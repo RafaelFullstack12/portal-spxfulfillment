@@ -17,9 +17,12 @@ app.use(renderer)
  */
 app.get('/', (c) => {
   // Construir URL de callback dinamicamente
-  const url = new URL(c.req.url)
-  const host = url.host || 'localhost:3002'
-  const protocol = url.protocol.replace(':', '') || 'https'
+  // No Vercel, usar variáveis de ambiente ou detectar do request
+  const forwardedHost = c.req.raw?.headers?.get?.('x-forwarded-host')
+  const forwardedProto = c.req.raw?.headers?.get?.('x-forwarded-proto')
+  
+  const host = forwardedHost || 'portal-spxfulfillment.vercel.app'
+  const protocol = forwardedProto || 'https'
   const redirectUri = `${protocol}://${host}/api/auth/callback`
   
   console.log('[LOGIN] Host:', host)
@@ -180,9 +183,11 @@ app.get('/api/auth/callback', async (c) => {
     console.log('[CALLBACK] Validando código com Google...')
     
     // Construir URL de callback dinamicamente (mesma lógica da rota /)
-    const url = new URL(c.req.url)
-    const host = url.host || 'localhost:3002'
-    const protocol = url.protocol.replace(':', '') || 'https'
+    const forwardedHost = c.req.raw?.headers?.get?.('x-forwarded-host')
+    const forwardedProto = c.req.raw?.headers?.get?.('x-forwarded-proto')
+    
+    const host = forwardedHost || 'portal-spxfulfillment.vercel.app'
+    const protocol = forwardedProto || 'https'
     const redirectUri = `${protocol}://${host}/api/auth/callback`
     
     console.log('[CALLBACK] Host:', host)
