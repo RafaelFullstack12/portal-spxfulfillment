@@ -1,3 +1,6 @@
 {
-  "version": 2
+  "version": 2,
+  "installCommand": "npm install",
+  "buildCommand": "node build.mjs",
+  "devCommand": "npm run dev"
 }
