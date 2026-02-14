@@ -1,4 +1,6 @@
-const { handle } = require('hono/vercel')
-const app = require('../src/index').default
+import { handle } from 'hono/vercel'
 
-module.exports = handle(app)
+// Importar dinamicamente o app
+const app = await import('../src/index.tsx').then(m => m.default)
+
+export default handle(app)
