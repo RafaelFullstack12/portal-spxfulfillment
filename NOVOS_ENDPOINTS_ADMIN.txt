@@ -1,0 +1,230 @@
+// ENDPOINTS ADMIN - COPIAR PARA index.tsx
+
+/**
+ * Painel Admin: Gerenciar Usuários
+ */
+app.get('/admin/users', async (c) => {
+  const email = c.req.query('email')
+  
+  if (!email) {
+    return c.redirect('/')
+  }
+  
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    
+    if (!user || user.status !== 'APROVADO' || parseInt(user.nivel || '0') < 10) {
+      return c.html(`
+        <h1>Acesso Negado</h1>
+        <p>Apenas administradores (Nível 10+) podem acessar esta página</p>
+        <p><a href="/portal?email=${encodeURIComponent(email)}">Voltar ao portal</a></p>
+      `)
+    }
+    
+    const pendingUsers = await sheetsManager.getPendingUsers()
+    const cidades = await sheetsManager.getCidadesAtivas()
+    
+    return c.html(renderAdminUsers(pendingUsers, cidades, email))
+    
+  } catch (error) {
+    console.error('[ADMIN] Erro:', error)
+    return c.html(`<h1>Erro</h1><p>${String(error)}</p>`)
+  }
+})
+
+/**
+ * Painel Admin: Configurações do Sistema
+ */
+app.get('/admin/config', async (c) => {
+  const email = c.req.query('email')
+  
+  if (!email) {
+    return c.redirect('/')
+  }
+  
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    
+    if (!user || user.status !== 'APROVADO' || parseInt(user.nivel || '0') < 10) {
+      return c.html(`
+        <h1>Acesso Negado</h1>
+        <p>Apenas administradores (Nível 10+) podem acessar esta página</p>
+        <p><a href="/portal?email=${encodeURIComponent(email)}">Voltar ao portal</a></p>
+      `)
+    }
+    
+    const cidades = await sheetsManager.getCidadesAtivas()
+    const cargos = await sheetsManager.getCargosAtivos()
+    
+    return c.html(renderAdminConfig(cidades, cargos, email))
+    
+  } catch (error) {
+    console.error('[ADMIN] Erro:', error)
+    return c.html(`<h1>Erro</h1><p>${String(error)}</p>`)
+  }
+})
+
+/**
+ * Painel Admin: Gerenciar Opções do Portal
+ */
+app.get('/admin/opcoes', async (c) => {
+  const email = c.req.query('email')
+  
+  if (!email) {
+    return c.redirect('/')
+  }
+  
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    
+    if (!user || user.status !== 'APROVADO' || parseInt(user.nivel || '0') < 10) {
+      return c.html(`
+        <h1>Acesso Negado</h1>
+        <p>Apenas administradores (Nível 10+) podem acessar esta página</p>
+        <p><a href="/portal?email=${encodeURIComponent(email)}">Voltar ao portal</a></p>
+      `)
+    }
+    
+    const opcoes = await sheetsManager.getAllPortalOpcoes()
+    const cidades = await sheetsManager.getCidadesAtivas()
+    
+    return c.html(renderAdminOpcoes(opcoes, cidades, email))
+    
+  } catch (error) {
+    console.error('[ADMIN] Erro:', error)
+    return c.html(`<h1>Erro</h1><p>${String(error)}</p>`)
+  }
+})
+
+/**
+ * API: Adicionar cidade
+ */
+app.post('/api/admin/config/cidades', async (c) => {
+  try {
+    const { nome } = await c.req.json()
+    
+    if (!nome) {
+      return c.json({ error: 'Nome da cidade é obrigatório' }, 400)
+    }
+    
+    await sheetsManager.addCidade(nome)
+    
+    return c.json({ success: true, message: 'Cidade adicionada' })
+  } catch (error) {
+    console.error('[API] Erro ao adicionar cidade:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
+
+/**
+ * API: Adicionar cargo
+ */
+app.post('/api/admin/config/cargos', async (c) => {
+  try {
+    const { nome, icone, descricao } = await c.req.json()
+    
+    if (!nome) {
+      return c.json({ error: 'Nome do cargo é obrigatório' }, 400)
+    }
+    
+    await sheetsManager.addCargo(nome, icone || 'fa-user', descricao || '')
+    
+    return c.json({ success: true, message: 'Cargo adicionado' })
+  } catch (error) {
+    console.error('[API] Erro ao adicionar cargo:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
+
+/**
+ * API: Criar nova opção
+ */
+app.post('/api/admin/opcoes', async (c) => {
+  try {
+    const data = await c.req.json()
+    
+    if (!data.nome || !data.link) {
+      return c.json({ error: 'Nome e Link são obrigatórios' }, 400)
+    }
+    
+    await sheetsManager.insertPortalOpcao(data)
+    
+    return c.json({ success: true, message: 'Opção criada' })
+  } catch (error) {
+    console.error('[API] Erro ao criar opção:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
+
+/**
+ * API: Atualizar opção (ativar/desativar)
+ */
+app.patch('/api/admin/opcoes/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const data = await c.req.json()
+    
+    await sheetsManager.updatePortalOpcao(id, data)
+    
+    return c.json({ success: true, message: 'Opção atualizada' })
+  } catch (error) {
+    console.error('[API] Erro ao atualizar opção:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
+
+/**
+ * API: Deletar opção
+ */
+app.delete('/api/admin/opcoes/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    
+    await sheetsManager.deletePortalOpcao(id)
+    
+    return c.json({ success: true, message: 'Opção deletada' })
+  } catch (error) {
+    console.error('[API] Erro ao deletar opção:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
+
+/**
+ * API: Aprovar usuário
+ */
+app.post('/api/admin/users/approve', async (c) => {
+  try {
+    const { email, nivel } = await c.req.json()
+    
+    if (!email || nivel === undefined) {
+      return c.json({ error: 'Dados incompletos' }, 400)
+    }
+    
+    await sheetsManager.updateUserStatus(email, 'APROVADO', nivel)
+    
+    return c.json({ success: true, message: 'Usuário aprovado' })
+  } catch (error) {
+    console.error('[API] Erro ao aprovar:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
+
+/**
+ * API: Rejeitar usuário
+ */
+app.post('/api/admin/users/reject', async (c) => {
+  try {
+    const { email } = await c.req.json()
+    
+    if (!email) {
+      return c.json({ error: 'Email não fornecido' }, 400)
+    }
+    
+    await sheetsManager.updateUserStatus(email, 'REJEITADO')
+    
+    return c.json({ success: true, message: 'Usuário rejeitado' })
+  } catch (error) {
+    console.error('[API] Erro ao rejeitar:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})
