@@ -17,10 +17,9 @@ app.use(renderer)
  */
 app.get('/', (c) => {
   // Construir URL de callback dinamicamente
-  const host = c.req.header('host') || 'localhost:3002'
-  
-  // Se for localhost, usa http. Caso contrário, usa https
-  const protocol = host.includes('localhost') ? 'http' : 'https'
+  const url = new URL(c.req.url)
+  const host = url.host || 'localhost:3002'
+  const protocol = url.protocol.replace(':', '') || 'https'
   const redirectUri = `${protocol}://${host}/api/auth/callback`
   
   console.log('[LOGIN] Host:', host)
@@ -181,10 +180,9 @@ app.get('/api/auth/callback', async (c) => {
     console.log('[CALLBACK] Validando código com Google...')
     
     // Construir URL de callback dinamicamente (mesma lógica da rota /)
-    const host = c.req.header('host') || 'localhost:3002'
-    
-    // Se for localhost, usa http. Caso contrário, usa https
-    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const url = new URL(c.req.url)
+    const host = url.host || 'localhost:3002'
+    const protocol = url.protocol.replace(':', '') || 'https'
     const redirectUri = `${protocol}://${host}/api/auth/callback`
     
     console.log('[CALLBACK] Host:', host)
