@@ -18,10 +18,19 @@ export default defineConfig({
   build: {
     minify: 'esbuild',
     sourcemap: false,
+    target: 'esnext',
     rollupOptions: {
       output: {
-        manualChunks: undefined
+        manualChunks: undefined,
+        compact: true
+      },
+      treeshake: {
+        preset: 'recommended',
+        moduleSideEffects: false
       }
     }
+  },
+  optimizeDeps: {
+    exclude: ['googleapis']
   }
 })
