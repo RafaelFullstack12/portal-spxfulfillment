@@ -1,6 +1,6 @@
 import { handle } from 'hono/vercel'
 
-// Importar dinamicamente o app
-const app = await import('../src/index.tsx').then(m => m.default)
+// Importar o app compilado
+const app = await import('../dist/index.js').then(m => m.default)
 
 export default handle(app)
