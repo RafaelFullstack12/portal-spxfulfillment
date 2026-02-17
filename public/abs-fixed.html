@@ -795,13 +795,20 @@ function carregarCalendario() {
     const grid = document.getElementById('calendario-grid');
     const infoSupervisor = document.getElementById('info-supervisor');
     
-    if (!grid || !infoSupervisor) {
-        console.error('Elementos não encontrados: calendario-grid ou info-supervisor');
+    // Elemento grid é obrigatório, info-supervisor é opcional
+    if (!grid) {
+        console.error('Elemento obrigatório não encontrado: calendario-grid');
         return;
     }
     
     grid.innerHTML = '';
-    infoSupervisor.textContent = estado.supervisor;
+    
+    // Atualiza info-supervisor apenas se existir
+    if (infoSupervisor) {
+        infoSupervisor.textContent = estado.supervisor;
+    } else {
+        console.warn('Elemento opcional não encontrado: info-supervisor');
+    }
     
     const colaboradoresSupervisor = estado.todosColaboradores.filter(
         c => c.lider === estado.supervisor
