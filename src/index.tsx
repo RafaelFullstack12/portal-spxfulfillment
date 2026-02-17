@@ -1563,9 +1563,10 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     }
     
     // Buscar dados dos colaboradores (a partir da LINHA 5)
+    // SEM LIMITE - pega todas as linhas com dados
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A5:AZ1000`
+      range: `${nomeAba}!A5:AZ`
     })
     
     const rows = dataResponse.data.values || []
