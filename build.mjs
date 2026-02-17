@@ -7,7 +7,8 @@ await build({
   target: 'node20',
   format: 'esm',
   outfile: '.build/app.js',
-  external: ['hono', 'googleapis', 'google-auth-library'],
+  // Manter dependências grandes externas para evitar timeout
+  external: ['hono', '@hono/*', 'googleapis', 'google-auth-library'],
   minify: false,
   sourcemap: false,
 })

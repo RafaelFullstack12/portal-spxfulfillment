@@ -1381,7 +1381,7 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
   try {
     const { warehouse, mes, ano } = c.req.param()
     
-    console.log(`[ABS API] Buscando colaboradores: ${warehouse} - ${mes}/${ano}`)
+    console.log(`[ABS API] ===== VERSÃO NOVA ===== Buscando colaboradores: ${warehouse} - ${mes}/${ano}`)
     
     // Validar warehouse
     const spreadsheetId = ABS_SPREADSHEETS[warehouse]
