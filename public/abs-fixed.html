@@ -833,7 +833,7 @@ function carregarCalendario() {
     }
     
     const colaboradoresSupervisor = estado.todosColaboradores.filter(
-        c => c.lider === estado.supervisor
+        c => c.lider?.trim() === estado.supervisor?.trim()
     );
     
     const mesIndex = MESES.indexOf(estado.mes);
@@ -975,7 +975,7 @@ function carregarMarcacoes() {
     }
     
     estado.colaboradores = estado.todosColaboradores.filter(
-        c => c.lider === estado.supervisor
+        c => c.lider?.trim() === estado.supervisor?.trim()
     );
     console.log('[carregarMarcacoes] Colaboradores filtrados:', estado.colaboradores.length);
     
