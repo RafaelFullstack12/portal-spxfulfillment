@@ -683,11 +683,15 @@ function esconderLoading() {
 // TELA 1: SELEÇÃO DE MÊS
 // ========================================
 function carregarMeses() {
+    console.log('[carregarMeses] INICIANDO');
     const ano = new Date().getFullYear();
     const mesAtual = new Date().getMonth(); // 0-11
     
     const grid = document.getElementById('meses-grid');
     const infoWarehouse = document.getElementById('info-warehouse');
+    
+    console.log('[carregarMeses] grid:', grid ? 'OK' : 'ERRO');
+    console.log('[carregarMeses] infoWarehouse:', infoWarehouse ? 'OK' : 'ERRO');
     
     if (!grid || !infoWarehouse) {
         console.error('Elementos não encontrados: meses-grid ou info-warehouse');
@@ -708,6 +712,10 @@ function carregarMeses() {
         <div class="card-subtitle">${ano}</div>
     `;
     grid.appendChild(card);
+    
+    console.log('[carregarMeses] Card criado:', mes, ano);
+    mostrarTela('meses');
+    console.log('[carregarMeses] CONCLUÍDO');
 }
 
 async function selecionarMes(mes, ano) {
