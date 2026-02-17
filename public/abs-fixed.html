@@ -847,9 +847,40 @@ function atualizarEstatisticas() {
     renderizarColaboradores();
 }
 
-function recarregarMarcacoes() {
-    estado.marcacoesModificadas = {};
-    carregarMarcacoes();
+async function recarregarMarcacoes() {
+    mostrarLoading('Recarregando dados...');
+    
+    try {
+        // Recarregar dados do servidor
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao recarregar dados');
+        }
+        
+        // Atualizar dados globais
+        estado.todosColaboradores = data.colaboradores || [];
+        
+        // Limpar modificações locais
+        estado.marcacoesModificadas = {};
+        
+        // Re-filtrar colaboradores do supervisor atual
+        estado.colaboradores = estado.todosColaboradores.filter(
+            c => c.lider === estado.supervisor
+        );
+        
+        // Re-renderizar lista
+        renderizarColaboradores();
+        atualizarEstatisticas();
+        
+        esconderLoading();
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao recarregar: ${error.message}`);
+        console.error(error);
+    }
 }
 
 async function salvarMarcacoes() {
