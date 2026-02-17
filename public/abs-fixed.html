@@ -997,9 +997,15 @@ function renderizarColaboradores() {
         }
         
         // Pega a marcação atual do colaborador para este dia
-        const marcacaoAtual = colab.marcacoes && colab.marcacoes[estado.dia] 
-            ? colab.marcacoes[estado.dia].sigla 
-            : '';
+        // Prioriza marcações modificadas (não salvas) sobre as do servidor
+        let marcacaoAtual = '';
+        if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
+            // Usa marcação modificada (ainda não salva)
+            marcacaoAtual = estado.marcacoesModificadas[colab.wfmUser];
+        } else if (colab.marcacoes && colab.marcacoes[estado.dia]) {
+            // Usa marcação do servidor
+            marcacaoAtual = colab.marcacoes[estado.dia].sigla;
+        }
         
         // Aplicar filtro de status
         const isPendente = !marcacaoAtual;
