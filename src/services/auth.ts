@@ -79,4 +79,17 @@ export class AuthManager {
   }
 }
 
-export const authManager = new AuthManager()
+// Inicialização defensiva - não quebra o servidor se falhar
+let authManager: AuthManager
+
+try {
+  authManager = new AuthManager()
+  console.log('✅ AuthManager inicializado com sucesso')
+} catch (error) {
+  console.error('⚠️ Erro ao inicializar AuthManager:', error)
+  console.error('⚠️ Funcionalidades de autenticação podem não funcionar')
+  // Criar um objeto mock para evitar crashes
+  authManager = null as any
+}
+
+export { authManager }

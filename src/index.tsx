@@ -8,9 +8,28 @@ import { renderAdminUsers } from './views/admin-users'
 import { renderAdminConfig } from './views/admin-config'
 import { renderAdminOpcoes } from './views/admin-opcoes'
 
+console.log('🚀 Iniciando aplicação...')
+console.log('📦 Módulos importados com sucesso')
+
 const app = new Hono()
 
+console.log('✅ Hono app criado')
+
 app.use(renderer)
+
+console.log('✅ Renderer configurado')
+console.log('✅ Aplicação pronta para receber requisições')
+
+/**
+ * Health Check - Rota simples para verificar se o servidor está rodando
+ */
+app.get('/health', (c) => {
+  return c.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    message: 'Servidor rodando normalmente'
+  })
+})
 
 /**
  * Página inicial - Login

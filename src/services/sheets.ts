@@ -1275,4 +1275,17 @@ export class SheetsManager {
   }
 }
 
-export const sheetsManager = new SheetsManager()
+// Inicialização defensiva - não quebra o servidor se falhar
+let sheetsManager: SheetsManager
+
+try {
+  sheetsManager = new SheetsManager()
+  console.log('✅ SheetsManager inicializado com sucesso')
+} catch (error) {
+  console.error('⚠️ Erro ao inicializar SheetsManager:', error)
+  console.error('⚠️ Funcionalidades do Google Sheets podem não funcionar')
+  // Criar um objeto mock para evitar crashes
+  sheetsManager = null as any
+}
+
+export { sheetsManager }
