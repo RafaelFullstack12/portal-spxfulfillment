@@ -851,15 +851,36 @@ function carregarCalendario() {
         card.appendChild(dayStatus);
         
         card.addEventListener('click', function() {
+            console.log('\n========== CLIQUE NO DIA ==========');
             console.log('[CLICK] Dia clicado:', dia);
-            console.log('[CLICK] Estado antes:', JSON.stringify(estado));
+            console.log('[CLICK] Estado ANTES:', JSON.stringify(estado));
+            
             estado.dia = dia;
             console.log('[CLICK] Estado.dia definido como:', estado.dia);
-            console.log('[CLICK] Chamando carregarMarcacoes()');
-            carregarMarcacoes();
-            console.log('[CLICK] Chamando mostrarTela(marcacao)');
-            mostrarTela('marcacao');
-            console.log('[CLICK] Concluído');
+            console.log('[CLICK] Estado DEPOIS:', JSON.stringify(estado));
+            
+            console.log('[CLICK] >>> Chamando carregarMarcacoes()...');
+            try {
+                carregarMarcacoes();
+                console.log('[CLICK] <<< carregarMarcacoes() SUCESSO');
+            } catch (e) {
+                console.error('[CLICK] ERRO em carregarMarcacoes():', e);
+                alert('Erro ao carregar marcações: ' + e.message);
+                return;
+            }
+            
+            console.log('[CLICK] >>> Chamando mostrarTela(marcacao)...');
+            try {
+                mostrarTela('marcacao');
+                console.log('[CLICK] <<< mostrarTela(marcacao) SUCESSO');
+            } catch (e) {
+                console.error('[CLICK] ERRO em mostrarTela():', e);
+                alert('Erro ao mostrar tela: ' + e.message);
+                return;
+            }
+            
+            console.log('[CLICK] ✅ CLIQUE PROCESSADO COM SUCESSO');
+            console.log('===================================\n');
         });
         
         grid.appendChild(card);
@@ -903,23 +924,45 @@ function voltarParaCalendario() {
 // TELA 4: MARCAÇÃO DE PRESENÇA
 // ========================================
 function carregarMarcacoes() {
+    console.log('[carregarMarcacoes] Iniciando...');
+    console.log('[carregarMarcacoes] Estado:', JSON.stringify(estado));
+    
     const list = document.getElementById('colaboradores-list');
     const infoDia = document.getElementById('info-dia');
     
-    if (!list || !infoDia) {
-        console.error('Elementos não encontrados: colaboradores-list ou info-dia');
+    console.log('[carregarMarcacoes] Elementos encontrados:', {
+        list: !!list,
+        infoDia: !!infoDia
+    });
+    
+    if (!list) {
+        console.error('[carregarMarcacoes] ERRO CRÍTICO: colaboradores-list não encontrado!');
         return;
     }
     
+    if (!infoDia) {
+        console.warn('[carregarMarcacoes] AVISO: info-dia não encontrado, continuando...');
+    }
+    
     list.innerHTML = '';
-    infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
+    console.log('[carregarMarcacoes] Lista limpa');
+    
+    if (infoDia) {
+        infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
+        console.log('[carregarMarcacoes] Info dia atualizado');
+    }
     
     estado.colaboradores = estado.todosColaboradores.filter(
         c => c.lider === estado.supervisor
     );
+    console.log('[carregarMarcacoes] Colaboradores filtrados:', estado.colaboradores.length);
     
     renderizarColaboradores();
+    console.log('[carregarMarcacoes] renderizarColaboradores() concluído');
+    
     atualizarEstatisticas();
+    console.log('[carregarMarcacoes] atualizarEstatisticas() concluído');
+    console.log('[carregarMarcacoes] FINALIZADO COM SUCESSO');
 }
 
 function renderizarColaboradores() {
