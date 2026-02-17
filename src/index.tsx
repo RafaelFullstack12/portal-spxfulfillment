@@ -1516,13 +1516,14 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     
     const header = headerResponse.data.values?.[0] || []
     console.log(`[ABS API] Cabeçalho encontrado com ${header.length} colunas`)
+    console.log(`[ABS API] Cabeçalho completo:`, header)
     
     // Validar colunas essenciais
     if (!header.includes('Colaborador')) {
       return c.json({ 
         success: false, 
         error: 'Coluna "Colaborador" não encontrada',
-        header_encontrado: header.slice(0, 20)
+        header_encontrado: header
       }, 400)
     }
     
@@ -1530,8 +1531,8 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     const getColIndex = (nome: string) => header.indexOf(nome)
     
     const indices = {
-      colaborador: getColIndex('Colaborador'),  // Coluna C (índice 2)
-      wfmUser: getColIndex('WFM USER'),         // Coluna G (índice 6)
+      colaborador: getColIndex('Colaborador'),
+      wfmUser: getColIndex('WFM USER'),
       setor: getColIndex('Setor'),
       lider: getColIndex('LIDER'),
       cargo: getColIndex('Cargo'),
@@ -1541,7 +1542,25 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
       dias: Array.from({ length: 31 }, (_, i) => getColIndex(`${i + 1}`))
     }
     
-    console.log(`[ABS API] Índice Colaborador: ${indices.colaborador}, WFM USER: ${indices.wfmUser}`)
+    console.log(`[ABS API] Mapeamento colunas:`, {
+      colaborador: indices.colaborador,
+      wfmUser: indices.wfmUser,
+      lider: indices.lider,
+      setor: indices.setor
+    })
+    
+    // Validar índices críticos
+    if (indices.colaborador === -1) {
+      return c.json({
+        success: false,
+        error: 'Coluna "Colaborador" não mapeada',
+        header
+      }, 400)
+    }
+    
+    if (indices.lider === -1) {
+      console.warn('[ABS API] AVISO: Coluna "LIDER" não encontrada no cabeçalho')
+    }
     
     // Buscar dados dos colaboradores (a partir da LINHA 5)
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
@@ -1564,16 +1583,31 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     // Calcular dias válidos do mês
     const diasNoMes = getDiasNoMes(mes, parseInt(ano))
     
-    rows.forEach(row => {
+    rows.forEach((row, rowIndex) => {
       const nomeOriginal = row[indices.colaborador]?.trim()
-      if (!nomeOriginal) return // Pula linha vazia
+      if (!nomeOriginal) {
+        console.log(`[ABS API] Linha ${rowIndex + 5} vazia, ignorando`)
+        return
+      }
       
       const nomeNormalizado = normalizarNome(nomeOriginal)
       
       // Se já existe, pula duplicata
       if (colaboradoresMap.has(nomeNormalizado)) {
-        console.log(`[ABS API] Duplicata ignorada: ${nomeOriginal}`)
+        console.log(`[ABS API] Duplicata na linha ${rowIndex + 5}: ${nomeOriginal}`)
         return
+      }
+      
+      const liderOriginal = row[indices.lider]?.trim() || 'Não atribuído'
+      
+      // Log primeira linha com dados
+      if (colaboradoresMap.size === 0) {
+        console.log(`[ABS API] Primeira linha processada (${rowIndex + 5}):`, {
+          nome: nomeOriginal,
+          lider: liderOriginal,
+          setor: row[indices.setor]?.trim(),
+          wfmUser: row[indices.wfmUser]
+        })
       }
       
       const marcacoes: Record<number, any> = {}
@@ -1596,7 +1630,7 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
         nome: nomeOriginal,
         wfmUser: (row[indices.wfmUser] || nomeOriginal.toLowerCase().replace(/\s+/g, '.')),
         setor: row[indices.setor]?.trim() || 'Não informado',
-        lider: row[indices.lider]?.trim() || 'Não atribuído',
+        lider: liderOriginal,
         cargo: row[indices.cargo]?.trim() || 'Não informado',
         escala: row[indices.escala]?.trim() || 'Não informada',
         dataAdmissao: row[indices.dataAdmissao] || null,
