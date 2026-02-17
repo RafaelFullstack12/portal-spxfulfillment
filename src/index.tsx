@@ -1334,8 +1334,38 @@ app.get('/abs', async (c) => {
   // Validar usuário e nível
   try {
     const user = await sheetsManager.findUserByEmail(decodeURIComponent(email))
-    if (!user || !['ADMIN', 'RH'].includes(user.nivel)) {
-      return c.html('<h1>Acesso Negado</h1><p>Apenas ADMIN e RH podem acessar o sistema ABS.</p><a href="/">Voltar</a>', 403)
+    const nivel = parseInt(user?.nivel || '0')
+    
+    if (!user || user.status !== 'APROVADO') {
+      return c.redirect('/')
+    }
+    
+    if (nivel < 5) {
+      return c.html(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Acesso Negado</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+                <div class="text-red-500 text-6xl mb-4">🚫</div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">Acesso Não Autorizado</h1>
+                <p class="text-gray-600 mb-6">Você não possui permissão para acessar o Sistema ABS.</p>
+                <div class="bg-gray-50 rounded p-4 mb-6 text-left">
+                    <p class="text-sm text-gray-700"><strong>Seu nível:</strong> ${nivel}</p>
+                    <p class="text-sm text-gray-700"><strong>Nível mínimo:</strong> 5 (Supervisor)</p>
+                </div>
+                <a href="/portal?email=${email}" class="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 font-semibold">
+                    ← Voltar ao Portal
+                </a>
+            </div>
+        </body>
+        </html>
+      `, 403)
     }
   } catch (error) {
     console.error('[ABS] Erro ao validar usuário:', error)
