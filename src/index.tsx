@@ -1307,15 +1307,15 @@ app.delete('/api/admin/users/:email', async (c) => {
  */
 app.get('/abs', async (c) => {
   try {
-    // Ler arquivo HTML estático com JS inline
+    // Ler arquivo HTML corrigido com JS inline
     const fs = await import('fs/promises')
     const path = await import('path')
-    const htmlPath = path.join(process.cwd(), 'public', 'abs-inline.html')
+    const htmlPath = path.join(process.cwd(), 'public', 'abs-fixed.html')
     const html = await fs.readFile(htmlPath, 'utf-8')
     return c.html(html)
   } catch (error) {
     console.error('[ABS] Erro ao carregar:', error)
-    return c.html('<h1>Erro ao carregar Sistema ABS</h1>', 500)
+    return c.html('<h1>Erro ao carregar Sistema ABS</h1><p>Verifique os logs do servidor</p>', 500)
   }
 })
 
