@@ -836,7 +836,9 @@ function carregarCalendario() {
 }
 
 function selecionarDia(dia) {
+    console.log('[DEBUG] selecionarDia chamado:', dia);
     estado.dia = dia;
+    console.log('[DEBUG] Estado atualizado:', estado);
     carregarMarcacoes();
     mostrarTela('marcacao');
 }
