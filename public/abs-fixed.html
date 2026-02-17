@@ -1206,6 +1206,9 @@ async function recarregarMarcacoes() {
 }
 
 async function salvarMarcacoes() {
+    console.log('[SAVE] Iniciando...');
+    console.log('[SAVE] Modificadas:', estado.marcacoesModificadas);
+    
     if (Object.keys(estado.marcacoesModificadas).length === 0) {
         alert('Nenhuma marcação foi alterada.');
         return;
@@ -1219,8 +1222,13 @@ async function salvarMarcacoes() {
         
         // PASSO 1: Processar marcações do dia atual
         for (const [wfmUser, sigla] of Object.entries(estado.marcacoesModificadas)) {
+            console.log('[SAVE] Processando:', wfmUser, sigla);
+            
             // Ignorar marcações propagadas antigas
-            if (wfmUser.includes('_dia_')) continue;
+            if (wfmUser.includes('_dia_')) {
+                console.log('[SAVE] Ignorando propagação antiga:', wfmUser);
+                continue;
+            }
             
             const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
             if (!colab) {
@@ -1247,6 +1255,7 @@ async function salvarMarcacoes() {
         }
         
         console.log('[SAVE] Marcações dia atual:', marcacoesDiaAtual.length);
+        console.log('[SAVE] Marcações para propagar:', marcacoesParaPropagar.length);
         
         if (marcacoesDiaAtual.length === 0) {
             esconderLoading();
@@ -1255,6 +1264,7 @@ async function salvarMarcacoes() {
         }
         
         // PASSO 2: SALVAR dia atual (SEMPRE)
+        console.log('[SAVE] Enviando para API...');
         const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
             method: 'POST',
             headers: { 
@@ -1270,15 +1280,18 @@ async function salvarMarcacoes() {
             })
         });
         
+        console.log('[SAVE] Response status:', response.status);
         const data = await response.json();
-        
-        console.log('[SAVE] SAVE_EXECUTADO=true');
+        console.log('[SAVE] Response data:', data);
         
         if (!data.success) {
+            console.log('[SAVE] SAVE_EXECUTADO=false - Erro:', data.error);
             esconderLoading();
             alert(`❌ Erro ao salvar: ${data.error}`);
             return;
         }
+        
+        console.log('[SAVE] SAVE_EXECUTADO=true');
         
         // PASSO 3: PROPAGAR desligamentos (se necessário)
         let totalPropagados = 0;
