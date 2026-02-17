@@ -1307,10 +1307,10 @@ app.delete('/api/admin/users/:email', async (c) => {
  */
 app.get('/abs', async (c) => {
   try {
-    // Ler arquivo HTML estático (nova versão)
+    // Ler arquivo HTML estático com JS inline
     const fs = await import('fs/promises')
     const path = await import('path')
-    const htmlPath = path.join(process.cwd(), 'public', 'abs-novo.html')
+    const htmlPath = path.join(process.cwd(), 'public', 'abs-inline.html')
     const html = await fs.readFile(htmlPath, 'utf-8')
     return c.html(html)
   } catch (error) {

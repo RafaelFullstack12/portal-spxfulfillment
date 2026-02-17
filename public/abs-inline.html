@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ABS - Controle de Absenteísmo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tela {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .tela.active {
+            display: flex;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #2b2b2b;
+            border-radius: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #388E3C;
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background: #404040;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #505050;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .card {
+            background: #333333;
+            border: 2px solid #404040;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            background: #404040;
+            border-color: #2196F3;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: #B0B0B0;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .day-card {
+            background: #333333;
+            border: 2px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .day-card:hover {
+            background: #404040;
+            border-color: #2196F3;
+            transform: scale(1.05);
+        }
+
+        .day-card.pendente {
+            border-color: #FFC107;
+            background: #3d3419;
+        }
+
+        .day-card.completo {
+            border-color: #4CAF50;
+            background: #1b2f1f;
+        }
+
+        .day-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .day-status {
+            font-size: 11px;
+            color: #B0B0B0;
+        }
+
+        .colaboradores-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .colaborador-item {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .colaborador-item:hover {
+            background: #3d3d3d;
+            border-color: #2196F3;
+        }
+
+        .colaborador-info {
+            flex: 1;
+        }
+
+        .colaborador-nome {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .colaborador-detalhes {
+            font-size: 12px;
+            color: #B0B0B0;
+        }
+
+        .marcacao-select {
+            background: #404040;
+            border: 1px solid #505050;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .marcacao-select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-pendente {
+            background: #FFC107;
+            color: #000;
+        }
+
+        .badge-completo {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: #333;
+            padding: 30px 50px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #404040;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-box {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            flex: 1;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-box input::placeholder {
+            color: #B0B0B0;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .stats-card {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #B0B0B0;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- TELA 1: SELEÇÃO DE MÊS -->
+        <div id="tela-meses" class="tela active">
+            <div class="header">
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Selecione o Mês
+                </h1>
+                <div class="text-sm text-gray-400" id="info-warehouse"></div>
+            </div>
+            <div class="grid-cards" id="meses-grid"></div>
+        </div>
+
+        <!-- TELA 2: SELEÇÃO DE SUPERVISOR -->
+        <div id="tela-supervisores" class="tela">
+            <div class="header">
+                <button class="btn btn-back" onclick="voltarParaMeses()">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-users mr-2"></i>
+                    Selecione o Supervisor
+                </h1>
+                <div class="text-sm text-gray-400" id="info-mes"></div>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search text-gray-400"></i>
+                <input type="text" placeholder="Pesquisar supervisor..." id="busca-supervisor" onkeyup="filtrarSupervisores()">
+            </div>
+            <div class="grid-cards" id="supervisores-grid"></div>
+        </div>
+
+        <!-- TELA 3: CALENDÁRIO -->
+        <div id="tela-calendario" class="tela">
+            <div class="header">
+                <button class="btn btn-back" onclick="voltarParaSupervisores()">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-calendar-days mr-2"></i>
+                    Calendário
+                </h1>
+                <div class="text-sm text-gray-400" id="info-supervisor"></div>
+            </div>
+            <div class="stats-card">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total de Dias</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-completos" style="color: #4CAF50;">0</div>
+                    <div class="stat-label">Completos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-pendentes" style="color: #FFC107;">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendario-grid"></div>
+        </div>
+
+        <!-- TELA 4: MARCAÇÃO DE PRESENÇA -->
+        <div id="tela-marcacao" class="tela">
+            <div class="header">
+                <button class="btn btn-back" onclick="voltarParaCalendario()">
+                    <i class="fas fa-arrow-left mr-2"></i>Calendário
+                </button>
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Marcação
+                </h1>
+                <div class="text-sm text-gray-400" id="info-dia"></div>
+            </div>
+            <div class="actions-bar">
+                <div class="search-box" style="flex: 1; margin-bottom: 0;">
+                    <i class="fas fa-search text-gray-400"></i>
+                    <input type="text" placeholder="Pesquisar colaborador..." id="busca-colaborador" onkeyup="filtrarColaboradores()">
+                </div>
+                <button class="btn btn-secondary" onclick="recarregarMarcacoes()">
+                    <i class="fas fa-sync-alt mr-2"></i>Recarregar
+                </button>
+                <button class="btn btn-primary" onclick="salvarMarcacoes()">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+            </div>
+            <div class="stats-card">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-marcacao-total">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-marcacao-marcados" style="color: #4CAF50;">0</div>
+                    <div class="stat-label">Marcados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-marcacao-pendentes" style="color: #FFC107;">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+            </div>
+            <div class="colaboradores-list" id="colaboradores-list"></div>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div id="loading-text">Carregando...</div>
+        </div>
+    </div>
+
+    <script>
+</body>
+</html>
+// ========================================
+// CONFIGURAÇÃO
+// ========================================
+const WAREHOUSE = 'SP'; // Pode ser PE, SP (FRANCO), GO
+const API_BASE = '';
+
+// Opções de marcação de presença
+const OPCOES_PRESENCA = {
+    '': { nome: '-- Selecione --', cor: '#666666' },
+    'P': { nome: 'Presente', cor: '#4CAF50' },
+    'F': { nome: 'Falta', cor: '#F44336' },
+    'FJ': { nome: 'Falta Justificada', cor: '#FFC107' },
+    'DV': { nome: 'Desligamento Voluntário', cor: '#FFC107' },
+    'DF': { nome: 'Desligamento Involuntário', cor: '#FFC107' },
+    'FE': { nome: 'Férias', cor: '#4CAF50' },
+    'FO': { nome: 'Folga', cor: '#8BC34A' },
+    'DSR': { nome: 'Descanso Semanal', cor: '#009688' },
+    'AL': { nome: 'Atestado', cor: '#FF5722' },
+    'AF': { nome: 'Afastamento', cor: '#9C27B0' },
+    'TR': { nome: 'Treinamento', cor: '#3F51B5' },
+    'PR': { nome: 'Presente Remoto', cor: '#2196F3' },
+    'BH': { nome: 'Bank Holiday', cor: '#00BCD4' },
+    'AM': { nome: 'Advertência/Atraso', cor: '#FF9800' },
+    'NC': { nome: 'Não Compareceu', cor: '#E91E63' },
+    'S1': { nome: 'Saída 1', cor: '#FF9800' },
+    'S2': { nome: 'Saída 2', cor: '#FF5722' },
+    'SU': { nome: 'Suspensão', cor: '#9E9E9E' }
+};
+
+const MESES = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril',
+    'Maio', 'Junho', 'Julho', 'Agosto',
+    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+// ========================================
+// ESTADO GLOBAL
+// ========================================
+let estado = {
+    warehouse: WAREHOUSE,
+    mes: null,
+    ano: null,
+    supervisor: null,
+    dia: null,
+    colaboradores: [],
+    todosColaboradores: [],
+    todosSupervisores: [],
+    marcacoesModificadas: {}
+};
+
+// ========================================
+// FUNÇÕES DE NAVEGAÇÃO
+// ========================================
+function mostrarTela(nomeTela) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tela-${nomeTela}`).classList.add('active');
+}
+
+function mostrarLoading(texto = 'Carregando...') {
+    document.getElementById('loading-text').textContent = texto;
+    document.getElementById('loading').classList.add('active');
+}
+
+function esconderLoading() {
+    document.getElementById('loading').classList.remove('active');
+}
+
+// ========================================
+// TELA 1: SELEÇÃO DE MÊS
+// ========================================
+function carregarMeses() {
+    const ano = new Date().getFullYear();
+    const mesAtual = new Date().getMonth(); // 0-11
+    
+    const grid = document.getElementById('meses-grid');
+    grid.innerHTML = '';
+    
+    document.getElementById('info-warehouse').textContent = `Warehouse: ${estado.warehouse}`;
+    
+    // Mostrar apenas o mês atual (conforme requisito)
+    const mes = MESES[mesAtual];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => selecionarMes(mes, ano);
+    card.innerHTML = `
+        <div class="card-icon">📅</div>
+        <div class="card-title">${mes}</div>
+        <div class="card-subtitle">${ano}</div>
+    `;
+    grid.appendChild(card);
+}
+
+async function selecionarMes(mes, ano) {
+    estado.mes = mes;
+    estado.ano = ano;
+    
+    mostrarLoading('Carregando supervisores...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar dados');
+        }
+        
+        estado.todosColaboradores = data.colaboradores || [];
+        
+        // Extrair lista única de supervisores
+        const supervisoresSet = new Set();
+        estado.todosColaboradores.forEach(c => {
+            if (c.lider && c.lider.trim()) {
+                supervisoresSet.add(c.lider.trim());
+            }
+        });
+        
+        estado.todosSupervisores = Array.from(supervisoresSet).sort();
+        
+        esconderLoading();
+        carregarSupervisores();
+        mostrarTela('supervisores');
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro: ${error.message}`);
+        console.error(error);
+    }
+}
+
+function voltarParaMeses() {
+    estado.mes = null;
+    estado.ano = null;
+    estado.supervisor = null;
+    estado.dia = null;
+    mostrarTela('meses');
+}
+
+// ========================================
+// TELA 2: SELEÇÃO DE SUPERVISOR
+// ========================================
+function carregarSupervisores() {
+    const grid = document.getElementById('supervisores-grid');
+    grid.innerHTML = '';
+    
+    document.getElementById('info-mes').textContent = `${estado.mes} ${estado.ano}`;
+    
+    if (estado.todosSupervisores.length === 0) {
+        grid.innerHTML = '<div class="text-center text-gray-400 p-8">Nenhum supervisor encontrado</div>';
+        return;
+    }
+    
+    estado.todosSupervisores.forEach(supervisor => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => selecionarSupervisor(supervisor);
+        
+        // Contar colaboradores deste supervisor
+        const qtd = estado.todosColaboradores.filter(c => c.lider === supervisor).length;
+        
+        card.innerHTML = `
+            <div class="card-icon">👤</div>
+            <div class="card-title">${supervisor}</div>
+            <div class="card-subtitle">${qtd} colaborador${qtd !== 1 ? 'es' : ''}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filtrarSupervisores() {
+    const busca = document.getElementById('busca-supervisor').value.toLowerCase();
+    const cards = document.querySelectorAll('#supervisores-grid .card');
+    
+    cards.forEach(card => {
+        const nome = card.querySelector('.card-title').textContent.toLowerCase();
+        card.style.display = nome.includes(busca) ? 'block' : 'none';
+    });
+}
+
+function selecionarSupervisor(supervisor) {
+    estado.supervisor = supervisor;
+    carregarCalendario();
+    mostrarTela('calendario');
+}
+
+function voltarParaSupervisores() {
+    estado.supervisor = null;
+    estado.dia = null;
+    mostrarTela('supervisores');
+}
+
+// ========================================
+// TELA 3: CALENDÁRIO
+// ========================================
+function carregarCalendario() {
+    const grid = document.getElementById('calendario-grid');
+    grid.innerHTML = '';
+    
+    document.getElementById('info-supervisor').textContent = estado.supervisor;
+    
+    // Filtrar colaboradores do supervisor
+    const colaboradoresSupervisor = estado.todosColaboradores.filter(
+        c => c.lider === estado.supervisor
+    );
+    
+    // Descobrir quantos dias tem o mês
+    const mesIndex = MESES.indexOf(estado.mes);
+    const diasNoMes = new Date(estado.ano, mesIndex + 1, 0).getDate();
+    
+    let completos = 0;
+    let pendentes = 0;
+    
+    // Criar card para cada dia
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        // Verificar se todos os colaboradores têm marcação neste dia
+        let marcados = 0;
+        colaboradoresSupervisor.forEach(colab => {
+            if (colab.marcacoes && colab.marcacoes[dia] && colab.marcacoes[dia].sigla) {
+                marcados++;
+            }
+        });
+        
+        const total = colaboradoresSupervisor.length;
+        const isCompleto = marcados === total;
+        const isPendente = marcados > 0 && marcados < total;
+        
+        if (isCompleto) completos++;
+        if (isPendente) pendentes++;
+        
+        const card = document.createElement('div');
+        card.className = `day-card ${isCompleto ? 'completo' : (isPendente ? 'pendente' : '')}`;
+        card.onclick = () => selecionarDia(dia);
+        
+        card.innerHTML = `
+            <div class="day-number">${dia}</div>
+            <div class="day-status">${marcados}/${total}</div>
+        `;
+        
+        grid.appendChild(card);
+    }
+    
+    // Atualizar estatísticas
+    document.getElementById('stat-total').textContent = diasNoMes;
+    document.getElementById('stat-completos').textContent = completos;
+    document.getElementById('stat-pendentes').textContent = pendentes;
+}
+
+function selecionarDia(dia) {
+    estado.dia = dia;
+    carregarMarcacoes();
+    mostrarTela('marcacao');
+}
+
+function voltarParaCalendario() {
+    estado.dia = null;
+    estado.marcacoesModificadas = {};
+    carregarCalendario();
+    mostrarTela('calendario');
+}
+
+// ========================================
+// TELA 4: MARCAÇÃO DE PRESENÇA
+// ========================================
+function carregarMarcacoes() {
+    const list = document.getElementById('colaboradores-list');
+    list.innerHTML = '';
+    
+    document.getElementById('info-dia').textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
+    
+    // Filtrar colaboradores do supervisor
+    estado.colaboradores = estado.todosColaboradores.filter(
+        c => c.lider === estado.supervisor
+    );
+    
+    renderizarColaboradores();
+    atualizarEstatisticas();
+}
+
+function renderizarColaboradores() {
+    const list = document.getElementById('colaboradores-list');
+    const busca = document.getElementById('busca-colaborador').value.toLowerCase();
+    list.innerHTML = '';
+    
+    let marcados = 0;
+    
+    estado.colaboradores.forEach((colab, index) => {
+        // Filtro de busca
+        if (busca && !colab.nome.toLowerCase().includes(busca)) {
+            return;
+        }
+        
+        const marcacaoAtual = estado.marcacoesModificadas[colab.wfmUser] !== undefined
+            ? estado.marcacoesModificadas[colab.wfmUser]
+            : (colab.marcacoes && colab.marcacoes[estado.dia] ? colab.marcacoes[estado.dia].sigla : '');
+        
+        if (marcacaoAtual) marcados++;
+        
+        const item = document.createElement('div');
+        item.className = 'colaborador-item';
+        
+        // Criar select de marcação
+        let selectOptions = '';
+        for (const [sigla, info] of Object.entries(OPCOES_PRESENCA)) {
+            const selected = marcacaoAtual === sigla ? 'selected' : '';
+            selectOptions += `<option value="${sigla}" ${selected}>${info.nome}</option>`;
+        }
+        
+        const isPendente = !marcacaoAtual;
+        
+        item.innerHTML = `
+            <div class="colaborador-info">
+                <div class="colaborador-nome">
+                    ${colab.nome}
+                    ${isPendente ? '<span class="badge badge-pendente">PENDENTE</span>' : '<span class="badge badge-completo">MARCADO</span>'}
+                </div>
+                <div class="colaborador-detalhes">
+                    WFM: ${colab.wfmUser} | ${colab.cargo || 'N/A'} | Admissão: ${colab.dataAdmissao || 'N/A'}
+                </div>
+            </div>
+            <select class="marcacao-select" data-wfm="${colab.wfmUser}" onchange="marcarPresenca(this)">
+                ${selectOptions}
+            </select>
+        `;
+        
+        list.appendChild(item);
+    });
+    
+    // Atualizar estatísticas
+    document.getElementById('stat-marcacao-total').textContent = estado.colaboradores.length;
+    document.getElementById('stat-marcacao-marcados').textContent = marcados;
+    document.getElementById('stat-marcacao-pendentes').textContent = estado.colaboradores.length - marcados;
+}
+
+function marcarPresenca(select) {
+    const wfmUser = select.dataset.wfm;
+    const sigla = select.value;
+    estado.marcacoesModificadas[wfmUser] = sigla;
+    renderizarColaboradores();
+}
+
+function filtrarColaboradores() {
+    renderizarColaboradores();
+}
+
+function atualizarEstatisticas() {
+    renderizarColaboradores();
+}
+
+function recarregarMarcacoes() {
+    estado.marcacoesModificadas = {};
+    carregarMarcacoes();
+}
+
+async function salvarMarcacoes() {
+    if (Object.keys(estado.marcacoesModificadas).length === 0) {
+        alert('Nenhuma marcação foi alterada.');
+        return;
+    }
+    
+    mostrarLoading('Salvando marcações...');
+    
+    try {
+        const marcacoes = [];
+        
+        for (const [wfmUser, sigla] of Object.entries(estado.marcacoesModificadas)) {
+            const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+            if (colab) {
+                marcacoes.push({
+                    wfmUser: wfmUser,
+                    nome: colab.nome,
+                    dia: estado.dia,
+                    sigla: sigla
+                });
+            }
+        }
+        
+        const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                marcacoes: marcacoes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar');
+        }
+        
+        // Atualizar estado local
+        marcacoes.forEach(m => {
+            const colab = estado.todosColaboradores.find(c => c.wfmUser === m.wfmUser);
+            if (colab) {
+                if (!colab.marcacoes) colab.marcacoes = {};
+                if (!colab.marcacoes[estado.dia]) colab.marcacoes[estado.dia] = {};
+                colab.marcacoes[estado.dia].sigla = m.sigla;
+                colab.marcacoes[estado.dia].tipo = 'manual';
+            }
+        });
+        
+        estado.marcacoesModificadas = {};
+        
+        esconderLoading();
+        alert(`✅ ${marcacoes.length} marcação(ões) salva(s) com sucesso!`);
+        
+        // Recarregar para mostrar dados atualizados
+        carregarMarcacoes();
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar: ${error.message}`);
+        console.error(error);
+    }
+}
+
+// ========================================
+// INICIALIZAÇÃO
+// ========================================
+document.addEventListener('DOMContentLoaded', () => {
+    carregarMeses();
+});
+</script>
+</body>
+</html>
