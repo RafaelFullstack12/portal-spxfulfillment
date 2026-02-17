@@ -817,15 +817,22 @@ function carregarCalendario() {
         const card = document.createElement('div');
         card.className = `day-card ${isCompleto ? 'completo' : (isPendente ? 'pendente' : '')}`;
         card.style.cursor = 'pointer';
+        
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = dia;
+        
+        const dayStatus = document.createElement('div');
+        dayStatus.className = 'day-status';
+        dayStatus.textContent = `${marcados}/${total}`;
+        
+        card.appendChild(dayNumber);
+        card.appendChild(dayStatus);
+        
         card.addEventListener('click', () => {
             console.log('[DEBUG] Card clicado, dia:', dia);
             selecionarDia(dia);
         });
-        
-        card.innerHTML = `
-            <div class="day-number">${dia}</div>
-            <div class="day-status">${marcados}/${total}</div>
-        `;
         
         grid.appendChild(card);
     }
