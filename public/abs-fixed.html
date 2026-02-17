@@ -600,6 +600,16 @@ const OPCOES_PRESENCA = {
 // Siglas que identificam desligamento
 const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
 
+// Normalizar campo lider (supervisor) - FUNÇÃO ÚNICA
+function normalizeLider(valor) {
+    if (!valor) return 'NÃO ATRIBUÍDO';
+    return valor
+        .trim()
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
 // Obter email do usuário do cookie
 function getUserEmail() {
     const match = document.cookie.match(/user_email=([^;]+)/);
@@ -716,12 +726,16 @@ async function selecionarMes(mes, ano) {
         
         estado.todosColaboradores = data.colaboradores || [];
         
-        // Extrair lista única de supervisores (com trim)
+        // Normalizar campo lider em TODOS os colaboradores
+        estado.todosColaboradores.forEach(c => {
+            c.liderNormalizado = normalizeLider(c.lider);
+        });
+        
+        // Extrair lista única de supervisores (normalizados)
         const supervisoresSet = new Set();
         estado.todosColaboradores.forEach(c => {
-            const liderNormalizado = c.lider?.trim();
-            if (liderNormalizado && liderNormalizado !== 'Não atribuído') {
-                supervisoresSet.add(liderNormalizado);
+            if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
+                supervisoresSet.add(c.liderNormalizado);
             }
         });
         
@@ -771,7 +785,7 @@ function carregarSupervisores() {
         card.className = 'card';
         card.onclick = () => selecionarSupervisor(supervisor);
         
-        const qtd = estado.todosColaboradores.filter(c => c.lider?.trim() === supervisor?.trim()).length;
+        const qtd = estado.todosColaboradores.filter(c => c.liderNormalizado === supervisor).length;
         
         card.innerHTML = `
             <div class="card-icon">👤</div>
@@ -833,7 +847,7 @@ function carregarCalendario() {
     }
     
     const colaboradoresSupervisor = estado.todosColaboradores.filter(
-        c => c.lider?.trim() === estado.supervisor?.trim()
+        c => c.liderNormalizado === estado.supervisor
     );
     
     const mesIndex = MESES.indexOf(estado.mes);
@@ -975,7 +989,7 @@ function carregarMarcacoes() {
     }
     
     estado.colaboradores = estado.todosColaboradores.filter(
-        c => c.lider?.trim() === estado.supervisor?.trim()
+        c => c.liderNormalizado === estado.supervisor
     );
     console.log('[carregarMarcacoes] Colaboradores filtrados:', estado.colaboradores.length);
     
@@ -1147,12 +1161,17 @@ async function recarregarMarcacoes() {
         // Atualizar dados globais
         estado.todosColaboradores = data.colaboradores || [];
         
+        // Normalizar campo lider em TODOS os colaboradores
+        estado.todosColaboradores.forEach(c => {
+            c.liderNormalizado = normalizeLider(c.lider);
+        });
+        
         // Limpar modificações locais
         estado.marcacoesModificadas = {};
         
         // Re-filtrar colaboradores do supervisor atual
         estado.colaboradores = estado.todosColaboradores.filter(
-            c => c.lider?.trim() === estado.supervisor?.trim()
+            c => c.liderNormalizado === estado.supervisor
         );
         
         // Re-renderizar lista
