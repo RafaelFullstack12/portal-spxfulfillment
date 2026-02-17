@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ABS - Fluxo Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
+            min-height: 100vh;
+        }
+        .card-hover { 
+            transition: all 0.3s ease; 
+            position: relative;
+            overflow: hidden;
+        }
+        .card-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .card-hover:hover::before {
+            left: 100%;
+        }
+        .card-hover:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        }
+        .badge-pulse { 
+            animation: pulse 2s infinite; 
+        }
+        @keyframes pulse { 
+            0%, 100% { opacity: 1; transform: scale(1); } 
+            50% { opacity: 0.8; transform: scale(1.05); } 
+        }
+        .gradient-pe { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-go { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .gradient-sp { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .warehouse-icon {
+            font-size: 4rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+        }
+        .tela { display: none; }
+        .tela.active { display: block; }
+        .badge-auto {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip-auto {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: #1f2937;
+            border: 1px solid #4b5563;
+            padding: 12px;
+            border-radius: 8px;
+            width: 280px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .badge-auto:hover .tooltip-auto {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+<!-- ========================================== -->
+<!-- TELA 1: PORTAL PRINCIPAL -->
+<!-- ========================================== -->
+<div id="tela-portal" class="tela active container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header Portal -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">
+                        <i class="fas fa-home mr-3 text-blue-400"></i>
+                        Portal SPX Fulfillment
+                    </h1>
+                    <p class="text-gray-400">Bem-vindo, Rafael Mateus | Nível: Administrador</p>
+                </div>
+                <button class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-all">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Sair
+                </button>
+            </div>
+        </div>
+
+        <!-- Cards de Opções -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Card ABS - DESTAQUE -->
+            <div onclick="irPara('tela-warehouses')" class="card-hover bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 cursor-pointer border-2 border-blue-400 shadow-xl">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                        <i class="fas fa-user-check text-3xl text-white"></i>
+                    </div>
+                    <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full badge-pulse shadow-lg">
+                        ● ONLINE
+                    </span>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Sistema ABS</h3>
+                <p class="text-blue-100 text-sm mb-4">Controle de Absenteísmo e Presença</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-blue-200">
+                        <i class="fas fa-warehouse mr-1"></i>
+                        Multi-Warehouse
+                    </span>
+                    <i class="fas fa-arrow-right text-white"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TELA 2: SELEÇÃO DE WAREHOUSE -->
+<!-- ========================================== -->
+<div id="tela-warehouses" class="tela container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="irPara('tela-portal')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar ao Portal
+                    </button>
+                    <h1 class="text-4xl font-bold mb-2">
+                        <i class="fas fa-warehouse mr-3 text-blue-400"></i>
+                        Sistema ABS
+                    </h1>
+                    <p class="text-gray-400 text-lg">Selecione o Warehouse (Centro de Distribuição)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas Gerais -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Colaboradores Ativos</p>
+                        <p class="text-3xl font-bold text-white">482</p>
+                        <p class="text-xs text-green-400 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Data Desligamento vazia
+                        </p>
+                    </div>
+                    <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Supervisores Ativos</p>
+                        <p class="text-3xl font-bold text-white">24</p>
+                    </div>
+                    <div class="bg-purple-600 w-12 h-12 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-user-tie text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Pendências Total</p>
+                        <p class="text-3xl font-bold text-yellow-400">12</p>
+                    </div>
+                    <div class="bg-yellow-600 w-12 h-12 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Warehouses -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- WAREHOUSE: PERNAMBUCO -->
+            <div onclick="selecionarWarehouse('PE')" class="card-hover gradient-pe rounded-xl p-6 cursor-pointer shadow-2xl border-2 border-purple-400 relative">
+                <i class="fas fa-warehouse warehouse-icon text-white"></i>
+                
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <i class="fas fa-building text-3xl text-white"></i>
+                        </div>
+                        <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                            ● ATIVO
+                        </span>
+                    </div>
+
+                    <h3 class="text-2xl font-bold mb-2 text-white">Pernambuco</h3>
+                    <p class="text-purple-100 text-lg font-bold mb-1">FBS PE - Jaboatão</p>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-purple-100">
+                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
+                            </span>
+                            <span class="font-bold text-white">156</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-purple-100">
+                                <i class="fas fa-user-tie mr-2"></i>Supervisores
+                            </span>
+                            <span class="font-bold text-white">8</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-white text-purple-700 font-bold px-4 py-3 rounded-lg hover:bg-purple-50 transition-all shadow-lg">
+                        <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
+                    </button>
+                </div>
+            </div>
+
+            <!-- WAREHOUSE: GOIÁS -->
+            <div onclick="selecionarWarehouse('GO')" class="card-hover gradient-go rounded-xl p-6 cursor-pointer shadow-2xl border-2 border-pink-400 relative">
+                <i class="fas fa-warehouse warehouse-icon text-white"></i>
+                
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <i class="fas fa-building text-3xl text-white"></i>
+                        </div>
+                        <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                            ● ATIVO
+                        </span>
+                    </div>
+
+                    <h3 class="text-2xl font-bold mb-2 text-white">Goiás</h3>
+                    <p class="text-pink-100 text-lg font-bold mb-1">FBS GO - Aparecida</p>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-pink-100">
+                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
+                            </span>
+                            <span class="font-bold text-white">189</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-pink-100">
+                                <i class="fas fa-user-tie mr-2"></i>Supervisores
+                            </span>
+                            <span class="font-bold text-white">9</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-white text-pink-700 font-bold px-4 py-3 rounded-lg hover:bg-pink-50 transition-all shadow-lg">
+                        <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
+                    </button>
+                </div>
+            </div>
+
+            <!-- WAREHOUSE: SÃO PAULO -->
+            <div onclick="selecionarWarehouse('SP')" class="card-hover gradient-sp rounded-xl p-6 cursor-pointer shadow-2xl border-2 border-cyan-400 relative">
+                <i class="fas fa-warehouse warehouse-icon text-white"></i>
+                
+                <div class="relative z-10">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                            <i class="fas fa-building text-3xl text-white"></i>
+                        </div>
+                        <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                            ● ATIVO
+                        </span>
+                    </div>
+
+                    <h3 class="text-2xl font-bold mb-2 text-white">São Paulo</h3>
+                    <p class="text-cyan-100 text-lg font-bold mb-1">FBS SP - Franco da Rocha</p>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-cyan-100">
+                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
+                            </span>
+                            <span class="font-bold text-white">137</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-cyan-100">
+                                <i class="fas fa-user-tie mr-2"></i>Supervisores
+                            </span>
+                            <span class="font-bold text-white">7</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-white text-cyan-700 font-bold px-4 py-3 rounded-lg hover:bg-cyan-50 transition-all shadow-lg">
+                        <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TELA 3: SELEÇÃO DE MÊS -->
+<!-- ========================================== -->
+<div id="tela-meses" class="tela container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="irPara('tela-warehouses')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar aos Warehouses
+                    </button>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-user-check mr-3 text-blue-400"></i>
+                        Sistema ABS - <span id="warehouse-nome">São Paulo</span>
+                    </h1>
+                    <p class="text-gray-400">Selecione o Mês - 2026</p>
+                    <p class="text-yellow-400 text-sm mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Apenas o mês atual pode ser editado.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Meses -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Janeiro - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Janeiro</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Fevereiro (mês atual - destaque) -->
+            <div onclick="irPara('tela-supervisores')" class="card-hover bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 cursor-pointer border-2 border-green-400 shadow-2xl">
+                <h3 class="text-xl font-bold mb-2">Fevereiro</h3>
+                <p class="text-green-200 text-sm mb-4">
+                    <i class="fas fa-calendar-check mr-2"></i>📅 MÊS ATUAL
+                </p>
+                <button class="w-full bg-white text-green-700 font-bold px-4 py-2 rounded-lg hover:bg-green-50 transition-all">
+                    Abrir
+                </button>
+            </div>
+
+            <!-- Março - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Março</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Abril - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Abril</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Maio - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Maio</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Junho - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Junho</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TELA 4: SELEÇÃO DE SUPERVISOR -->
+<!-- ========================================== -->
+<div id="tela-supervisores" class="tela container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="irPara('tela-meses')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar aos Meses
+                    </button>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-user-tie mr-3 text-blue-400"></i>
+                        Seleção de Supervisor - Fevereiro 2026
+                    </h1>
+                    <p class="text-gray-400">São Paulo (SP) - Franco da Rocha</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
+            <label class="text-gray-400 text-sm mb-2 block">
+                <i class="fas fa-search mr-2"></i>Buscar Supervisor
+            </label>
+            <input type="text" 
+                   placeholder="Nome do supervisor..." 
+                   class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+        </div>
+
+        <!-- Lista de Supervisores -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div onclick="selecionarSupervisor('João Carlos Silva')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-blue-500">
+                <div class="flex items-center">
+                    <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
+                        JC
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold">João Carlos Silva</h3>
+                        <p class="text-gray-400 text-sm">24 colaboradores</p>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded">18 marcados</span>
+                            <span class="text-xs bg-yellow-600 px-2 py-1 rounded">6 pendentes</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+                </div>
+            </div>
+
+            <div onclick="selecionarSupervisor('Maria Santos Lima')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-purple-500">
+                <div class="flex items-center">
+                    <div class="bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
+                        MS
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold">Maria Santos Lima</h3>
+                        <p class="text-gray-400 text-sm">19 colaboradores</p>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded">19 marcados</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+                </div>
+            </div>
+
+            <div onclick="selecionarSupervisor('Pedro Costa Silva')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-orange-500">
+                <div class="flex items-center">
+                    <div class="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
+                        PC
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold">Pedro Costa Silva</h3>
+                        <p class="text-gray-400 text-sm">22 colaboradores</p>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded">15 marcados</span>
+                            <span class="text-xs bg-yellow-600 px-2 py-1 rounded">7 pendentes</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+                </div>
+            </div>
+
+            <div onclick="selecionarSupervisor('Ana Paula Rocha')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-pink-500">
+                <div class="flex items-center">
+                    <div class="bg-pink-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
+                        AP
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold">Ana Paula Rocha</h3>
+                        <p class="text-gray-400 text-sm">18 colaboradores</p>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded">18 marcados</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TELA 5: CALENDÁRIO DO MÊS -->
+<!-- ========================================== -->
+<div id="tela-calendario" class="tela container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="irPara('tela-supervisores')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar aos Supervisores
+                    </button>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-calendar-alt mr-3 text-blue-400"></i>
+                        Calendário - Fevereiro 2026
+                    </h1>
+                    <p class="text-gray-400">
+                        Supervisor: João Carlos Silva | 24 colaboradores
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendário -->
+        <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
+            <div class="grid grid-cols-7 gap-2">
+                <!-- Header dos dias da semana -->
+                <div class="text-center font-bold text-gray-400 p-2">Dom</div>
+                <div class="text-center font-bold text-gray-400 p-2">Seg</div>
+                <div class="text-center font-bold text-gray-400 p-2">Ter</div>
+                <div class="text-center font-bold text-gray-400 p-2">Qua</div>
+                <div class="text-center font-bold text-gray-400 p-2">Qui</div>
+                <div class="text-center font-bold text-gray-400 p-2">Sex</div>
+                <div class="text-center font-bold text-gray-400 p-2">Sáb</div>
+
+                <!-- Dias do mês - TODOS CLICÁVEIS -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">1</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">2</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">3</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">4</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">5</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-yellow-700 rounded-lg p-3 text-center cursor-pointer border border-yellow-500">
+                    <div class="text-lg font-bold">6</div>
+                    <div class="text-xs text-yellow-200">⚠️ Pendente</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">7</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+
+                <!-- Segunda semana -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">8</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">9</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">10</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-yellow-700 rounded-lg p-3 text-center cursor-pointer border border-yellow-500">
+                    <div class="text-lg font-bold">11</div>
+                    <div class="text-xs text-yellow-200">⚠️ Pendente</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">12</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">13</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">14</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+
+                <!-- Terceira semana -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">15</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <!-- Dia atual (16) - Destacado -->
+                <div onclick="irPara('tela-marcacao')" class="bg-gradient-to-br from-green-600 to-green-800 rounded-lg p-3 text-center cursor-pointer border-2 border-green-400 card-hover">
+                    <div class="text-2xl font-bold">16</div>
+                    <div class="text-xs text-green-200">✅ HOJE</div>
+                    <div class="text-xs text-yellow-300 mt-1">6 pendentes</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">17</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">18</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">19</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">20</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">21</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+
+                <!-- Quarta semana -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">22</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">23</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">24</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">25</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">26</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">27</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">28</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="mt-6 bg-gray-800 rounded-xl p-4 shadow-xl">
+            <h3 class="font-bold mb-3">Legenda:</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-green-600 rounded"></div>
+                    <span>Completo</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-yellow-600 rounded"></div>
+                    <span>Pendente</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-gray-700 rounded"></div>
+                    <span>Não iniciado</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-blue-600 rounded border-2 border-blue-400"></div>
+                    <span>Hoje</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TELA 6: MARCAÇÃO DE PRESENÇA -->
+<!-- ========================================== -->
+<div id="tela-marcacao" class="tela container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <button onclick="irPara('tela-calendario')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar ao Calendário
+                    </button>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-check-square mr-3 text-blue-400"></i>
+                        Marcação de Presença - Dia 16/02/2026
+                    </h1>
+                    <p class="text-gray-400">
+                        <i class="fas fa-warehouse mr-2"></i>São Paulo (SP) - Franco da Rocha
+                        <span class="mx-2">|</span>
+                        <i class="fas fa-user-tie mr-2"></i>Supervisor: João Carlos Silva
+                    </p>
+                </div>
+                <div class="text-right">
+                    <div class="bg-green-600/20 border border-green-600 rounded-lg px-4 py-2">
+                        <p class="text-green-400 font-bold text-xl">18/24</p>
+                        <p class="text-green-300 text-sm">Marcados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta de Presença Automática -->
+        <div class="bg-blue-900/30 border border-blue-500/50 rounded-xl p-4 mb-6 flex items-start">
+            <div class="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                <i class="fas fa-robot text-white"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-bold text-blue-400 mb-1">🤖 Marcação Automática Ativa</h3>
+                <p class="text-gray-300 text-sm">
+                    18 colaboradores tiveram presença marcada automaticamente via sistema de ponto eletrônico (raw_scan).
+                </p>
+            </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label class="text-gray-400 text-sm mb-2 block">
+                        <i class="fas fa-search mr-2"></i>Buscar Colaborador
+                    </label>
+                    <input type="text" 
+                           placeholder="Nome ou WFM User..." 
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-gray-400 text-sm mb-2 block">
+                        <i class="fas fa-filter mr-2"></i>Filtrar por Status
+                    </label>
+                    <select class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                        <option>Todos</option>
+                        <option>Marcados</option>
+                        <option>Pendentes</option>
+                        <option>Automáticos</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Colaboradores -->
+        <div class="bg-gray-800 rounded-xl p-6 shadow-xl mb-6">
+            <h2 class="text-xl font-bold mb-4">
+                <i class="fas fa-users mr-2 text-blue-400"></i>
+                Colaboradores (24 total)
+            </h2>
+
+            <div class="space-y-3">
+                
+                <!-- Colaborador 1: PRESENÇA AUTOMÁTICA -->
+                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 border-green-500">
+                    <div class="flex items-center flex-1">
+                        <div class="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold">João Silva Santos</h3>
+                                <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full badge-auto">
+                                    🤖 AUTO
+                                    <div class="tooltip-auto">
+                                        <div class="font-bold text-blue-400 mb-2">
+                                            <i class="fas fa-robot mr-1"></i>
+                                            Presença Automática
+                                        </div>
+                                        <div class="text-xs space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">WFM User:</span>
+                                                <span class="text-white">joao.silva</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">Primeira batida:</span>
+                                                <span class="text-green-400">07:45</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">Horário esperado:</span>
+                                                <span class="text-white">08:00</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">Tolerância:</span>
+                                                <span class="text-green-400">✅ Dentro (±1h)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <p class="text-gray-400 text-sm">
+                                WFM: joao.silva | Operador Inbound | Admissão: 15/01/2024
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select class="bg-gray-600 text-white px-4 py-2 rounded-lg border border-green-500 focus:outline-none">
+                            <option value="P" selected>P - Presente</option>
+                            <option value="F">F - Falta Injustificada</option>
+                            <option value="FJ">FJ - Falta Justificada</option>
+                            <option value="FE">FE - Férias</option>
+                            <option value="FO">FO - Folga</option>
+                            <option value="DSR">DSR - Descanso Semanal Remunerado</option>
+                            <option value="AM">AM - Atestado Médico</option>
+                            <option value="AF">AF - Afastamento (1º à 15º dia)</option>
+                            <option value="AL">AL - Afastamento INSS (16º dia+)</option>
+                            <option value="BH">BH - Banco de Horas</option>
+                            <option value="TR">TR - Transferência Fixa</option>
+                            <option value="SU">SU - Suspensão</option>
+                            <option value="PR">PR - Promoção</option>
+                            <option value="S1">S1 - Sinergia Enviada</option>
+                            <option value="S2">S2 - Sinergia Recebida</option>
+                            <option value="DF">DF - Desligamento Forçado</option>
+                            <option value="DV">DV - Desligamento Voluntário</option>
+                            <option value="DP">DP - Desligamento Planejado</option>
+                            <option value="NC">NC - Não Contratado</option>
+                        </select>
+                        <button onclick="abrirModalHoraExtra('João Silva Santos', 'joao.silva')" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1"
+                                title="Registrar Hora Extra">
+                            <i class="fas fa-clock"></i>
+                            <span class="text-xs">HE</span>
+                        </button>
+                        <button onclick="abrirModalSinergia('João Silva Santos', 'joao.silva', 'Inbound')" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1"
+                                title="Registrar Sinergia">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span class="text-xs">SIN</span>
+                        </button>
+                        <span class="text-green-400">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Colaborador 2: PENDENTE -->
+                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 border-yellow-500">
+                    <div class="flex items-center flex-1">
+                        <div class="bg-yellow-600 w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                            <i class="fas fa-question text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold">Ana Paula Oliveira</h3>
+                                <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">
+                                    ⚠️ SEM SCAN
+                                </span>
+                            </div>
+                            <p class="text-gray-400 text-sm">
+                                WFM: ana.oliveira | Operador Flow | Admissão: 05/09/2023
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select class="bg-gray-600 text-white px-4 py-2 rounded-lg border border-yellow-500 focus:outline-none">
+                            <option value="" selected>Selecione...</option>
+                            <option value="P">P - Presente</option>
+                            <option value="F">F - Falta Injustificada</option>
+                            <option value="FJ">FJ - Falta Justificada</option>
+                            <option value="FE">FE - Férias</option>
+                            <option value="FO">FO - Folga</option>
+                            <option value="DSR">DSR - Descanso Semanal Remunerado</option>
+                        </select>
+                        <button onclick="abrirModalHoraExtra('Ana Paula Oliveira', 'ana.oliveira')" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                            <i class="fas fa-clock"></i>
+                            <span class="text-xs">HE</span>
+                        </button>
+                        <button onclick="abrirModalSinergia('Ana Paula Oliveira', 'ana.oliveira', 'Flow')" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span class="text-xs">SIN</span>
+                        </button>
+                        <span class="text-yellow-400">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <p class="text-3xl font-bold text-white">24</p>
+                <p class="text-gray-400 text-sm">Total</p>
+            </div>
+            <div class="bg-green-900/30 border border-green-600 rounded-lg p-4 text-center">
+                <p class="text-3xl font-bold text-green-400">18</p>
+                <p class="text-green-300 text-sm">🤖 Automáticos</p>
+            </div>
+            <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-4 text-center">
+                <p class="text-3xl font-bold text-purple-400">3</p>
+                <p class="text-purple-300 text-sm">👤 Manuais</p>
+            </div>
+            <div class="bg-yellow-900/30 border border-yellow-600 rounded-lg p-4 text-center">
+                <p class="text-3xl font-bold text-yellow-400">3</p>
+                <p class="text-yellow-300 text-sm">⚠️ Pendentes</p>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex gap-4">
+            <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-all shadow-lg">
+                <i class="fas fa-save mr-2"></i>
+                Salvar Todas as Marcações
+            </button>
+            <button onclick="irPara('tela-calendario')" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg transition-all">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Sinergia -->
+<div id="modalSinergia" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-white">
+                <i class="fas fa-exchange-alt text-purple-500 mr-2"></i>
+                Registrar Sinergia
+            </h2>
+            <button onclick="fecharModalSinergia()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-gray-700 rounded-lg p-4">
+                <p class="text-gray-400 text-sm mb-1">Colaborador:</p>
+                <p class="text-white font-bold" id="sinNome">-</p>
+                <p class="text-gray-400 text-xs mt-1">
+                    WFM: <span id="sinWfmUser" class="text-white">-</span>
+                </p>
+                <p class="text-gray-400 text-xs mt-1">
+                    Setor Atual: <span id="sinSetorAtual" class="text-white">-</span>
+                </p>
+            </div>
+
+            <div>
+                <label class="text-gray-400 text-sm mb-2 block">
+                    <i class="fas fa-warehouse mr-1"></i>
+                    Warehouse
+                </label>
+                <input type="text" 
+                       id="sinWarehouse" 
+                       value="BRFSP1"
+                       readonly
+                       class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg border border-gray-600 cursor-not-allowed">
+            </div>
+
+            <div>
+                <label class="text-gray-400 text-sm mb-2 block">
+                    <i class="fas fa-arrow-right mr-1"></i>
+                    Setor de Destino
+                </label>
+                <select id="sinSetorDestino" 
+                        class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none">
+                    <option value="">Selecione o setor...</option>
+                    <option value="Inbound">Inbound</option>
+                    <option value="Outbound">Outbound</option>
+                    <option value="Flow">Flow</option>
+                    <option value="Qualidade">Qualidade</option>
+                    <option value="Administrativo">Administrativo</option>
+                </select>
+            </div>
+
+            <div class="bg-blue-900/20 border border-blue-600 rounded-lg p-3">
+                <p class="text-blue-400 text-sm mb-1">
+                    <i class="fas fa-clock mr-1"></i>
+                    Horário de Registro:
+                </p>
+                <p class="text-xl font-bold text-white" id="sinHorario">-</p>
+                <p class="text-xs text-gray-400 mt-1">Automático</p>
+            </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+            <button onclick="salvarSinergia()" 
+                    class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-all">
+                <i class="fas fa-save mr-2"></i>
+                Salvar em raw_sinergia
+            </button>
+            <button onclick="fecharModalSinergia()" 
+                    class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+        </div>
+
+        <div class="mt-4 bg-blue-900/20 border border-blue-600 rounded-lg p-3">
+            <p class="text-blue-400 text-xs">
+                <i class="fas fa-info-circle mr-1"></i>
+                Salvos: <strong>WH, Nome, Setor Atual, Setor Destino, Horário</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Hora Extra -->
+<div id="modalHoraExtra" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-white">
+                <i class="fas fa-clock text-orange-500 mr-2"></i>
+                Registrar Hora Extra
+            </h2>
+            <button onclick="fecharModalHoraExtra()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-gray-700 rounded-lg p-4">
+                <p class="text-gray-400 text-sm mb-1">Colaborador:</p>
+                <p class="text-white font-bold" id="heNome">-</p>
+                <p class="text-gray-400 text-xs mt-1">WFM: <span id="heWfmUser" class="text-white">-</span></p>
+            </div>
+
+            <div>
+                <label class="text-gray-400 text-sm mb-2 block">
+                    <i class="fas fa-warehouse mr-1"></i>
+                    Warehouse
+                </label>
+                <input type="text" 
+                       id="heWarehouse" 
+                       value="BRFSP1"
+                       readonly
+                       class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg border border-gray-600 cursor-not-allowed">
+            </div>
+
+            <div>
+                <label class="text-gray-400 text-sm mb-2 block">
+                    <i class="fas fa-calendar mr-1"></i>
+                    Data
+                </label>
+                <input type="date" 
+                       id="heData" 
+                       value="2026-02-16"
+                       class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-center gap-3 bg-gray-700 rounded-lg p-3">
+                <input type="checkbox" 
+                       id="heDiaInteiro"
+                       onchange="toggleDiaInteiro()"
+                       class="w-5 h-5 text-orange-600 bg-gray-600 border-gray-500 rounded focus:ring-orange-500">
+                <label for="heDiaInteiro" class="text-white cursor-pointer">
+                    <i class="fas fa-sun text-yellow-400 mr-2"></i>
+                    Dia Inteiro (8 horas)
+                </label>
+            </div>
+
+            <div id="heHorariosContainer">
+                <div>
+                    <label class="text-gray-400 text-sm mb-2 block">
+                        <i class="fas fa-clock mr-1"></i>
+                        Hora de Início
+                    </label>
+                    <input type="time" 
+                           id="heHoraInicio" 
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none">
+                </div>
+
+                <div class="mt-4">
+                    <label class="text-gray-400 text-sm mb-2 block">
+                        <i class="fas fa-clock mr-1"></i>
+                        Hora de Fim
+                    </label>
+                    <input type="time" 
+                           id="heHoraFim" 
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="bg-orange-900/20 border border-orange-600 rounded-lg p-3">
+                <p class="text-orange-400 text-sm mb-1">Total de Horas Extras:</p>
+                <p class="text-2xl font-bold text-white" id="heTotalHoras">0h 00min</p>
+            </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+            <button onclick="salvarHoraExtra()" 
+                    class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all">
+                <i class="fas fa-save mr-2"></i>
+                Salvar em raw_hr
+            </button>
+            <button onclick="fecharModalHoraExtra()" 
+                    class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+        </div>
+
+        <div class="mt-4 bg-blue-900/20 border border-blue-600 rounded-lg p-3">
+            <p class="text-blue-400 text-xs">
+                <i class="fas fa-info-circle mr-1"></i>
+                Salvos: <strong>WH, Nome, WFM User, Data e Hora</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Navegação entre telas
+    function irPara(telaId) {
+        document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
+        document.getElementById(telaId).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    let warehouseSelecionado = null;
+    let supervisorSelecionado = null;
+
+    function selecionarWarehouse(codigo) {
+        warehouseSelecionado = codigo;
+        const nomes = { 'PE': 'Pernambuco', 'GO': 'Goiás', 'SP': 'São Paulo' };
+        document.getElementById('warehouse-nome').textContent = nomes[codigo];
+        irPara('tela-meses');
+    }
+
+    function selecionarSupervisor(nome) {
+        supervisorSelecionado = nome;
+        irPara('tela-calendario');
+    }
+
+    // Modal Sinergia
+    let sinColaboradorAtual = { nome: '', wfmUser: '', setorAtual: '' };
+
+    function abrirModalSinergia(nome, wfmUser, setorAtual) {
+        sinColaboradorAtual = { nome, wfmUser, setorAtual };
+        document.getElementById('sinNome').textContent = nome;
+        document.getElementById('sinWfmUser').textContent = wfmUser;
+        document.getElementById('sinSetorAtual').textContent = setorAtual;
+        
+        const agora = new Date();
+        const horarioFormatado = agora.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById('sinHorario').textContent = horarioFormatado;
+        
+        document.getElementById('modalSinergia').style.display = 'flex';
+    }
+
+    function fecharModalSinergia() {
+        document.getElementById('modalSinergia').style.display = 'none';
+        document.getElementById('sinSetorDestino').value = '';
+    }
+
+    function salvarSinergia() {
+        const setorDestino = document.getElementById('sinSetorDestino').value;
+        const horario = document.getElementById('sinHorario').textContent;
+        
+        if (!setorDestino) {
+            alert('⚠️ Por favor, selecione o setor de destino.');
+            return;
+        }
+        
+        const dadosSinergia = {
+            wh: document.getElementById('sinWarehouse').value,
+            nome: sinColaboradorAtual.nome,
+            wfmUser: sinColaboradorAtual.wfmUser,
+            setorAtual: sinColaboradorAtual.setorAtual,
+            setorDestino: setorDestino,
+            horario: horario,
+            planilha: 'raw_sinergia',
+            spreadsheetId: '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w'
+        };
+        
+        console.log('📊 Dados para raw_sinergia:', dadosSinergia);
+        
+        alert(`✅ Sinergia registrada!
+
+WH: ${dadosSinergia.wh}
+Colaborador: ${dadosSinergia.nome}
+Setor Atual: ${dadosSinergia.setorAtual}
+Setor Destino: ${dadosSinergia.setorDestino}
+Horário: ${dadosSinergia.horario}
+
+Salvo em raw_sinergia.`);
+        
+        fecharModalSinergia();
+    }
+
+    // Modal Hora Extra
+    let heColaboradorAtual = { nome: '', wfmUser: '' };
+
+    function abrirModalHoraExtra(nome, wfmUser) {
+        heColaboradorAtual = { nome, wfmUser };
+        document.getElementById('heNome').textContent = nome;
+        document.getElementById('heWfmUser').textContent = wfmUser;
+        document.getElementById('modalHoraExtra').style.display = 'flex';
+        
+        document.getElementById('heHoraInicio').addEventListener('change', calcularTotalHoras);
+        document.getElementById('heHoraFim').addEventListener('change', calcularTotalHoras);
+    }
+
+    function fecharModalHoraExtra() {
+        document.getElementById('modalHoraExtra').style.display = 'none';
+        document.getElementById('heHoraInicio').value = '';
+        document.getElementById('heHoraFim').value = '';
+        document.getElementById('heDiaInteiro').checked = false;
+        document.getElementById('heHorariosContainer').style.display = 'block';
+        document.getElementById('heTotalHoras').textContent = '0h 00min';
+    }
+
+    function toggleDiaInteiro() {
+        const diaInteiro = document.getElementById('heDiaInteiro').checked;
+        const horariosContainer = document.getElementById('heHorariosContainer');
+        
+        if (diaInteiro) {
+            horariosContainer.style.display = 'none';
+            document.getElementById('heTotalHoras').textContent = '8h 00min';
+        } else {
+            horariosContainer.style.display = 'block';
+            document.getElementById('heTotalHoras').textContent = '0h 00min';
+        }
+    }
+
+    function calcularTotalHoras() {
+        const inicio = document.getElementById('heHoraInicio').value;
+        const fim = document.getElementById('heHoraFim').value;
+        
+        if (inicio && fim) {
+            const [hI, mI] = inicio.split(':').map(Number);
+            const [hF, mF] = fim.split(':').map(Number);
+            
+            let totalMinutos = (hF * 60 + mF) - (hI * 60 + mI);
+            
+            if (totalMinutos < 0) {
+                totalMinutos += 24 * 60;
+            }
+            
+            const horas = Math.floor(totalMinutos / 60);
+            const minutos = totalMinutos % 60;
+            
+            document.getElementById('heTotalHoras').textContent = `${horas}h ${minutos.toString().padStart(2, '0')}min`;
+        }
+    }
+
+    function salvarHoraExtra() {
+        const data = document.getElementById('heData').value;
+        const diaInteiro = document.getElementById('heDiaInteiro').checked;
+        const horaInicio = diaInteiro ? 'DIA INTEIRO' : document.getElementById('heHoraInicio').value;
+        const horaFim = diaInteiro ? 'DIA INTEIRO' : document.getElementById('heHoraFim').value;
+        const wh = document.getElementById('heWarehouse').value;
+        
+        if (!diaInteiro && (!horaInicio || !horaFim)) {
+            alert('⚠️ Por favor, preencha os horários ou marque "Dia Inteiro".');
+            return;
+        }
+        
+        const dadosHoraExtra = {
+            wh: wh,
+            nome: heColaboradorAtual.nome,
+            wfmUser: heColaboradorAtual.wfmUser,
+            data: data,
+            horaInicio: horaInicio,
+            horaFim: horaFim,
+            totalHoras: document.getElementById('heTotalHoras').textContent,
+            diaInteiro: diaInteiro,
+            planilha: 'raw_hr',
+            spreadsheetId: '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w'
+        };
+        
+        console.log('📊 Dados para raw_hr:', dadosHoraExtra);
+        
+        alert(`✅ Hora Extra registrada!
+
+WH: ${dadosHoraExtra.wh}
+Colaborador: ${dadosHoraExtra.nome}
+Data: ${dadosHoraExtra.data}
+Horário: ${dadosHoraExtra.horaInicio} - ${dadosHoraExtra.horaFim}
+Total: ${dadosHoraExtra.totalHoras}
+
+Salvo em raw_hr.`);
+        
+        fecharModalHoraExtra();
+    }
+
+    // Auto-propagação de desligamentos (DV, DP, DF)
+    function handleDesligamento(selectElement, colaboradorNome, wfmUser, diaAtual) {
+        const sigla = selectElement.value;
+        const siglasDesligamento = ['DV', 'DP', 'DF'];
+        
+        if (siglasDesligamento.includes(sigla)) {
+            const confirmacao = confirm(
+                `⚠️ DESLIGAMENTO DETECTADO\n\n` +
+                `Colaborador: ${colaboradorNome}\n` +
+                `Tipo: ${sigla}\n` +
+                `Dia: ${diaAtual}/02/2026\n\n` +
+                `Deseja propagar automaticamente esta marcação para os dias seguintes do mês?\n\n` +
+                `Isso marcará todos os dias de ${diaAtual + 1} até 28 com "${sigla}".`
+            );
+            
+            if (confirmacao) {
+                console.log(`🔄 Auto-propagando ${sigla} para ${colaboradorNome} (${wfmUser})`);
+                console.log(`📅 Dias afetados: ${diaAtual + 1} até 28 de Fevereiro 2026`);
+                
+                // Aqui seria a integração real com a planilha
+                const diasAfetados = 28 - diaAtual;
+                
+                alert(
+                    `✅ Propagação Concluída!\n\n` +
+                    `Colaborador: ${colaboradorNome}\n` +
+                    `Marcação: ${sigla}\n` +
+                    `Dias propagados: ${diasAfetados} dias (${diaAtual + 1}/02 até 28/02)\n\n` +
+                    `Todos os registros foram salvos na planilha ABS.`
+                );
+                
+                // Log para integração backend
+                console.log({
+                    action: 'propagate_termination',
+                    colaborador: colaboradorNome,
+                    wfmUser: wfmUser,
+                    sigla: sigla,
+                    diaInicio: diaAtual,
+                    diaFim: 28,
+                    mes: 'Fevereiro',
+                    ano: 2026,
+                    diasAfetados: diasAfetados,
+                    spreadsheetId: '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w',
+                    planilha: 'ABS'
+                });
+            }
+        }
+    }
+
+    // Adicionar listeners aos selects de marcação
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar listener a todos os selects de presença
+        document.querySelectorAll('select[class*="bg-gray-600"]').forEach((select, index) => {
+            select.addEventListener('change', function() {
+                // Extrair informações do colaborador do DOM
+                const card = this.closest('.bg-gray-700');
+                const nomeElement = card?.querySelector('h3');
+                const wfmElement = card?.querySelector('.text-gray-400');
+                
+                if (nomeElement && wfmElement) {
+                    const nome = nomeElement.textContent.trim();
+                    const wfmMatch = wfmElement.textContent.match(/WFM:\s*([^\s|]+)/);
+                    const wfmUser = wfmMatch ? wfmMatch[1] : 'unknown';
+                    const diaAtual = 16; // Dia atual (seria dinâmico na implementação real)
+                    
+                    handleDesligamento(this, nome, wfmUser, diaAtual);
+                }
+            });
+        });
+    });
+
+    // Fechar modais ao clicar fora
+    document.getElementById('modalSinergia')?.addEventListener('click', function(e) {
+        if (e.target === this) fecharModalSinergia();
+    });
+
+    document.getElementById('modalHoraExtra')?.addEventListener('click', function(e) {
+        if (e.target === this) fecharModalHoraExtra();
+    });
+</script>
+
+</body>
+</html>

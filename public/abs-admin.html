@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ABS - Painel Administrativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .card-hover { 
+            transition: all 0.3s ease; 
+        }
+        .card-hover:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .tela { display: none; }
+        .tela.active { display: block; }
+        
+        /* Estilos para tabela */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #374151;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #4b5563;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #374151;
+        }
+        tr:hover {
+            background: #374151;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        
+        /* Tabs */
+        .tab-button {
+            padding: 12px 24px;
+            background: #374151;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-button:hover {
+            background: #4b5563;
+        }
+        .tab-button.active {
+            background: #3b82f6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="text-white p-4">
+
+<!-- ========================================== -->
+<!-- TELA 1: LOGIN ADMIN -->
+<!-- ========================================== -->
+<div id="tela-login" class="tela active">
+    <div class="max-w-md mx-auto mt-20">
+        <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="bg-red-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-shield text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold mb-2">Painel Administrativo</h1>
+                <p class="text-gray-400">Sistema ABS - Acesso Restrito</p>
+            </div>
+
+            <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">
+                        <i class="fas fa-user mr-2"></i>Usuário
+                    </label>
+                    <input type="text" 
+                           id="loginUsuario"
+                           required
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
+                           placeholder="Digite seu usuário">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">
+                        <i class="fas fa-lock mr-2"></i>Senha
+                    </label>
+                    <input type="password" 
+                           id="loginSenha"
+                           required
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
+                           placeholder="Digite sua senha">
+                </div>
+
+                <div class="bg-yellow-900/30 border border-yellow-600 rounded-lg p-3 text-sm">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                    <strong>Acesso Restrito:</strong> Apenas administradores (Nível 10)
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-all">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Entrar
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="mockup_abs_completo.html" class="text-blue-400 hover:text-blue-300 text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar ao Sistema ABS
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TELA 2: DASHBOARD ADMIN -->
+<!-- ========================================== -->
+<div id="tela-dashboard" class="tela container mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-cogs mr-3 text-red-400"></i>
+                        Painel Administrativo
+                    </h1>
+                    <p class="text-gray-400">Bem-vindo, <span id="nomeUsuarioLogado">Admin</span> | Nível de Acesso: 10</p>
+                </div>
+                <button onclick="fazerLogout()" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg transition-all">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Sair
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs de Navegação -->
+        <div class="bg-gray-800 rounded-xl mb-6 shadow-xl overflow-hidden">
+            <div class="flex border-b border-gray-700">
+                <button class="tab-button active" onclick="trocarTab('warehouses')">
+                    <i class="fas fa-warehouse mr-2"></i>Gerenciar Warehouses
+                </button>
+                <button class="tab-button" onclick="trocarTab('sheets')">
+                    <i class="fas fa-table mr-2"></i>Links Google Sheets
+                </button>
+                <button class="tab-button" onclick="trocarTab('usuarios')">
+                    <i class="fas fa-users mr-2"></i>Usuários
+                </button>
+                <button class="tab-button" onclick="trocarTab('logs')">
+                    <i class="fas fa-history mr-2"></i>Logs do Sistema
+                </button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: GERENCIAR WAREHOUSES -->
+        <!-- ========================================== -->
+        <div id="tab-warehouses" class="tab-content active">
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-warehouse mr-2 text-blue-400"></i>
+                        Warehouses Cadastrados
+                    </h2>
+                    <button onclick="abrirModalWarehouse()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-all">
+                        <i class="fas fa-plus mr-2"></i>Novo Warehouse
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome</th>
+                                <th>Código WH</th>
+                                <th>Cidade/Estado</th>
+                                <th>Status</th>
+                                <th>Colaboradores</th>
+                                <th>Link Planilha ABS</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaWarehouses">
+                            <tr>
+                                <td><span class="bg-purple-600 px-3 py-1 rounded-full text-sm font-bold">PE</span></td>
+                                <td>Pernambuco</td>
+                                <td>BRFPE1</td>
+                                <td>Recife, PE</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Ativo</span></td>
+                                <td>156</td>
+                                <td>
+                                    <a href="#" class="text-blue-400 hover:text-blue-300 text-sm">
+                                        <i class="fas fa-external-link-alt mr-1"></i>Ver planilha
+                                    </a>
+                                </td>
+                                <td>
+                                    <button onclick="editarWarehouse('PE')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deletarWarehouse('PE')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="bg-orange-600 px-3 py-1 rounded-full text-sm font-bold">GO</span></td>
+                                <td>Goiás</td>
+                                <td>BRFGO1</td>
+                                <td>Goiânia, GO</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Ativo</span></td>
+                                <td>189</td>
+                                <td>
+                                    <a href="#" class="text-blue-400 hover:text-blue-300 text-sm">
+                                        <i class="fas fa-external-link-alt mr-1"></i>Ver planilha
+                                    </a>
+                                </td>
+                                <td>
+                                    <button onclick="editarWarehouse('GO')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deletarWarehouse('GO')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="bg-blue-600 px-3 py-1 rounded-full text-sm font-bold">SP</span></td>
+                                <td>São Paulo</td>
+                                <td>BRFSP1</td>
+                                <td>Franco da Rocha, SP</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Ativo</span></td>
+                                <td>137</td>
+                                <td>
+                                    <a href="#" class="text-blue-400 hover:text-blue-300 text-sm">
+                                        <i class="fas fa-external-link-alt mr-1"></i>Ver planilha
+                                    </a>
+                                </td>
+                                <td>
+                                    <button onclick="editarWarehouse('SP')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deletarWarehouse('SP')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-purple-600 rounded-xl p-6 shadow-xl">
+                    <div class="text-4xl font-bold mb-2">3</div>
+                    <div class="text-purple-200">Warehouses Ativos</div>
+                </div>
+                <div class="bg-blue-600 rounded-xl p-6 shadow-xl">
+                    <div class="text-4xl font-bold mb-2">482</div>
+                    <div class="text-blue-200">Total Colaboradores</div>
+                </div>
+                <div class="bg-green-600 rounded-xl p-6 shadow-xl">
+                    <div class="text-4xl font-bold mb-2">24</div>
+                    <div class="text-green-200">Supervisores</div>
+                </div>
+                <div class="bg-orange-600 rounded-xl p-6 shadow-xl">
+                    <div class="text-4xl font-bold mb-2">12</div>
+                    <div class="text-orange-200">Itens Pendentes</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: LINKS GOOGLE SHEETS -->
+        <!-- ========================================== -->
+        <div id="tab-sheets" class="tab-content">
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-table mr-2 text-green-400"></i>
+                        Configuração de Planilhas Google Sheets
+                    </h2>
+                    <button onclick="abrirModalSheet()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-all">
+                        <i class="fas fa-plus mr-2"></i>Novo Link
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Warehouse</th>
+                                <th>Tipo de Planilha</th>
+                                <th>Spreadsheet ID</th>
+                                <th>Aba/Sheet</th>
+                                <th>Status</th>
+                                <th>Última Atualização</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaSheets">
+                            <tr>
+                                <td><span class="bg-purple-600 px-3 py-1 rounded-full text-sm">PE</span></td>
+                                <td>ABS - Marcações</td>
+                                <td class="text-xs font-mono">1pm0dtDn6x9k4Ct5u98pyD7FoAzl52...</td>
+                                <td>ABS</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Conectado</span></td>
+                                <td>16/02/2026 14:30</td>
+                                <td>
+                                    <button onclick="editarSheet('PE-ABS')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="testarSheet('PE-ABS')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-plug"></i>
+                                    </button>
+                                    <button onclick="deletarSheet('PE-ABS')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="bg-purple-600 px-3 py-1 rounded-full text-sm">PE</span></td>
+                                <td>raw_scan</td>
+                                <td class="text-xs font-mono">1pm0dtDn6x9k4Ct5u98pyD7FoAzl52...</td>
+                                <td>raw_scan</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Conectado</span></td>
+                                <td>16/02/2026 14:25</td>
+                                <td>
+                                    <button onclick="editarSheet('PE-raw_scan')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="testarSheet('PE-raw_scan')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-plug"></i>
+                                    </button>
+                                    <button onclick="deletarSheet('PE-raw_scan')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="bg-purple-600 px-3 py-1 rounded-full text-sm">PE</span></td>
+                                <td>raw_hr</td>
+                                <td class="text-xs font-mono">1pm0dtDn6x9k4Ct5u98pyD7FoAzl52...</td>
+                                <td>raw_hr</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Conectado</span></td>
+                                <td>16/02/2026 14:20</td>
+                                <td>
+                                    <button onclick="editarSheet('PE-raw_hr')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="testarSheet('PE-raw_hr')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-plug"></i>
+                                    </button>
+                                    <button onclick="deletarSheet('PE-raw_hr')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="bg-purple-600 px-3 py-1 rounded-full text-sm">PE</span></td>
+                                <td>raw_sinergia</td>
+                                <td class="text-xs font-mono">1pm0dtDn6x9k4Ct5u98pyD7FoAzl52...</td>
+                                <td>raw_sinergia</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Conectado</span></td>
+                                <td>16/02/2026 14:15</td>
+                                <td>
+                                    <button onclick="editarSheet('PE-raw_sinergia')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="testarSheet('PE-raw_sinergia')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-plug"></i>
+                                    </button>
+                                    <button onclick="deletarSheet('PE-raw_sinergia')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Informações sobre estrutura -->
+            <div class="bg-blue-900/30 border border-blue-600 rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-4">
+                    <i class="fas fa-info-circle mr-2"></i>Estrutura de Planilhas
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <h4 class="font-bold mb-2 text-blue-300">ABS - Marcações de Presença</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>Dia, Mês, Ano</li>
+                            <li>Colaborador, WFM User</li>
+                            <li>Sigla de Marcação</li>
+                            <li>Supervisor, Warehouse</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-2 text-blue-300">raw_scan - Batidas de Ponto</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>WH (Warehouse Code)</li>
+                            <li>WFM User</li>
+                            <li>Data Primeira Batida</li>
+                            <li>Data Última Batida</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-2 text-blue-300">raw_hr - Horas Extras</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>WH, Nome, WFM User</li>
+                            <li>Data, Hora Início, Hora Fim</li>
+                            <li>Total Horas, Dia Inteiro</li>
+                            <li>Observações</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-2 text-blue-300">raw_sinergia - Transferências</h4>
+                        <ul class="list-disc list-inside text-gray-300 space-y-1">
+                            <li>WH, Nome, WFM User</li>
+                            <li>Setor Atual, Setor Destino</li>
+                            <li>Horário (timestamp)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: USUÁRIOS -->
+        <!-- ========================================== -->
+        <div id="tab-usuarios" class="tab-content">
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-users mr-2 text-yellow-400"></i>
+                        Gerenciar Usuários
+                    </h2>
+                    <button onclick="abrirModalUsuario()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-all">
+                        <i class="fas fa-user-plus mr-2"></i>Novo Usuário
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Usuário</th>
+                                <th>Nível de Acesso</th>
+                                <th>Warehouses Permitidos</th>
+                                <th>Status</th>
+                                <th>Último Acesso</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Admin Sistema</td>
+                                <td>admin</td>
+                                <td><span class="bg-red-600 px-3 py-1 rounded-full text-sm font-bold">10 - ADMIN</span></td>
+                                <td>Todos</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Ativo</span></td>
+                                <td>16/02/2026 14:35</td>
+                                <td>
+                                    <button disabled class="bg-gray-600 px-3 py-1 rounded text-sm opacity-50 cursor-not-allowed">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>João Carlos Silva</td>
+                                <td>joao.supervisor</td>
+                                <td><span class="bg-blue-600 px-3 py-1 rounded-full text-sm">5 - SUPERVISOR</span></td>
+                                <td>SP</td>
+                                <td><span class="bg-green-600 px-3 py-1 rounded-full text-xs">✓ Ativo</span></td>
+                                <td>16/02/2026 08:15</td>
+                                <td>
+                                    <button onclick="editarUsuario('joao')" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="desativarUsuario('joao')" class="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: LOGS DO SISTEMA -->
+        <!-- ========================================== -->
+        <div id="tab-logs" class="tab-content">
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
+                <h2 class="text-2xl font-bold mb-6">
+                    <i class="fas fa-history mr-2 text-purple-400"></i>
+                    Logs de Auditoria
+                </h2>
+
+                <div class="mb-4 flex gap-4">
+                    <select class="bg-gray-700 px-4 py-2 rounded-lg border border-gray-600">
+                        <option>Todos os Tipos</option>
+                        <option>Login/Logout</option>
+                        <option>Criação de Warehouse</option>
+                        <option>Edição de Links</option>
+                        <option>Propagação de Desligamento</option>
+                        <option>Marcação de Presença</option>
+                    </select>
+                    <input type="date" class="bg-gray-700 px-4 py-2 rounded-lg border border-gray-600">
+                </div>
+
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-green-600 w-10 h-10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-sign-in-alt"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Login realizado</div>
+                                <div class="text-sm text-gray-400">Usuário: admin | IP: 192.168.1.100</div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-400">16/02/2026 14:35:22</div>
+                    </div>
+
+                    <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Warehouse editado</div>
+                                <div class="text-sm text-gray-400">WH: SP | Campo: Link Planilha | Por: admin</div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-400">16/02/2026 12:20:15</div>
+                    </div>
+
+                    <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-purple-600 w-10 h-10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-sync"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Propagação de desligamento</div>
+                                <div class="text-sm text-gray-400">Colaborador: João Silva | Sigla: DV | 12 dias | WH: SP</div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-400">16/02/2026 10:45:30</div>
+                    </div>
+
+                    <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-yellow-600 w-10 h-10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-table"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Link Sheet atualizado</div>
+                                <div class="text-sm text-gray-400">WH: GO | Tipo: raw_scan | Por: admin</div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-400">15/02/2026 16:30:45</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: ADICIONAR/EDITAR WAREHOUSE -->
+<!-- ========================================== -->
+<div id="modalWarehouse" class="modal">
+    <div class="bg-gray-800 rounded-xl p-8 max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">
+                <i class="fas fa-warehouse mr-2"></i>
+                <span id="tituloModalWarehouse">Novo Warehouse</span>
+            </h3>
+            <button onclick="fecharModalWarehouse()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form id="formWarehouse" onsubmit="salvarWarehouse(event)" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Código (2 letras)</label>
+                    <input type="text" 
+                           id="whCodigo"
+                           maxlength="2"
+                           required
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none uppercase"
+                           placeholder="Ex: RJ">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Nome</label>
+                    <input type="text" 
+                           id="whNome"
+                           required
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                           placeholder="Ex: Rio de Janeiro">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Código WH (Sistema)</label>
+                    <input type="text" 
+                           id="whCodigoSistema"
+                           required
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none uppercase"
+                           placeholder="Ex: BRFRJ1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Cidade/Estado</label>
+                    <input type="text" 
+                           id="whCidade"
+                           required
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                           placeholder="Ex: Rio de Janeiro, RJ">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Link Planilha ABS (Google Sheets ID)</label>
+                <input type="text" 
+                       id="whLinkPlanilha"
+                       required
+                       class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                       placeholder="Ex: 1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w">
+                <p class="text-xs text-gray-400 mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Cole apenas o ID da planilha (parte entre /d/ e /edit na URL)
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Cor do Tema</label>
+                <select id="whCor" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                    <option value="blue">Azul</option>
+                    <option value="purple">Roxo</option>
+                    <option value="orange">Laranja</option>
+                    <option value="green">Verde</option>
+                    <option value="red">Vermelho</option>
+                    <option value="pink">Rosa</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Status</label>
+                <select id="whStatus" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                    <option value="ativo">✓ Ativo</option>
+                    <option value="inativo">✗ Inativo</option>
+                </select>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-all">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" onclick="fecharModalWarehouse()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-all">
+                    <i class="fas fa-times mr-2"></i>Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: ADICIONAR/EDITAR GOOGLE SHEET -->
+<!-- ========================================== -->
+<div id="modalSheet" class="modal">
+    <div class="bg-gray-800 rounded-xl p-8 max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">
+                <i class="fas fa-table mr-2"></i>
+                <span id="tituloModalSheet">Novo Link Google Sheets</span>
+            </h3>
+            <button onclick="fecharModalSheet()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form id="formSheet" onsubmit="salvarSheet(event)" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Warehouse</label>
+                    <select id="sheetWarehouse" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                        <option value="PE">PE - Pernambuco</option>
+                        <option value="GO">GO - Goiás</option>
+                        <option value="SP">SP - São Paulo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tipo de Planilha</label>
+                    <select id="sheetTipo" class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
+                        <option value="ABS">ABS - Marcações</option>
+                        <option value="raw_scan">raw_scan - Batidas de Ponto</option>
+                        <option value="raw_hr">raw_hr - Horas Extras</option>
+                        <option value="raw_sinergia">raw_sinergia - Sinergias</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Spreadsheet ID</label>
+                <input type="text" 
+                       id="sheetId"
+                       required
+                       class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                       placeholder="Ex: 1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w">
+                <p class="text-xs text-gray-400 mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Cole o ID completo da planilha do Google Sheets
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Nome da Aba (Sheet Name)</label>
+                <input type="text" 
+                       id="sheetNomeAba"
+                       required
+                       class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                       placeholder="Ex: ABS, raw_scan, raw_hr, raw_sinergia">
+            </div>
+
+            <div class="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+                <h4 class="font-bold mb-2">
+                    <i class="fas fa-lightbulb mr-2"></i>Dica
+                </h4>
+                <p class="text-sm text-gray-300">
+                    Para encontrar o Spreadsheet ID, abra a planilha no Google Sheets e copie a parte da URL entre <code class="bg-gray-700 px-2 py-1 rounded">/d/</code> e <code class="bg-gray-700 px-2 py-1 rounded">/edit</code>
+                </p>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-all">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" onclick="fecharModalSheet()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-all">
+                    <i class="fas fa-times mr-2"></i>Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ============================================
+// SISTEMA DE LOGIN
+// ============================================
+function fazerLogin(event) {
+    event.preventDefault();
+    
+    const usuario = document.getElementById('loginUsuario').value;
+    const senha = document.getElementById('loginSenha').value;
+    
+    // Validação simples (no backend seria JWT + hash de senha)
+    if (usuario === 'admin' && senha === 'admin123') {
+        // Simular autenticação
+        localStorage.setItem('abs_admin_logado', 'true');
+        localStorage.setItem('abs_admin_usuario', usuario);
+        localStorage.setItem('abs_admin_nivel', '10');
+        
+        document.getElementById('nomeUsuarioLogado').textContent = 'Admin';
+        
+        // Ir para dashboard
+        document.getElementById('tela-login').classList.remove('active');
+        document.getElementById('tela-dashboard').classList.add('active');
+        
+        console.log('✅ Login realizado com sucesso');
+        registrarLog('login', `Usuário ${usuario} fez login`, 'success');
+    } else {
+        alert('❌ Usuário ou senha incorretos!\n\nDica: admin / admin123');
+    }
+}
+
+function fazerLogout() {
+    if (confirm('Deseja realmente sair do painel administrativo?')) {
+        localStorage.removeItem('abs_admin_logado');
+        localStorage.removeItem('abs_admin_usuario');
+        localStorage.removeItem('abs_admin_nivel');
+        
+        document.getElementById('tela-dashboard').classList.remove('active');
+        document.getElementById('tela-login').classList.add('active');
+        
+        document.getElementById('loginUsuario').value = '';
+        document.getElementById('loginSenha').value = '';
+        
+        console.log('✅ Logout realizado');
+        registrarLog('logout', 'Usuário fez logout', 'info');
+    }
+}
+
+// Verificar se já está logado ao carregar página
+window.addEventListener('DOMContentLoaded', () => {
+    const logado = localStorage.getItem('abs_admin_logado');
+    if (logado === 'true') {
+        const usuario = localStorage.getItem('abs_admin_usuario');
+        document.getElementById('nomeUsuarioLogado').textContent = usuario;
+        document.getElementById('tela-login').classList.remove('active');
+        document.getElementById('tela-dashboard').classList.add('active');
+    }
+});
+
+// ============================================
+// SISTEMA DE TABS
+// ============================================
+function trocarTab(tabNome) {
+    // Remover active de todos os botões e conteúdos
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Adicionar active no botão e conteúdo clicado
+    event.target.classList.add('active');
+    document.getElementById(`tab-${tabNome}`).classList.add('active');
+}
+
+// ============================================
+// GERENCIAR WAREHOUSES
+// ============================================
+function abrirModalWarehouse(codigo = null) {
+    document.getElementById('modalWarehouse').classList.add('active');
+    
+    if (codigo) {
+        // Modo edição
+        document.getElementById('tituloModalWarehouse').textContent = `Editar Warehouse ${codigo}`;
+        // Aqui carregaria os dados do warehouse para edição
+        // Por enquanto, apenas exemplo
+        document.getElementById('whCodigo').value = codigo;
+        document.getElementById('whCodigo').disabled = true;
+    } else {
+        // Modo criação
+        document.getElementById('tituloModalWarehouse').textContent = 'Novo Warehouse';
+        document.getElementById('formWarehouse').reset();
+        document.getElementById('whCodigo').disabled = false;
+    }
+}
+
+function fecharModalWarehouse() {
+    document.getElementById('modalWarehouse').classList.remove('active');
+    document.getElementById('formWarehouse').reset();
+}
+
+function salvarWarehouse(event) {
+    event.preventDefault();
+    
+    const dados = {
+        codigo: document.getElementById('whCodigo').value.toUpperCase(),
+        nome: document.getElementById('whNome').value,
+        codigoSistema: document.getElementById('whCodigoSistema').value.toUpperCase(),
+        cidade: document.getElementById('whCidade').value,
+        linkPlanilha: document.getElementById('whLinkPlanilha').value,
+        cor: document.getElementById('whCor').value,
+        status: document.getElementById('whStatus').value
+    };
+    
+    console.log('📊 Salvando warehouse:', dados);
+    
+    // Aqui seria a chamada para API backend
+    // await fetch('/api/admin/warehouses', { method: 'POST', body: JSON.stringify(dados) })
+    
+    alert(`✅ Warehouse ${dados.codigo} salvo com sucesso!`);
+    registrarLog('warehouse_criado', `Warehouse ${dados.codigo} - ${dados.nome} criado`, 'success');
+    
+    fecharModalWarehouse();
+    // Recarregar tabela
+}
+
+function editarWarehouse(codigo) {
+    abrirModalWarehouse(codigo);
+}
+
+function deletarWarehouse(codigo) {
+    if (confirm(`⚠️ Tem certeza que deseja deletar o warehouse ${codigo}?\n\nEsta ação não pode ser desfeita!`)) {
+        console.log(`🗑️ Deletando warehouse: ${codigo}`);
+        
+        // Aqui seria a chamada para API backend
+        // await fetch(`/api/admin/warehouses/${codigo}`, { method: 'DELETE' })
+        
+        alert(`✅ Warehouse ${codigo} deletado com sucesso!`);
+        registrarLog('warehouse_deletado', `Warehouse ${codigo} deletado`, 'warning');
+        
+        // Recarregar tabela
+    }
+}
+
+// ============================================
+// GERENCIAR GOOGLE SHEETS
+// ============================================
+function abrirModalSheet(id = null) {
+    document.getElementById('modalSheet').classList.add('active');
+    
+    if (id) {
+        document.getElementById('tituloModalSheet').textContent = 'Editar Link Google Sheets';
+        // Carregar dados para edição
+    } else {
+        document.getElementById('tituloModalSheet').textContent = 'Novo Link Google Sheets';
+        document.getElementById('formSheet').reset();
+    }
+}
+
+function fecharModalSheet() {
+    document.getElementById('modalSheet').classList.remove('active');
+    document.getElementById('formSheet').reset();
+}
+
+function salvarSheet(event) {
+    event.preventDefault();
+    
+    const dados = {
+        warehouse: document.getElementById('sheetWarehouse').value,
+        tipo: document.getElementById('sheetTipo').value,
+        spreadsheetId: document.getElementById('sheetId').value,
+        nomeAba: document.getElementById('sheetNomeAba').value
+    };
+    
+    console.log('📊 Salvando link Google Sheets:', dados);
+    
+    // Aqui seria a chamada para API backend
+    // await fetch('/api/admin/sheets', { method: 'POST', body: JSON.stringify(dados) })
+    
+    alert(`✅ Link Google Sheets salvo com sucesso!\n\nWarehouse: ${dados.warehouse}\nTipo: ${dados.tipo}`);
+    registrarLog('sheet_criado', `Link ${dados.tipo} para WH ${dados.warehouse} criado`, 'success');
+    
+    fecharModalSheet();
+}
+
+function editarSheet(id) {
+    abrirModalSheet(id);
+}
+
+function testarSheet(id) {
+    console.log(`🔌 Testando conexão com sheet: ${id}`);
+    
+    // Aqui seria o teste real de conexão
+    // await fetch(`/api/admin/sheets/${id}/test`)
+    
+    alert(`✅ Conexão com Google Sheets testada com sucesso!\n\n` +
+          `Sheet ID: ${id}\n` +
+          `Status: Conectado\n` +
+          `Última atualização: ${new Date().toLocaleString('pt-BR')}`);
+}
+
+function deletarSheet(id) {
+    if (confirm(`⚠️ Tem certeza que deseja deletar este link?\n\nID: ${id}\n\nEsta ação não pode ser desfeita!`)) {
+        console.log(`🗑️ Deletando link sheet: ${id}`);
+        
+        alert(`✅ Link deletado com sucesso!`);
+        registrarLog('sheet_deletado', `Link ${id} deletado`, 'warning');
+    }
+}
+
+// ============================================
+// GERENCIAR USUÁRIOS
+// ============================================
+function abrirModalUsuario(usuario = null) {
+    alert('🚧 Funcionalidade em desenvolvimento\n\nEm breve você poderá criar e gerenciar usuários do sistema.');
+}
+
+function editarUsuario(usuario) {
+    abrirModalUsuario(usuario);
+}
+
+function desativarUsuario(usuario) {
+    if (confirm(`⚠️ Desativar usuário ${usuario}?`)) {
+        alert(`✅ Usuário ${usuario} desativado!`);
+        registrarLog('usuario_desativado', `Usuário ${usuario} desativado`, 'warning');
+    }
+}
+
+// ============================================
+// SISTEMA DE LOGS
+// ============================================
+function registrarLog(tipo, mensagem, nivel = 'info') {
+    const log = {
+        tipo,
+        mensagem,
+        nivel,
+        timestamp: new Date().toISOString(),
+        usuario: localStorage.getItem('abs_admin_usuario') || 'sistema'
+    };
+    
+    console.log(`📝 LOG [${nivel.toUpperCase()}]:`, log);
+    
+    // Aqui seria salvo no backend
+    // await fetch('/api/admin/logs', { method: 'POST', body: JSON.stringify(log) })
+}
+
+// Fechar modais ao clicar fora
+document.getElementById('modalWarehouse')?.addEventListener('click', function(e) {
+    if (e.target === this) fecharModalWarehouse();
+});
+
+document.getElementById('modalSheet')?.addEventListener('click', function(e) {
+    if (e.target === this) fecharModalSheet();
+});
+</script>
+
+</body>
+</html>
