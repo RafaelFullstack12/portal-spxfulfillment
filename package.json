@@ -4,9 +4,9 @@
   "scripts": {
     "dev": "vite",
     "build": "node build.mjs",
-    "start": "node server.js",
+    "start": "npm run build && node server.js",
     "start:dev": "tsx server.js",
-    "start:railway": "node server.js",
+    "start:railway": "npm run build && node server.js",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
