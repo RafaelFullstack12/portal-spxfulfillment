@@ -1133,29 +1133,7 @@ function marcarPresenca(select) {
     // Marcar o dia atual
     estado.marcacoesModificadas[wfmUser] = sigla;
     
-    // Se for desligamento (DV, DP, DF), propagar automaticamente
-    if (SIGLAS_DESLIGAMENTO.includes(sigla)) {
-        console.log('[marcarPresenca] Detectado desligamento! Propagando...');
-        
-        // Calcular último dia do mês
-        const mesIndex = MESES.indexOf(estado.mes);
-        const ultimoDia = new Date(estado.ano, mesIndex + 1, 0).getDate();
-        
-        console.log('[marcarPresenca] Propagando de', estado.dia, 'até', ultimoDia);
-        
-        // Propagar para todos os dias seguintes
-        for (let dia = estado.dia + 1; dia <= ultimoDia; dia++) {
-            // Criar chave única para cada dia
-            const chaveModificacao = `${wfmUser}_dia_${dia}`;
-            estado.marcacoesModificadas[chaveModificacao] = sigla;
-            console.log('[marcarPresenca] Propagado:', chaveModificacao, '=', sigla);
-        }
-        
-        const diasPropagados = ultimoDia - estado.dia;
-        if (diasPropagados > 0) {
-            alert(`✅ Desligamento marcado!\n\n${sigla} será aplicado automaticamente do dia ${estado.dia} até o dia ${ultimoDia} (${diasPropagados} dias propagados).`);
-        }
-    }
+    // NÃO propagar aqui - propagação só acontece no SAVE
     
     renderizarColaboradores();
 }
@@ -1231,20 +1209,10 @@ async function salvarMarcacoes() {
         const marcacoes = [];
         const marcacoesPorDia = {}; // Agrupar marcações por dia
         
-        // Processar marcações modificadas
-        for (const [chave, sigla] of Object.entries(estado.marcacoesModificadas)) {
-            let wfmUser, dia;
-            
-            // Verificar se é marcação propagada (formato: wfmUser_dia_X)
-            if (chave.includes('_dia_')) {
-                const partes = chave.split('_dia_');
-                wfmUser = partes[0];
-                dia = parseInt(partes[1]);
-            } else {
-                // Marcação normal (apenas wfmUser)
-                wfmUser = chave;
-                dia = estado.dia;
-            }
+        // Processar marcações modificadas do dia atual apenas
+        for (const [wfmUser, sigla] of Object.entries(estado.marcacoesModificadas)) {
+            // Ignorar marcações propagadas antigas (formato: wfmUser_dia_X)
+            if (wfmUser.includes('_dia_')) continue;
             
             // Encontrar colaborador
             const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
@@ -1253,60 +1221,72 @@ async function salvarMarcacoes() {
                 continue;
             }
             
-            // Agrupar por dia
-            if (!marcacoesPorDia[dia]) {
-                marcacoesPorDia[dia] = [];
-            }
-            
-            marcacoesPorDia[dia].push({
+            // Preparar marcação do dia atual
+            const marcacao = {
                 wfmUser: wfmUser,
                 nome: colab.nome,
-                dia: dia,
+                dia: estado.dia,
                 sigla: sigla
-            });
-        }
-        
-        console.log('[salvarMarcacoes] Marcações agrupadas por dia:', marcacoesPorDia);
-        
-        // Enviar marcações de cada dia
-        let totalSalvos = 0;
-        let totalErros = 0;
-        
-        for (const [dia, marcacoesDia] of Object.entries(marcacoesPorDia)) {
-            console.log(`[salvarMarcacoes] Salvando dia ${dia}:`, marcacoesDia.length, 'marcações');
+            };
             
-            const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-user-email': getUserEmail()
-                },
-                body: JSON.stringify({
-                    warehouse: estado.warehouse,
-                    mes: estado.mes,
-                    ano: estado.ano,
-                    dia: parseInt(dia),
-                    marcacoes: marcacoesDia
-                })
-            });
+            marcacoes.push(marcacao);
             
-            const data = await response.json();
+            // LOG: Verificar se é desligamento
+            const isDesligamento = SIGLAS_DESLIGAMENTO.includes(sigla);
+            console.log(`[SAVE] ${wfmUser} dia ${estado.dia}: ${sigla} | PROPAGACAO_EXECUTADA=${isDesligamento}`);
             
-            if (data.success) {
-                totalSalvos += data.salvos || 0;
-                totalErros += data.erros || 0;
-            } else {
-                console.error(`[salvarMarcacoes] Erro ao salvar dia ${dia}:`, data.error);
-                totalErros += marcacoesDia.length;
+            // PROPAGAÇÃO: Só executa se o valor SALVO for DV/DF/DP
+            if (isDesligamento) {
+                const mesIndex = MESES.indexOf(estado.mes);
+                const ultimoDia = new Date(estado.ano, mesIndex + 1, 0).getDate();
+                
+                console.log(`[SAVE] Propagando ${sigla} de ${estado.dia + 1} até ${ultimoDia}`);
+                
+                // Propagar para dias seguintes
+                for (let dia = estado.dia + 1; dia <= ultimoDia; dia++) {
+                    marcacoes.push({
+                        wfmUser: wfmUser,
+                        nome: colab.nome,
+                        dia: dia,
+                        sigla: sigla
+                    });
+                }
             }
         }
+        
+        console.log('[salvarMarcacoes] Total de marcações a salvar:', marcacoes.length);
+        
+        if (marcacoes.length === 0) {
+            esconderLoading();
+            alert('Nenhuma marcação válida para salvar.');
+            return;
+        }
+        
+        // Enviar todas as marcações de uma vez
+        const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-user-email': getUserEmail()
+            },
+            body: JSON.stringify({
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                marcacoes: marcacoes
+            })
+        });
+        
+        const data = await response.json();
         
         esconderLoading();
         
-        if (totalErros === 0) {
+        if (data.success) {
+            const totalSalvos = data.salvos || 0;
             alert(`✅ Sucesso!\n\n${totalSalvos} marcação(ões) salva(s) com sucesso.`);
         } else {
-            alert(`⚠️ Concluído com avisos\n\n${totalSalvos} salvas\n${totalErros} com erro`);
+            alert(`❌ Erro ao salvar: ${data.error}`);
         }
         
         // Limpar modificações e recarregar
