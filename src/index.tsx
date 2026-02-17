@@ -1550,45 +1550,73 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     })
     
     const rows = dataResponse.data.values || []
-    console.log(`[ABS API] ${rows.length} linhas encontradas`)
+    console.log(`[ABS API] ${rows.length} linhas brutas encontradas`)
+    
+    // Normalizar nome para detecção de duplicatas
+    function normalizarNome(nome: string): string {
+      if (!nome) return ''
+      return nome.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    }
+    
+    // Mapa para garantir colaborador único por nome normalizado
+    const colaboradoresMap = new Map<string, any>()
     
     // Calcular dias válidos do mês
     const diasNoMes = getDiasNoMes(mes, parseInt(ano))
     
-    const colaboradores = rows
-      .filter(row => row[indices.colaborador]?.trim()) // Filtrar apenas linhas completamente vazias
-      .map(row => {
-        const marcacoes: Record<number, any> = {}
-        
-        // Extrair marcações dos dias válidos
-        for (let dia = 1; dia <= diasNoMes; dia++) {
-          const colIndex = indices.dias[dia - 1]
-          if (colIndex >= 0) {
-            const valor = row[colIndex]
-            if (valor) {
-              marcacoes[dia] = {
-                sigla: valor,
-                tipo: 'manual'
-              }
+    rows.forEach(row => {
+      const nomeOriginal = row[indices.colaborador]?.trim()
+      if (!nomeOriginal) return // Pula linha vazia
+      
+      const nomeNormalizado = normalizarNome(nomeOriginal)
+      
+      // Se já existe, pula duplicata
+      if (colaboradoresMap.has(nomeNormalizado)) {
+        console.log(`[ABS API] Duplicata ignorada: ${nomeOriginal}`)
+        return
+      }
+      
+      const marcacoes: Record<number, any> = {}
+      
+      // Extrair marcações dos dias válidos
+      for (let dia = 1; dia <= diasNoMes; dia++) {
+        const colIndex = indices.dias[dia - 1]
+        if (colIndex >= 0) {
+          const valor = row[colIndex]
+          if (valor) {
+            marcacoes[dia] = {
+              sigla: valor,
+              tipo: 'manual'
             }
           }
         }
-        
-        return {
-          nome: row[indices.colaborador]?.trim() || '',
-          wfmUser: (row[indices.wfmUser] || row[indices.colaborador]?.toLowerCase().replace(/\s+/g, '.')),
-          setor: row[indices.setor]?.trim() || 'Não informado',
-          lider: row[indices.lider]?.trim() || 'Não atribuído',
-          cargo: row[indices.cargo]?.trim() || 'Não informado',
-          escala: row[indices.escala]?.trim() || 'Não informada',
-          dataAdmissao: row[indices.dataAdmissao] || null,
-          dataDesligamento: row[indices.dataDesligamento] || null,
-          warehouse,
-          marcacoes
-        }
+      }
+      
+      colaboradoresMap.set(nomeNormalizado, {
+        nome: nomeOriginal,
+        wfmUser: (row[indices.wfmUser] || nomeOriginal.toLowerCase().replace(/\s+/g, '.')),
+        setor: row[indices.setor]?.trim() || 'Não informado',
+        lider: row[indices.lider]?.trim() || 'Não atribuído',
+        cargo: row[indices.cargo]?.trim() || 'Não informado',
+        escala: row[indices.escala]?.trim() || 'Não informada',
+        dataAdmissao: row[indices.dataAdmissao] || null,
+        dataDesligamento: row[indices.dataDesligamento] || null,
+        warehouse,
+        marcacoes
       })
+    })
     
-    console.log(`[ABS API] ${colaboradores.length} colaboradores processados com sucesso`)
+    const colaboradores = Array.from(colaboradoresMap.values())
+    
+    console.log(`[ABS API] ${colaboradores.length} colaboradores únicos processados`)
+    
+    // Log detalhado de agrupamento por lider
+    const contagemPorLider: Record<string, number> = {}
+    colaboradores.forEach(c => {
+      const liderNorm = normalizarNome(c.lider)
+      contagemPorLider[liderNorm] = (contagemPorLider[liderNorm] || 0) + 1
+    })
+    console.log(`[ABS API] Contagem por lider:`, contagemPorLider)
     
     return c.json({
       success: true,
