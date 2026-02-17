@@ -1745,7 +1745,7 @@ app.post('/api/abs/marcar-presenca', async (c) => {
     // Buscar dados (a partir da LINHA 5)
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A5:AZ1000`
+      range: `${nomeAba}!A5:AZ`
     })
     
     const rows = dataResponse.data.values || []
@@ -2107,7 +2107,7 @@ app.post('/api/abs/propagar-desligamento', async (c) => {
     // Buscar dados (a partir da LINHA 5)
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A5:AZ1000`
+      range: `${nomeAba}!A5:AZ`
     })
     
     const rows = dataResponse.data.values || []
