@@ -426,6 +426,13 @@
                     <i class="fas fa-search text-gray-400"></i>
                     <input type="text" placeholder="Pesquisar colaborador..." id="busca-colaborador" onkeyup="filtrarColaboradores()">
                 </div>
+                <select id="filtro-status" onchange="aplicarFiltroStatus()" style="padding: 10px 16px; background: #333; border: 1px solid #404040; border-radius: 8px; color: #fff; font-size: 14px; cursor: pointer; min-width: 150px;">
+                    <option value="todos">Todos</option>
+                    <option value="ativos">Ativos</option>
+                    <option value="desligados">Desligados (DV/DP/DF)</option>
+                    <option value="pendentes">Pendentes</option>
+                    <option value="marcados">Marcados</option>
+                </select>
                 <button class="btn" onclick="abrirModalSinergia()" style="background: #9C27B0; border-color: #9C27B0; color: #fff;">
                     <i class="fas fa-handshake mr-2"></i>Sinergia
                 </button>
@@ -565,28 +572,33 @@
 const WAREHOUSE = 'SP'; // Pode ser PE, SP (FRANCO), GO
 const API_BASE = ''; // Base vazia = mesmo domínio
 
-// Opções de marcação de presença (18 tipos)
+// Opções de marcação de presença (20 tipos - atualizado conforme especificação)
 const OPCOES_PRESENCA = {
     '': { nome: '-- Selecione --', cor: '#666666' },
-    'P': { nome: 'Presente', cor: '#4CAF50' },
-    'F': { nome: 'Falta', cor: '#F44336' },
-    'FJ': { nome: 'Falta Justificada', cor: '#FFC107' },
-    'DV': { nome: 'Desligamento Voluntário', cor: '#FFC107' },
-    'DF': { nome: 'Desligamento Involuntário', cor: '#FFC107' },
-    'FE': { nome: 'Férias', cor: '#4CAF50' },
-    'FO': { nome: 'Folga', cor: '#8BC34A' },
-    'DSR': { nome: 'Descanso Semanal', cor: '#009688' },
-    'AL': { nome: 'Atestado', cor: '#FF5722' },
-    'AF': { nome: 'Afastamento', cor: '#9C27B0' },
-    'TR': { nome: 'Treinamento', cor: '#3F51B5' },
-    'PR': { nome: 'Presente Remoto', cor: '#2196F3' },
-    'BH': { nome: 'Bank Holiday', cor: '#00BCD4' },
-    'AM': { nome: 'Advertência/Atraso', cor: '#FF9800' },
-    'NC': { nome: 'Não Compareceu', cor: '#E91E63' },
-    'S1': { nome: 'Saída 1', cor: '#FF9800' },
-    'S2': { nome: 'Saída 2', cor: '#FF5722' },
-    'SU': { nome: 'Suspensão', cor: '#9E9E9E' }
+    'P': { nome: 'P - Presente', cor: '#4CAF50' },
+    'F': { nome: 'F - Falta injustificada', cor: '#F44336' },
+    'FJ': { nome: 'FJ - Falta justificada', cor: '#FFC107' },
+    'FE': { nome: 'FE - Férias', cor: '#2196F3' },
+    'FO': { nome: 'FO - Folga', cor: '#8BC34A' },
+    'AM': { nome: 'AM - Atestado médico', cor: '#FF9800' },
+    'AF': { nome: 'AF - Afastamento (1º ao 15º dia)', cor: '#9C27B0' },
+    'AL': { nome: 'AL - Afastamento INSS/licença (16º+ dia)', cor: '#9C27B0' },
+    'DSR': { nome: 'DSR - Descanso Semanal Remunerado', cor: '#009688' },
+    'BH': { nome: 'BH - Banco de Horas', cor: '#00BCD4' },
+    'DV': { nome: 'DV - Desligamento voluntário', cor: '#E91E63' },
+    'DP': { nome: 'DP - Desligamento planejado', cor: '#E91E63' },
+    'DF': { nome: 'DF - Desligamento forçado', cor: '#E91E63' },
+    'NC': { nome: 'NC - Não contratado', cor: '#9E9E9E' },
+    'PR': { nome: 'PR - Promoção (para Analista)', cor: '#673AB7' },
+    'TR': { nome: 'TR - Transferência fixa (outra operação)', cor: '#3F51B5' },
+    'S1': { nome: 'S1 - Sinergia enviada', cor: '#FF6F00' },
+    'S2': { nome: 'S2 - Sinergia recebida', cor: '#FF6F00' },
+    'SU': { nome: 'SU - Suspensão', cor: '#607D8B' },
+    'ON': { nome: 'ON - Onboarding', cor: '#00BCD4' }
 };
+
+// Siglas que identificam desligamento
+const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
 
 const MESES = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril',
@@ -606,7 +618,8 @@ let estado = {
     colaboradores: [],
     todosColaboradores: [],
     todosSupervisores: [],
-    marcacoesModificadas: {}
+    marcacoesModificadas: {},
+    filtroStatus: 'todos' // Filtro: todos, ativos, desligados, pendentes, marcados
 };
 
 // ========================================
@@ -975,9 +988,11 @@ function renderizarColaboradores() {
     list.innerHTML = '';
     
     let marcados = 0;
+    let totalFiltrado = 0;
     
     estado.colaboradores.forEach((colab) => {
-        if (busca && !colab.nome.toLowerCase().includes(busca)) {
+        // Filtro de busca por nome/WFM
+        if (busca && !colab.nome.toLowerCase().includes(busca) && !colab.wfmUser.toLowerCase().includes(busca)) {
             return;
         }
         
@@ -986,6 +1001,19 @@ function renderizarColaboradores() {
             ? colab.marcacoes[estado.dia].sigla 
             : '';
         
+        // Aplicar filtro de status
+        const isPendente = !marcacaoAtual;
+        const isMarcado = !!marcacaoAtual;
+        const isDesligado = SIGLAS_DESLIGAMENTO.includes(marcacaoAtual);
+        const isAtivo = !isDesligado;
+        
+        // Lógica de filtro por status
+        if (estado.filtroStatus === 'pendentes' && !isPendente) return;
+        if (estado.filtroStatus === 'marcados' && !isMarcado) return;
+        if (estado.filtroStatus === 'desligados' && !isDesligado) return;
+        if (estado.filtroStatus === 'ativos' && !isAtivo) return;
+        
+        totalFiltrado++;
         if (marcacaoAtual) marcados++;
         
         const item = document.createElement('div');
@@ -997,13 +1025,21 @@ function renderizarColaboradores() {
             selectOptions += `<option value="${sigla}" ${selected}>${info.nome}</option>`;
         }
         
-        const isPendente = !marcacaoAtual;
+        // Badge dinâmico
+        let badgeHTML = '';
+        if (isPendente) {
+            badgeHTML = '<span class="badge badge-pendente">PENDENTE</span>';
+        } else if (isDesligado) {
+            badgeHTML = '<span class="badge" style="background: #E91E63;">DESLIGADO</span>';
+        } else {
+            badgeHTML = '<span class="badge badge-completo">MARCADO</span>';
+        }
         
         item.innerHTML = `
             <div class="colaborador-info">
                 <div class="colaborador-nome">
                     ${colab.nome}
-                    ${isPendente ? '<span class="badge badge-pendente">PENDENTE</span>' : '<span class="badge badge-completo">MARCADO</span>'}
+                    ${badgeHTML}
                 </div>
                 <div class="colaborador-detalhes">
                     WFM: ${colab.wfmUser} | ${colab.cargo || 'N/A'} | Admissão: ${colab.dataAdmissao || 'N/A'}
@@ -1017,13 +1053,14 @@ function renderizarColaboradores() {
         list.appendChild(item);
     });
     
+    // Atualizar estatísticas com base nos colaboradores filtrados
     const statMarcacaoTotal = document.getElementById('stat-marcacao-total');
     const statMarcacaoMarcados = document.getElementById('stat-marcacao-marcados');
     const statMarcacaoPendentes = document.getElementById('stat-marcacao-pendentes');
     
-    if (statMarcacaoTotal) statMarcacaoTotal.textContent = estado.colaboradores.length;
+    if (statMarcacaoTotal) statMarcacaoTotal.textContent = totalFiltrado;
     if (statMarcacaoMarcados) statMarcacaoMarcados.textContent = marcados;
-    if (statMarcacaoPendentes) statMarcacaoPendentes.textContent = estado.colaboradores.length - marcados;
+    if (statMarcacaoPendentes) statMarcacaoPendentes.textContent = totalFiltrado - marcados;
 }
 
 function marcarPresenca(select) {
@@ -1035,6 +1072,15 @@ function marcarPresenca(select) {
 
 function filtrarColaboradores() {
     renderizarColaboradores();
+}
+
+function aplicarFiltroStatus() {
+    const select = document.getElementById('filtro-status');
+    if (select) {
+        estado.filtroStatus = select.value;
+        console.log('[aplicarFiltroStatus] Filtro alterado para:', estado.filtroStatus);
+        renderizarColaboradores();
+    }
 }
 
 function atualizarEstatisticas() {
