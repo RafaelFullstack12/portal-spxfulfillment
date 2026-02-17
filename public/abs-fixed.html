@@ -887,10 +887,6 @@ function renderizarColaboradores() {
             return;
         }
         
-        const marcacaoAtual = estado.marcacoesModificadas[colab.wfmUser] !== undefined
-            ? estado.marcacoesModificadas[colab.wfmUser]
-            : (colab.marcacoes && colab.marcacoes[estado.dia] ? colab.marcacoes[estado.dia].sigla : '');
-        
         if (marcacaoAtual) marcados++;
         
         const item = document.createElement('div');
@@ -1237,6 +1233,38 @@ async function salvarSinergia() {
                 tipo: tipo,
                 observacoes: observacoes,
                 timestamp: new Date().toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar sinergia');
+        }
+        
+        esconderLoading();
+        fecharModalSinergia();
+        alert(`✅ Sinergia registrada com sucesso!\n\nColaborador: ${colab.nome}\nTipo: ${tipo}\nDia: ${estado.dia}/${estado.mes}/${estado.ano}\nSetor Origem: ${colab.setor || 'N/A'}\nSetor Destino: ${setorDestino}`);
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar sinergia: ${error.message}`);
+        console.error(error);
+    }
+}
+
+// ========================================
+// INICIALIZAÇÃO
+// ========================================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Sistema ABS carregado');
+    console.log('Warehouse:', WAREHOUSE);
+    console.log('Estado inicial:', estado);
+    carregarMeses();
+});
+    </script>
+</body>
+</html>
             })
         });
         
