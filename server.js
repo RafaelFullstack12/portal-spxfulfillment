@@ -49,7 +49,7 @@ console.log(`🚀 Iniciando servidor na porta ${port}...`)
 
 // Iniciar servidor com tratamento de erro
 try {
-  serve({
+  const server = serve({
     fetch: app.fetch,
     port: port,
     hostname: '0.0.0.0' // Importante para Railway/Docker
@@ -59,7 +59,19 @@ try {
     console.log(`🌐 Porta: ${info.port}`)
     console.log(`🔗 Local: http://localhost:${info.port}`)
     console.log('============================================')
+    
+    // CRITICAL: Railway precisa que o processo continue rodando
+    // Manter processo vivo indefinidamente
+    setInterval(() => {
+      // Noop para manter o event loop ativo
+    }, 1000 * 60 * 60) // A cada hora
   })
+  
+  // Garantir que o servidor não feche sozinho
+  server.on('close', () => {
+    console.log('⚠️ Servidor foi fechado')
+  })
+  
 } catch (error) {
   console.error('❌ ERRO FATAL ao iniciar servidor:', error)
   console.error('Stack:', error.stack)
@@ -68,8 +80,12 @@ try {
 
 // Tratamento de sinais para shutdown gracioso
 process.on('SIGTERM', () => {
-  console.log('⚠️ SIGTERM recebido, encerrando servidor...')
-  process.exit(0)
+  console.log('⚠️ SIGTERM recebido, encerrando servidor graciosamente...')
+  // NÃO fazer exit imediatamente, deixar o Railway gerenciar
+  setTimeout(() => {
+    console.log('⚠️ Timeout de shutdown atingido, forçando saída...')
+    process.exit(0)
+  }, 10000) // 10 segundos para cleanup
 })
 
 process.on('SIGINT', () => {
@@ -89,3 +105,6 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Promise:', promise)
   // Não fazer exit aqui para permitir que o servidor continue rodando
 })
+
+// Keepalive para garantir que o processo não morra
+console.log('✅ Keepalive ativo - processo permanecerá rodando')
