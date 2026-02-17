@@ -1556,16 +1556,16 @@ app.get('/api/abs/presenca-automatica/:warehouse/:data', async (c) => {
 app.post('/api/abs/marcar-presenca', async (c) => {
   try {
     const body = await c.req.json()
-    const { dia, mes, ano, colaborador, wfmUser, sigla, warehouse } = body
+    const { warehouse, mes, ano, dia, marcacoes } = body
     
-    console.log(`[ABS API] Marcando presença:`, body)
+    console.log(`[ABS API] Marcando presença (batch):`, body)
     
     // Validar dados obrigatórios
-    if (!dia || !mes || !ano || !colaborador || !wfmUser || !sigla || !warehouse) {
+    if (!dia || !mes || !ano || !warehouse || !marcacoes || !Array.isArray(marcacoes)) {
       return c.json({ 
         success: false, 
         error: 'Dados incompletos',
-        campos_obrigatorios: ['dia', 'mes', 'ano', 'colaborador', 'wfmUser', 'sigla', 'warehouse']
+        campos_obrigatorios: ['dia', 'mes', 'ano', 'warehouse', 'marcacoes (array)']
       }, 400)
     }
     
@@ -1607,22 +1607,6 @@ app.post('/api/abs/marcar-presenca', async (c) => {
       }, 400)
     }
     
-    // Encontrar linha do colaborador (lembrar que dados começam na linha 5)
-    let linhaColaborador = -1
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i][wfmUserIndex] === wfmUser) {
-        linhaColaborador = i + 5 // +5 porque dados começam na linha 5
-        break
-      }
-    }
-    
-    if (linhaColaborador === -1) {
-      return c.json({ 
-        success: false, 
-        error: `Colaborador não encontrado: ${wfmUser}`
-      }, 404)
-    }
-    
     // Obter letra da coluna do dia
     const getColumnLetter = (index: number) => {
       let letter = ''
@@ -1634,38 +1618,77 @@ app.post('/api/abs/marcar-presenca', async (c) => {
     }
     
     const colLetter = getColumnLetter(diaColIndex)
-    const cellRange = `${nomeAba}!${colLetter}${linhaColaborador}`
     
-    console.log(`[ABS API] Atualizando célula: ${cellRange} com valor: ${sigla}`)
+    // Preparar batch update (atualizar múltiplas células de uma vez)
+    const updates: any[] = []
+    const resultados: any[] = []
     
-    // Atualizar célula
-    await sheetsManager.sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: cellRange,
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [[sigla]]
+    for (const marcacao of marcacoes) {
+      const { wfmUser, sigla, nome } = marcacao
+      
+      // Encontrar linha do colaborador
+      let linhaColaborador = -1
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i][wfmUserIndex] === wfmUser) {
+          linhaColaborador = i + 5 // +5 porque dados começam na linha 5
+          break
+        }
       }
-    })
+      
+      if (linhaColaborador === -1) {
+        console.warn(`[ABS API] Colaborador não encontrado: ${wfmUser} (${nome})`)
+        resultados.push({
+          wfmUser,
+          nome,
+          sucesso: false,
+          erro: 'Colaborador não encontrado'
+        })
+        continue
+      }
+      
+      const cellRange = `${nomeAba}!${colLetter}${linhaColaborador}`
+      
+      updates.push({
+        range: cellRange,
+        values: [[sigla]]
+      })
+      
+      resultados.push({
+        wfmUser,
+        nome,
+        sucesso: true,
+        celula: cellRange,
+        sigla
+      })
+    }
     
-    console.log(`[ABS API] Presença marcada com sucesso`)
+    // Executar batch update se houver atualizações
+    if (updates.length > 0) {
+      console.log(`[ABS API] Executando batch update de ${updates.length} marcações`)
+      
+      await sheetsManager.sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          valueInputOption: 'RAW',
+          data: updates
+        }
+      })
+      
+      console.log(`[ABS API] Batch update executado com sucesso`)
+    }
+    
+    const salvos = resultados.filter(r => r.sucesso).length
+    const erros = resultados.filter(r => !r.sucesso).length
     
     return c.json({
       success: true,
-      message: 'Presença marcada com sucesso',
-      data: {
-        dia,
-        mes,
-        ano,
-        colaborador,
-        wfmUser,
-        sigla,
-        warehouse,
-        celula: cellRange
-      }
+      message: `${salvos} marcação(ões) salva(s) com sucesso`,
+      salvos,
+      erros,
+      resultados
     })
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('[ABS API] Erro ao marcar presença:', error)
     return c.json({ 
       success: false, 
