@@ -981,6 +981,11 @@ function renderizarColaboradores() {
             return;
         }
         
+        // Pega a marcação atual do colaborador para este dia
+        const marcacaoAtual = colab.marcacoes && colab.marcacoes[estado.dia] 
+            ? colab.marcacoes[estado.dia].sigla 
+            : '';
+        
         if (marcacaoAtual) marcados++;
         
         const item = document.createElement('div');
