@@ -613,12 +613,26 @@ let estado = {
 // FUNÇÕES DE NAVEGAÇÃO
 // ========================================
 function mostrarTela(nomeTela) {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
-    const tela = document.getElementById(`tela-${nomeTela}`);
+    console.log('[mostrarTela] Mudando para:', nomeTela);
+    
+    // Remove active de todas as telas
+    document.querySelectorAll('.tela').forEach(t => {
+        t.classList.remove('active');
+        console.log('[mostrarTela] Removido active de:', t.id);
+    });
+    
+    // Adiciona active na tela solicitada
+    const telaId = `tela-${nomeTela}`;
+    const tela = document.getElementById(telaId);
+    
     if (tela) {
         tela.classList.add('active');
+        console.log('[mostrarTela] Adicionado active em:', telaId);
+        console.log('[mostrarTela] Classes da tela:', tela.className);
     } else {
-        console.error(`Tela não encontrada: tela-${nomeTela}`);
+        console.error('[mostrarTela] ERRO: Tela não encontrada:', telaId);
+        console.log('[mostrarTela] Telas disponíveis:', 
+            Array.from(document.querySelectorAll('.tela')).map(t => t.id));
     }
 }
 
@@ -829,9 +843,16 @@ function carregarCalendario() {
         card.appendChild(dayNumber);
         card.appendChild(dayStatus);
         
-        card.addEventListener('click', () => {
-            console.log('[DEBUG] Card clicado, dia:', dia);
-            selecionarDia(dia);
+        card.addEventListener('click', function() {
+            console.log('[CLICK] Dia clicado:', dia);
+            console.log('[CLICK] Estado antes:', JSON.stringify(estado));
+            estado.dia = dia;
+            console.log('[CLICK] Estado.dia definido como:', estado.dia);
+            console.log('[CLICK] Chamando carregarMarcacoes()');
+            carregarMarcacoes();
+            console.log('[CLICK] Chamando mostrarTela(marcacao)');
+            mostrarTela('marcacao');
+            console.log('[CLICK] Concluído');
         });
         
         grid.appendChild(card);
@@ -847,11 +868,21 @@ function carregarCalendario() {
 }
 
 function selecionarDia(dia) {
-    console.log('[DEBUG] selecionarDia chamado:', dia);
-    estado.dia = dia;
-    console.log('[DEBUG] Estado atualizado:', estado);
-    carregarMarcacoes();
-    mostrarTela('marcacao');
+    console.log('[selecionarDia] Chamado com dia:', dia);
+    console.log('[selecionarDia] Tipo do dia:', typeof dia);
+    estado.dia = parseInt(dia);
+    console.log('[selecionarDia] Estado.dia:', estado.dia);
+    console.log('[selecionarDia] Estado completo:', JSON.stringify(estado));
+    
+    try {
+        carregarMarcacoes();
+        console.log('[selecionarDia] carregarMarcacoes() concluído');
+        mostrarTela('marcacao');
+        console.log('[selecionarDia] mostrarTela(marcacao) concluído');
+    } catch (erro) {
+        console.error('[selecionarDia] ERRO:', erro);
+        alert('Erro ao selecionar dia: ' + erro.message);
+    }
 }
 
 function voltarParaCalendario() {
