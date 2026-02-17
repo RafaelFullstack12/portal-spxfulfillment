@@ -816,7 +816,11 @@ function carregarCalendario() {
         
         const card = document.createElement('div');
         card.className = `day-card ${isCompleto ? 'completo' : (isPendente ? 'pendente' : '')}`;
-        card.onclick = () => selecionarDia(dia);
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+            console.log('[DEBUG] Card clicado, dia:', dia);
+            selecionarDia(dia);
+        });
         
         card.innerHTML = `
             <div class="day-number">${dia}</div>
