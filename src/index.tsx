@@ -1332,4 +1332,453 @@ app.get('/abs/admin', async (c) => {
   }
 })
 
+/**
+ * ==========================================
+ * APIs DO SISTEMA ABS
+ * ==========================================
+ */
+
+// IDs das planilhas ABS por warehouse
+const ABS_SPREADSHEETS = {
+  'PE': '1WNtyJVIYaBBgzcIvBdNxaSl7REeSCB_AmGi7mCnp9Xg',
+  'SP': '1vs_8_vdJYYToJpDf44pFMaqbKnJq8MsD4XBwfWoVjYk', // FRANCO
+  'GO': '1pOcVegvj6AbAqD8sWmr__8zGCbf7fl3MKCMtkPMtaHY'
+}
+
+// Colunas obrigatórias da estrutura ABS (validação rigorosa)
+const COLUNAS_OBRIGATORIAS = [
+  'Turno Detalhado', 'Gênero', 'Colaborador', 'Hora', 'Escala', 'Dia de Inicio',
+  'WFM USER', 'Setor', 'Lider', 'DATA DE PROMOÇÃO', 'Data de Admissão',
+  'Data de Desligamento', 'Station', 'Código BPO', 'BPO', 'Contrato', 'Cargo',
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14',
+  '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27',
+  '28', '29', '30', '31', 'PROCESSO', 'SUB-PROCESSO', 'PROCESSO', '%', 'ESCALA 6x2'
+]
+
+/**
+ * Mapear nome do mês PT → EN para identificação correta
+ */
+const MESES_PT_EN = {
+  'Janeiro': 'January', 'Fevereiro': 'February', 'Março': 'March',
+  'Abril': 'April', 'Maio': 'May', 'Junho': 'June',
+  'Julho': 'July', 'Agosto': 'August', 'Setembro': 'September',
+  'Outubro': 'October', 'Novembro': 'November', 'Dezembro': 'December'
+}
+
+/**
+ * Obter número de dias no mês
+ */
+function getDiasNoMes(mes: string, ano: number): number {
+  const mesNum = Object.keys(MESES_PT_EN).indexOf(mes) + 1
+  return new Date(ano, mesNum, 0).getDate()
+}
+
+/**
+ * API: Buscar colaboradores de um warehouse para um mês específico
+ * GET /api/abs/colaboradores/:warehouse/:mes/:ano
+ */
+app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
+  try {
+    const { warehouse, mes, ano } = c.req.param()
+    
+    console.log(`[ABS API] Buscando colaboradores: ${warehouse} - ${mes}/${ano}`)
+    
+    // Validar warehouse
+    const spreadsheetId = ABS_SPREADSHEETS[warehouse]
+    if (!spreadsheetId) {
+      return c.json({ 
+        success: false, 
+        error: `Warehouse inválido: ${warehouse}`,
+        warehouses_disponiveis: Object.keys(ABS_SPREADSHEETS)
+      }, 400)
+    }
+    
+    // Identificar aba no formato "Controle de Presença | <Mês> <Ano>"
+    const nomeAba = `Controle de Presença | ${mes} ${ano}`
+    console.log(`[ABS API] Buscando aba: ${nomeAba}`)
+    
+    // Verificar se a aba existe
+    const spreadsheet = await sheetsManager.sheets.spreadsheets.get({
+      spreadsheetId
+    })
+    
+    const abaExiste = spreadsheet.data.sheets?.some(
+      sheet => sheet.properties?.title === nomeAba
+    )
+    
+    if (!abaExiste) {
+      const abasDisponiveis = spreadsheet.data.sheets?.map(s => s.properties?.title).filter(t => t?.startsWith('Controle de Presença |'))
+      return c.json({ 
+        success: false, 
+        error: `Aba não encontrada: ${nomeAba}`,
+        abas_disponiveis: abasDisponiveis
+      }, 404)
+    }
+    
+    // Buscar cabeçalho para validar estrutura
+    const headerResponse = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${nomeAba}!A1:AZ1`
+    })
+    
+    const header = headerResponse.data.values?.[0] || []
+    
+    // Validar colunas obrigatórias
+    const colunasAusentes = COLUNAS_OBRIGATORIAS.filter(col => !header.includes(col))
+    if (colunasAusentes.length > 0) {
+      return c.json({ 
+        success: false, 
+        error: 'Estrutura da planilha inválida',
+        colunas_ausentes: colunasAusentes,
+        colunas_encontradas: header
+      }, 400)
+    }
+    
+    console.log(`[ABS API] Estrutura validada com sucesso`)
+    
+    // Mapear índices das colunas
+    const getColIndex = (nome: string) => header.indexOf(nome)
+    
+    const indices = {
+      colaborador: getColIndex('Colaborador'),
+      wfmUser: getColIndex('WFM USER'),
+      setor: getColIndex('Setor'),
+      lider: getColIndex('Lider'),
+      cargo: getColIndex('Cargo'),
+      escala: getColIndex('Escala'),
+      dataAdmissao: getColIndex('Data de Admissão'),
+      dataDesligamento: getColIndex('Data de Desligamento'),
+      dias: Array.from({ length: 31 }, (_, i) => getColIndex(`${i + 1}`))
+    }
+    
+    // Buscar dados dos colaboradores
+    const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${nomeAba}!A2:AZ10000`
+    })
+    
+    const rows = dataResponse.data.values || []
+    
+    // Calcular dias válidos do mês
+    const diasNoMes = getDiasNoMes(mes, parseInt(ano))
+    
+    const colaboradores = rows
+      .filter(row => row[indices.colaborador]) // Filtrar linhas vazias
+      .map(row => {
+        const marcacoes: Record<number, any> = {}
+        
+        // Extrair marcações dos dias válidos
+        for (let dia = 1; dia <= diasNoMes; dia++) {
+          const colIndex = indices.dias[dia - 1]
+          const valor = row[colIndex]
+          if (valor) {
+            marcacoes[dia] = {
+              sigla: valor,
+              tipo: 'manual'
+            }
+          }
+        }
+        
+        return {
+          nome: row[indices.colaborador],
+          wfmUser: row[indices.wfmUser] || row[indices.colaborador]?.toLowerCase().replace(/\s+/g, '.'),
+          setor: row[indices.setor] || 'Não informado',
+          lider: row[indices.lider] || 'Não atribuído',
+          cargo: row[indices.cargo] || 'Não informado',
+          escala: row[indices.escala] || 'Não informada',
+          dataAdmissao: row[indices.dataAdmissao] || null,
+          dataDesligamento: row[indices.dataDesligamento] || null,
+          warehouse,
+          marcacoes
+        }
+      })
+    
+    console.log(`[ABS API] ${colaboradores.length} colaboradores carregados com sucesso`)
+    
+    return c.json({
+      success: true,
+      colaboradores,
+      warehouse,
+      mes,
+      ano,
+      diasNoMes,
+      aba: nomeAba,
+      total: colaboradores.length
+    })
+    
+  } catch (error) {
+    console.error('[ABS API] Erro ao buscar colaboradores:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Erro ao buscar colaboradores',
+      message: error.message 
+    }, 500)
+  }
+})
+
+/**
+ * API: Buscar presença automática do raw_scan
+ * GET /api/abs/presenca-automatica/:warehouse/:data
+ * NOTA: Removida - não aplicável à estrutura atual
+ */
+app.get('/api/abs/presenca-automatica/:warehouse/:data', async (c) => {
+  return c.json({
+    success: true,
+    presencas: [],
+    warehouse: c.req.param('warehouse'),
+    data: c.req.param('data'),
+    message: 'Presença automática não disponível nesta estrutura'
+  })
+})
+
+/**
+ * API: Marcar presença de um colaborador
+ * POST /api/abs/marcar-presenca
+ */
+app.post('/api/abs/marcar-presenca', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { dia, mes, ano, colaborador, wfmUser, sigla, warehouse } = body
+    
+    console.log(`[ABS API] Marcando presença:`, body)
+    
+    // Validar dados obrigatórios
+    if (!dia || !mes || !ano || !colaborador || !wfmUser || !sigla || !warehouse) {
+      return c.json({ 
+        success: false, 
+        error: 'Dados incompletos',
+        campos_obrigatorios: ['dia', 'mes', 'ano', 'colaborador', 'wfmUser', 'sigla', 'warehouse']
+      }, 400)
+    }
+    
+    // Validar warehouse
+    const spreadsheetId = ABS_SPREADSHEETS[warehouse]
+    if (!spreadsheetId) {
+      return c.json({ 
+        success: false, 
+        error: `Warehouse inválido: ${warehouse}`
+      }, 400)
+    }
+    
+    // Identificar aba
+    const nomeAba = `Controle de Presença | ${mes} ${ano}`
+    
+    // Buscar cabeçalho
+    const headerResponse = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${nomeAba}!A1:AZ1`
+    })
+    
+    const header = headerResponse.data.values?.[0] || []
+    const getColIndex = (nome: string) => header.indexOf(nome)
+    
+    // Buscar linha do colaborador
+    const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${nomeAba}!A2:AZ10000`
+    })
+    
+    const rows = dataResponse.data.values || []
+    const wfmUserIndex = getColIndex('WFM USER')
+    const diaColIndex = getColIndex(`${dia}`)
+    
+    // Encontrar linha do colaborador
+    let linhaColaborador = -1
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][wfmUserIndex] === wfmUser) {
+        linhaColaborador = i + 2 // +2 porque começa em A2
+        break
+      }
+    }
+    
+    if (linhaColaborador === -1) {
+      return c.json({ 
+        success: false, 
+        error: `Colaborador não encontrado: ${wfmUser}`
+      }, 404)
+    }
+    
+    // Obter letra da coluna do dia
+    const getColumnLetter = (index: number) => {
+      let letter = ''
+      while (index >= 0) {
+        letter = String.fromCharCode((index % 26) + 65) + letter
+        index = Math.floor(index / 26) - 1
+      }
+      return letter
+    }
+    
+    const colLetter = getColumnLetter(diaColIndex)
+    const cellRange = `${nomeAba}!${colLetter}${linhaColaborador}`
+    
+    console.log(`[ABS API] Atualizando célula: ${cellRange} com valor: ${sigla}`)
+    
+    // Atualizar célula
+    await sheetsManager.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: cellRange,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[sigla]]
+      }
+    })
+    
+    console.log(`[ABS API] Presença marcada com sucesso`)
+    
+    return c.json({
+      success: true,
+      message: 'Presença marcada com sucesso',
+      data: {
+        dia,
+        mes,
+        ano,
+        colaborador,
+        wfmUser,
+        sigla,
+        warehouse,
+        celula: cellRange
+      }
+    })
+    
+  } catch (error) {
+    console.error('[ABS API] Erro ao marcar presença:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Erro ao marcar presença',
+      message: error.message 
+    }, 500)
+  }
+})
+
+/**
+ * API: Propagar desligamento (DV, DP, DF) para dias seguintes
+ * POST /api/abs/propagar-desligamento
+ */
+app.post('/api/abs/propagar-desligamento', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { diaInicio, mes, ano, colaborador, wfmUser, sigla, warehouse } = body
+    
+    console.log(`[ABS API] Propagando desligamento:`, body)
+    
+    // Validar siglas de desligamento
+    if (!['DV', 'DP', 'DF'].includes(sigla)) {
+      return c.json({ 
+        success: false, 
+        error: 'Sigla inválida para propagação. Use: DV, DP ou DF'
+      }, 400)
+    }
+    
+    // Validar warehouse
+    const spreadsheetId = ABS_SPREADSHEETS[warehouse]
+    if (!spreadsheetId) {
+      return c.json({ 
+        success: false, 
+        error: `Warehouse inválido: ${warehouse}`
+      }, 400)
+    }
+    
+    // Identificar aba
+    const nomeAba = `Controle de Presença | ${mes} ${ano}`
+    
+    // Buscar cabeçalho
+    const headerResponse = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${nomeAba}!A1:AZ1`
+    })
+    
+    const header = headerResponse.data.values?.[0] || []
+    const getColIndex = (nome: string) => header.indexOf(nome)
+    
+    // Buscar linha do colaborador
+    const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${nomeAba}!A2:AZ10000`
+    })
+    
+    const rows = dataResponse.data.values || []
+    const wfmUserIndex = getColIndex('WFM USER')
+    
+    // Encontrar linha do colaborador
+    let linhaColaborador = -1
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][wfmUserIndex] === wfmUser) {
+        linhaColaborador = i + 2
+        break
+      }
+    }
+    
+    if (linhaColaborador === -1) {
+      return c.json({ 
+        success: false, 
+        error: `Colaborador não encontrado: ${wfmUser}`
+      }, 404)
+    }
+    
+    // Calcular dias do mês
+    const diasNoMes = getDiasNoMes(mes, parseInt(ano))
+    
+    // Obter letra da coluna
+    const getColumnLetter = (index: number) => {
+      let letter = ''
+      while (index >= 0) {
+        letter = String.fromCharCode((index % 26) + 65) + letter
+        index = Math.floor(index / 26) - 1
+      }
+      return letter
+    }
+    
+    // Propagar para dias seguintes
+    const diasPropagados = []
+    const updates = []
+    
+    for (let dia = parseInt(diaInicio) + 1; dia <= diasNoMes; dia++) {
+      const diaColIndex = getColIndex(`${dia}`)
+      if (diaColIndex === -1) continue
+      
+      const colLetter = getColumnLetter(diaColIndex)
+      const cellRange = `${nomeAba}!${colLetter}${linhaColaborador}`
+      
+      updates.push({
+        range: cellRange,
+        values: [[sigla]]
+      })
+      
+      diasPropagados.push(dia)
+    }
+    
+    // Executar todas as atualizações em batch
+    if (updates.length > 0) {
+      await sheetsManager.sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          valueInputOption: 'RAW',
+          data: updates
+        }
+      })
+    }
+    
+    console.log(`[ABS API] Desligamento propagado para ${diasPropagados.length} dias`)
+    
+    return c.json({
+      success: true,
+      message: `Desligamento propagado para ${diasPropagados.length} dias`,
+      diasPropagados,
+      sigla,
+      colaborador,
+      wfmUser,
+      diaInicio,
+      diaFim: diasNoMes
+    })
+    
+  } catch (error) {
+    console.error('[ABS API] Erro ao propagar desligamento:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Erro ao propagar desligamento',
+      message: error.message 
+    }, 500)
+  }
+})
+
 export default app

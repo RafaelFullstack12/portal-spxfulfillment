@@ -1382,6 +1382,308 @@ Salvo em raw_hr.`);
     document.getElementById('modalHoraExtra')?.addEventListener('click', function(e) {
         if (e.target === this) fecharModalHoraExtra();
     });
+
+    // ==========================================
+    // INTEGRAÇÃO COM APIS REAIS
+    // ==========================================
+
+    let colaboradoresCache = [];
+    let presencasAutomaticasCache = {};
+
+    /**
+     * Buscar colaboradores de um warehouse para o mês selecionado
+     */
+    async function carregarColaboradores(warehouse, mes, ano, dia) {
+        try {
+            console.log(`[ABS] Carregando colaboradores: ${warehouse} - ${mes}/${ano}`);
+            
+            const response = await fetch(`/api/abs/colaboradores/${warehouse}/${mes}/${ano}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                console.error('[ABS] Erro ao carregar colaboradores:', data.error);
+                return [];
+            }
+            
+            colaboradoresCache = data.colaboradores;
+            console.log(`[ABS] ${colaboradoresCache.length} colaboradores carregados`);
+            
+            // Buscar presença automática para este dia
+            await carregarPresencaAutomatica(warehouse, dia);
+            
+            // Renderizar lista
+            renderizarColaboradores(dia);
+            
+            return colaboradoresCache;
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao carregar colaboradores:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Buscar presença automática do raw_scan
+     */
+    async function carregarPresencaAutomatica(warehouse, dia) {
+        try {
+            // Formatar data como DD/MM/YYYY
+            const data = `${String(dia).padStart(2, '0')}/02/2026`;
+            
+            console.log(`[ABS] Carregando presença automática: ${warehouse} - ${data}`);
+            
+            const response = await fetch(`/api/abs/presenca-automatica/${warehouse}/${data}`);
+            const result = await response.json();
+            
+            if (!result.success) {
+                console.error('[ABS] Erro ao carregar presença automática:', result.error);
+                return;
+            }
+            
+            // Armazenar em cache
+            presencasAutomaticasCache = {};
+            result.presencas.forEach(p => {
+                presencasAutomaticasCache[p.wfmUser] = p;
+            });
+            
+            console.log(`[ABS] ${result.presencas.length} presenças automáticas carregadas`);
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao carregar presença automática:', error);
+        }
+    }
+
+    /**
+     * Renderizar lista de colaboradores com dados reais
+     */
+    function renderizarColaboradores(dia) {
+        const container = document.querySelector('#tela-marcacao .space-y-3');
+        if (!container) return;
+        
+        container.innerHTML = ''; // Limpar lista atual
+        
+        if (colaboradoresCache.length === 0) {
+            container.innerHTML = `
+                <div class="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-6 text-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
+                    <p class="text-gray-300">Nenhum colaborador encontrado para este warehouse/mês.</p>
+                    <p class="text-gray-400 text-sm mt-2">Verifique se há dados na planilha ABS.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let marcados = 0;
+        let pendentes = 0;
+        let automaticos = 0;
+        
+        colaboradoresCache.forEach(colab => {
+            const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
+            const marcacaoDia = colab.marcacoes[dia];
+            const jaFoiMarcado = !!marcacaoDia;
+            
+            if (temPresencaAutomatica) automaticos++;
+            if (jaFoiMarcado) marcados++;
+            else pendentes++;
+            
+            const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
+            const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
+            const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
+            
+            let badgeHtml = '';
+            if (temPresencaAutomatica) {
+                badgeHtml = `
+                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                        🤖 AUTO
+                    </span>
+                `;
+            } else if (!jaFoiMarcado) {
+                badgeHtml = `
+                    <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">
+                        ⚠️ PENDENTE
+                    </span>
+                `;
+            }
+            
+            const siglaAtual = marcacaoDia?.sigla || 'P';
+            
+            const html = `
+                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}">
+                    <div class="flex items-center flex-1">
+                        <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                            <i class="fas ${icon} text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold">${colab.nome}</h3>
+                                ${badgeHtml}
+                            </div>
+                            <p class="text-gray-400 text-sm">
+                                WFM: ${colab.wfmUser} | 
+                                Supervisor: ${colab.supervisor}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select 
+                            class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
+                            onchange="marcarPresenca('${colab.wfmUser}', '${colab.nome}', this.value, ${dia})"
+                        >
+                            <option value="P" ${siglaAtual === 'P' ? 'selected' : ''}>P - Presente</option>
+                            <option value="F" ${siglaAtual === 'F' ? 'selected' : ''}>F - Falta</option>
+                            <option value="FJ" ${siglaAtual === 'FJ' ? 'selected' : ''}>FJ - Falta Justificada</option>
+                            <option value="FE" ${siglaAtual === 'FE' ? 'selected' : ''}>FE - Férias</option>
+                            <option value="FO" ${siglaAtual === 'FO' ? 'selected' : ''}>FO - Folga</option>
+                            <option value="DSR" ${siglaAtual === 'DSR' ? 'selected' : ''}>DSR - Descanso Semanal</option>
+                            <option value="AM" ${siglaAtual === 'AM' ? 'selected' : ''}>AM - Atestado Médico</option>
+                            <option value="AF" ${siglaAtual === 'AF' ? 'selected' : ''}>AF - Afastamento</option>
+                            <option value="AL" ${siglaAtual === 'AL' ? 'selected' : ''}>AL - Atraso Longo</option>
+                            <option value="BH" ${siglaAtual === 'BH' ? 'selected' : ''}>BH - Banco de Horas</option>
+                            <option value="TR" ${siglaAtual === 'TR' ? 'selected' : ''}>TR - Treinamento</option>
+                            <option value="SU" ${siglaAtual === 'SU' ? 'selected' : ''}>SU - Suspensão</option>
+                            <option value="PR" ${siglaAtual === 'PR' ? 'selected' : ''}>PR - Pré-Contratação</option>
+                            <option value="S1" ${siglaAtual === 'S1' ? 'selected' : ''}>S1 - Saída 1h</option>
+                            <option value="S2" ${siglaAtual === 'S2' ? 'selected' : ''}>S2 - Saída 2h</option>
+                            <option value="DV" ${siglaAtual === 'DV' ? 'selected' : ''}>DV - Desligamento Voluntário</option>
+                            <option value="DP" ${siglaAtual === 'DP' ? 'selected' : ''}>DP - Desligamento Pedido</option>
+                            <option value="DF" ${siglaAtual === 'DF' ? 'selected' : ''}>DF - Desligamento Força</option>
+                            <option value="NC" ${siglaAtual === 'NC' ? 'selected' : ''}>NC - Não Compareceu</option>
+                        </select>
+                        <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
+                            <i class="fas fa-clock mr-1"></i> HE
+                        </button>
+                        <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
+                            <i class="fas fa-exchange-alt mr-1"></i> SIN
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML += html;
+        });
+        
+        // Atualizar estatísticas no header
+        const statsElement = document.querySelector('#tela-marcacao .text-green-400.font-bold.text-xl');
+        if (statsElement) {
+            statsElement.textContent = `${marcados}/${colaboradoresCache.length}`;
+        }
+        
+        console.log(`[ABS] Lista renderizada: ${marcados} marcados, ${pendentes} pendentes, ${automaticos} automáticos`);
+    }
+
+    /**
+     * Marcar presença de um colaborador
+     */
+    async function marcarPresenca(wfmUser, nome, sigla, dia) {
+        try {
+            console.log(`[ABS] Marcando presença: ${nome} (${wfmUser}) - ${sigla} - Dia ${dia}`);
+            
+            // Verificar se é desligamento (DV, DP, DF)
+            if (['DV', 'DP', 'DF'].includes(sigla)) {
+                const confirmar = confirm(`⚠️ ATENÇÃO: Auto-Propagação de Desligamento\n\nVocê está marcando ${nome} como:\n${sigla}\n\nEsta marcação será propagada automaticamente para todos os dias seguintes do mês.\n\nDeseja confirmar?`);
+                
+                if (!confirmar) {
+                    // Reverter select
+                    event.target.value = 'P';
+                    return;
+                }
+                
+                // Propagar desligamento
+                await propagarDesligamento(wfmUser, nome, sigla, dia);
+            }
+            
+            const response = await fetch('/api/abs/marcar-presenca', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    dia,
+                    mes: 'Fevereiro',
+                    ano: 2026,
+                    colaborador: nome,
+                    wfmUser,
+                    sigla,
+                    supervisor: supervisorSelecionado || 'Sistema',
+                    warehouse: warehouseSelecionado,
+                    tipo: 'manual'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                alert('❌ Erro ao marcar presença: ' + data.error);
+                return;
+            }
+            
+            console.log('[ABS] Presença marcada com sucesso!');
+            
+            // Recarregar lista
+            await carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao marcar presença:', error);
+            alert('❌ Erro ao marcar presença. Verifique o console.');
+        }
+    }
+
+    /**
+     * Propagar desligamento para dias seguintes
+     */
+    async function propagarDesligamento(wfmUser, nome, sigla, diaInicio) {
+        try {
+            console.log(`[ABS] Propagando desligamento: ${nome} - ${sigla} - A partir do dia ${diaInicio}`);
+            
+            const response = await fetch('/api/abs/propagar-desligamento', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    diaInicio,
+                    mes: 'Fevereiro',
+                    ano: 2026,
+                    colaborador: nome,
+                    wfmUser,
+                    sigla,
+                    supervisor: supervisorSelecionado || 'Sistema',
+                    warehouse: warehouseSelecionado
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                alert('❌ Erro ao propagar desligamento: ' + data.error);
+                return;
+            }
+            
+            alert(`✅ Propagação concluída!\n\n${nome} foi marcado como ${sigla} em ${data.diasPropagados.length} dias`);
+            
+            console.log('[ABS] Desligamento propagado com sucesso:', data);
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao propagar desligamento:', error);
+            alert('❌ Erro ao propagar desligamento. Verifique o console.');
+        }
+    }
+
+    /**
+     * Hook para carregar colaboradores ao entrar na tela de marcação
+     */
+    const irParaOriginal = window.irPara;
+    window.irPara = function(telaId) {
+        irParaOriginal(telaId);
+        
+        // Se for tela de marcação, carregar colaboradores
+        if (telaId === 'tela-marcacao' && warehouseSelecionado) {
+            const dia = 16; // Dia atual (seria dinâmico na implementação real)
+            carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
+        }
+    };
 </script>
 
 </body>
