@@ -1466,7 +1466,7 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
   
   // Validar nível de acesso
   const user = await sheetsManager.findUserByEmail(email)
-  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) {
+  const nivel = parseInt(user?.nivel || '0'); if (!user || user.status !== 'APROVADO' || nivel < 5) {
     return c.json({ success: false, error: 'Acesso negado' }, 403)
   }
   try {
@@ -1639,7 +1639,7 @@ app.post('/api/abs/marcar-presenca', async (c) => {
   
   // Validar nível de acesso
   const user = await sheetsManager.findUserByEmail(email)
-  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) {
+  const nivel = parseInt(user?.nivel || '0'); if (!user || user.status !== 'APROVADO' || nivel < 5) {
     return c.json({ success: false, error: 'Acesso negado' }, 403)
   }
   
@@ -1796,7 +1796,7 @@ app.post('/api/abs/hora-extra', async (c) => {
   const email = c.req.header('x-user-email')
   if (!email) return c.json({ success: false, error: 'Não autenticado' }, 401)
   const user = await sheetsManager.findUserByEmail(email)
-  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) return c.json({ success: false, error: 'Acesso negado' }, 403)
+  const nivel = parseInt(user?.nivel || '0'); if (!user || user.status !== 'APROVADO' || nivel < 5) return c.json({ success: false, error: 'Acesso negado' }, 403)
   try {
     const body = await c.req.json()
     const { warehouse, mes, ano, dia, wfmUser, nome, diaInteiro, horaInicio, horaFim, timestamp } = body
@@ -1894,7 +1894,7 @@ app.post('/api/abs/sinergia', async (c) => {
   const email = c.req.header('x-user-email')
   if (!email) return c.json({ success: false, error: 'Não autenticado' }, 401)
   const user = await sheetsManager.findUserByEmail(email)
-  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) return c.json({ success: false, error: 'Acesso negado' }, 403)
+  const nivel = parseInt(user?.nivel || '0'); if (!user || user.status !== 'APROVADO' || nivel < 5) return c.json({ success: false, error: 'Acesso negado' }, 403)
   try {
     const body = await c.req.json()
     const { warehouse, mes, ano, dia, wfmUser, nome, setorOrigem, setorDestino, tipo, observacoes, timestamp } = body
@@ -2005,7 +2005,7 @@ app.post('/api/abs/propagar-desligamento', async (c) => {
   const email = c.req.header('x-user-email')
   if (!email) return c.json({ success: false, error: 'Não autenticado' }, 401)
   const user = await sheetsManager.findUserByEmail(email)
-  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) return c.json({ success: false, error: 'Acesso negado' }, 403)
+  const nivel = parseInt(user?.nivel || '0'); if (!user || user.status !== 'APROVADO' || nivel < 5) return c.json({ success: false, error: 'Acesso negado' }, 403)
   try {
     const body = await c.req.json()
     const { diaInicio, mes, ano, colaborador, wfmUser, sigla, warehouse } = body
