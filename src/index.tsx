@@ -1415,35 +1415,34 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
       }, 404)
     }
     
-    // Buscar cabeçalho para validar estrutura
+    console.log(`[ABS API] Aba encontrada: ${nomeAba}`)
+    
+    // IMPORTANTE: Cabeçalho está na LINHA 4, dados começam na LINHA 5
     const headerResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A1:AZ1`
+      range: `${nomeAba}!A4:AZ4`
     })
     
     const header = headerResponse.data.values?.[0] || []
+    console.log(`[ABS API] Cabeçalho encontrado com ${header.length} colunas`)
     
-    // Validar colunas obrigatórias
-    const colunasAusentes = COLUNAS_OBRIGATORIAS.filter(col => !header.includes(col))
-    if (colunasAusentes.length > 0) {
+    // Validar colunas essenciais
+    if (!header.includes('Colaborador')) {
       return c.json({ 
         success: false, 
-        error: 'Estrutura da planilha inválida',
-        colunas_ausentes: colunasAusentes,
-        colunas_encontradas: header
+        error: 'Coluna "Colaborador" não encontrada',
+        header_encontrado: header.slice(0, 20)
       }, 400)
     }
-    
-    console.log(`[ABS API] Estrutura validada com sucesso`)
     
     // Mapear índices das colunas
     const getColIndex = (nome: string) => header.indexOf(nome)
     
     const indices = {
-      colaborador: getColIndex('Colaborador'),
-      wfmUser: getColIndex('WFM USER'),
+      colaborador: getColIndex('Colaborador'),  // Coluna C (índice 2)
+      wfmUser: getColIndex('WFM USER'),         // Coluna G (índice 6)
       setor: getColIndex('Setor'),
-      lider: getColIndex('Lider'),
+      lider: getColIndex('LIDER'),
       cargo: getColIndex('Cargo'),
       escala: getColIndex('Escala'),
       dataAdmissao: getColIndex('Data de Admissão'),
@@ -1451,13 +1450,16 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
       dias: Array.from({ length: 31 }, (_, i) => getColIndex(`${i + 1}`))
     }
     
-    // Buscar dados dos colaboradores
+    console.log(`[ABS API] Índice Colaborador: ${indices.colaborador}, WFM USER: ${indices.wfmUser}`)
+    
+    // Buscar dados dos colaboradores (a partir da LINHA 5)
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A2:AZ10000`
+      range: `${nomeAba}!A5:AZ1000`
     })
     
     const rows = dataResponse.data.values || []
+    console.log(`[ABS API] ${rows.length} linhas encontradas`)
     
     // Calcular dias válidos do mês
     const diasNoMes = getDiasNoMes(mes, parseInt(ano))
@@ -1470,11 +1472,13 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
         // Extrair marcações dos dias válidos
         for (let dia = 1; dia <= diasNoMes; dia++) {
           const colIndex = indices.dias[dia - 1]
-          const valor = row[colIndex]
-          if (valor) {
-            marcacoes[dia] = {
-              sigla: valor,
-              tipo: 'manual'
+          if (colIndex >= 0) {
+            const valor = row[colIndex]
+            if (valor) {
+              marcacoes[dia] = {
+                sigla: valor,
+                tipo: 'manual'
+              }
             }
           }
         }
@@ -1493,7 +1497,7 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
         }
       })
     
-    console.log(`[ABS API] ${colaboradores.length} colaboradores carregados com sucesso`)
+    console.log(`[ABS API] ${colaboradores.length} colaboradores processados com sucesso`)
     
     return c.json({
       success: true,
@@ -1563,30 +1567,37 @@ app.post('/api/abs/marcar-presenca', async (c) => {
     // Identificar aba
     const nomeAba = `Controle de Presença | ${mes} ${ano}`
     
-    // Buscar cabeçalho
+    // Buscar cabeçalho (LINHA 4)
     const headerResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A1:AZ1`
+      range: `${nomeAba}!A4:AZ4`
     })
     
     const header = headerResponse.data.values?.[0] || []
     const getColIndex = (nome: string) => header.indexOf(nome)
     
-    // Buscar linha do colaborador
+    // Buscar dados (a partir da LINHA 5)
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A2:AZ10000`
+      range: `${nomeAba}!A5:AZ1000`
     })
     
     const rows = dataResponse.data.values || []
     const wfmUserIndex = getColIndex('WFM USER')
     const diaColIndex = getColIndex(`${dia}`)
     
-    // Encontrar linha do colaborador
+    if (wfmUserIndex === -1 || diaColIndex === -1) {
+      return c.json({ 
+        success: false, 
+        error: `Coluna não encontrada: WFM USER=${wfmUserIndex}, Dia ${dia}=${diaColIndex}`
+      }, 400)
+    }
+    
+    // Encontrar linha do colaborador (lembrar que dados começam na linha 5)
     let linhaColaborador = -1
     for (let i = 0; i < rows.length; i++) {
       if (rows[i][wfmUserIndex] === wfmUser) {
-        linhaColaborador = i + 2 // +2 porque começa em A2
+        linhaColaborador = i + 5 // +5 porque dados começam na linha 5
         break
       }
     }
@@ -1681,29 +1692,29 @@ app.post('/api/abs/propagar-desligamento', async (c) => {
     // Identificar aba
     const nomeAba = `Controle de Presença | ${mes} ${ano}`
     
-    // Buscar cabeçalho
+    // Buscar cabeçalho (LINHA 4)
     const headerResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A1:AZ1`
+      range: `${nomeAba}!A4:AZ4`
     })
     
     const header = headerResponse.data.values?.[0] || []
     const getColIndex = (nome: string) => header.indexOf(nome)
     
-    // Buscar linha do colaborador
+    // Buscar dados (a partir da LINHA 5)
     const dataResponse = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${nomeAba}!A2:AZ10000`
+      range: `${nomeAba}!A5:AZ1000`
     })
     
     const rows = dataResponse.data.values || []
     const wfmUserIndex = getColIndex('WFM USER')
     
-    // Encontrar linha do colaborador
+    // Encontrar linha do colaborador (lembrar que dados começam na linha 5)
     let linhaColaborador = -1
     for (let i = 0; i < rows.length; i++) {
       if (rows[i][wfmUserIndex] === wfmUser) {
-        linhaColaborador = i + 2
+        linhaColaborador = i + 5
         break
       }
     }
