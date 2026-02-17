@@ -1307,14 +1307,28 @@ app.delete('/api/admin/users/:email', async (c) => {
  */
 app.get('/abs', async (c) => {
   try {
-    // Ler arquivo HTML estático
+    // Ler arquivo HTML estático (nova versão)
+    const fs = await import('fs/promises')
+    const path = await import('path')
+    const htmlPath = path.join(process.cwd(), 'public', 'abs-novo.html')
+    const html = await fs.readFile(htmlPath, 'utf-8')
+    return c.html(html)
+  } catch (error) {
+    console.error('[ABS] Erro ao carregar:', error)
+    return c.html('<h1>Erro ao carregar Sistema ABS</h1>', 500)
+  }
+})
+
+// Rota para versão antiga (backup)
+app.get('/abs/old', async (c) => {
+  try {
     const fs = await import('fs/promises')
     const path = await import('path')
     const htmlPath = path.join(process.cwd(), 'public', 'abs.html')
     const html = await fs.readFile(htmlPath, 'utf-8')
     return c.html(html)
   } catch (error) {
-    console.error('[ABS] Erro ao carregar:', error)
+    console.error('[ABS Old] Erro ao carregar:', error)
     return c.html('<h1>Erro ao carregar Sistema ABS</h1>', 500)
   }
 })
