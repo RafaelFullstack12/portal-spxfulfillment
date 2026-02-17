@@ -426,6 +426,12 @@
                     <i class="fas fa-search text-gray-400"></i>
                     <input type="text" placeholder="Pesquisar colaborador..." id="busca-colaborador" onkeyup="filtrarColaboradores()">
                 </div>
+                <button class="btn" onclick="abrirModalSinergia()" style="background: #9C27B0; border-color: #9C27B0; color: #fff;">
+                    <i class="fas fa-handshake mr-2"></i>Sinergia
+                </button>
+                <button class="btn btn-warning" onclick="abrirModalHoraExtra()" style="background: #FF9800; border-color: #FF9800;">
+                    <i class="fas fa-clock mr-2"></i>Hora Extra
+                </button>
                 <button class="btn btn-secondary" onclick="recarregarMarcacoes()">
                     <i class="fas fa-sync-alt mr-2"></i>Recarregar
                 </button>
@@ -448,6 +454,99 @@
                 </div>
             </div>
             <div class="colaboradores-list" id="colaboradores-list"></div>
+        </div>
+    </div>
+
+    <!-- MODAL HORA EXTRA -->
+    <div id="modal-hora-extra" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #2b2b2b; border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 24px; font-weight: bold; color: #FF9800;">
+                    <i class="fas fa-clock mr-2"></i>Registrar Hora Extra
+                </h2>
+                <button onclick="fecharModalHoraExtra()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Colaborador:</label>
+                <select id="hr-colaborador" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione um colaborador --</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="hr-dia-inteiro" onchange="toggleHorarioHR()" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                    <span style="color: #fff; font-size: 16px;">Dia Inteiro</span>
+                </label>
+            </div>
+
+            <div id="hr-horarios" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Hora Início:</label>
+                    <input type="time" id="hr-inicio" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Hora Fim:</label>
+                    <input type="time" id="hr-fim" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="fecharModalHoraExtra()" style="flex: 1; padding: 14px; background: #666; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button onclick="salvarHoraExtra()" style="flex: 1; padding: 14px; background: #FF9800; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SINERGIA -->
+    <div id="modal-sinergia" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #2b2b2b; border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 24px; font-weight: bold; color: #9C27B0;">
+                    <i class="fas fa-handshake mr-2"></i>Registrar Sinergia
+                </h2>
+                <button onclick="fecharModalSinergia()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Colaborador:</label>
+                <select id="sinergia-colaborador" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione um colaborador --</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Tipo de Sinergia:</label>
+                <select id="sinergia-tipo" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione o tipo --</option>
+                    <option value="S1">S1 - Sinergia Parcial</option>
+                    <option value="S2">S2 - Sinergia Total</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Setor de Destino:</label>
+                <input type="text" id="sinergia-setor-destino" placeholder="Ex: OUTBOUND, INBOUND, etc." style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Observações (opcional):</label>
+                <textarea id="sinergia-obs" rows="3" placeholder="Informações adicionais..." style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button onclick="fecharModalSinergia()" style="flex: 1; padding: 14px; background: #666; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button onclick="salvarSinergia()" style="flex: 1; padding: 14px; background: #9C27B0; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -944,6 +1043,216 @@ async function salvarMarcacoes() {
     } catch (error) {
         esconderLoading();
         alert(`Erro ao salvar: ${error.message}`);
+        console.error(error);
+    }
+}
+
+// ========================================
+// HORA EXTRA
+// ========================================
+function abrirModalHoraExtra() {
+    const modal = document.getElementById('modal-hora-extra');
+    const select = document.getElementById('hr-colaborador');
+    
+    // Limpar select
+    select.innerHTML = '<option value="">-- Selecione um colaborador --</option>';
+    
+    // Preencher com colaboradores do supervisor atual
+    estado.colaboradores.forEach(colab => {
+        const option = document.createElement('option');
+        option.value = colab.wfmUser;
+        option.textContent = `${colab.nome} (${colab.wfmUser})`;
+        select.appendChild(option);
+    });
+    
+    // Limpar campos
+    document.getElementById('hr-dia-inteiro').checked = false;
+    document.getElementById('hr-inicio').value = '';
+    document.getElementById('hr-fim').value = '';
+    document.getElementById('hr-horarios').style.display = 'grid';
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+}
+
+function fecharModalHoraExtra() {
+    const modal = document.getElementById('modal-hora-extra');
+    modal.style.display = 'none';
+}
+
+function toggleHorarioHR() {
+    const diaInteiro = document.getElementById('hr-dia-inteiro').checked;
+    const horariosDiv = document.getElementById('hr-horarios');
+    
+    if (diaInteiro) {
+        horariosDiv.style.display = 'none';
+        document.getElementById('hr-inicio').value = '';
+        document.getElementById('hr-fim').value = '';
+    } else {
+        horariosDiv.style.display = 'grid';
+    }
+}
+
+async function salvarHoraExtra() {
+    const wfmUser = document.getElementById('hr-colaborador').value;
+    const diaInteiro = document.getElementById('hr-dia-inteiro').checked;
+    const hrInicio = document.getElementById('hr-inicio').value;
+    const hrFim = document.getElementById('hr-fim').value;
+    
+    // Validações
+    if (!wfmUser) {
+        alert('Selecione um colaborador');
+        return;
+    }
+    
+    if (!diaInteiro && (!hrInicio || !hrFim)) {
+        alert('Preencha o horário de início e fim ou marque "Dia Inteiro"');
+        return;
+    }
+    
+    if (!diaInteiro && hrInicio >= hrFim) {
+        alert('Hora de início deve ser menor que hora de fim');
+        return;
+    }
+    
+    const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+    if (!colab) {
+        alert('Colaborador não encontrado');
+        return;
+    }
+    
+    mostrarLoading('Salvando hora extra...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/abs/hora-extra`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                wfmUser: wfmUser,
+                nome: colab.nome,
+                diaInteiro: diaInteiro,
+                horaInicio: diaInteiro ? 'DIA_INTEIRO' : hrInicio,
+                horaFim: diaInteiro ? 'DIA_INTEIRO' : hrFim,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar hora extra');
+        }
+        
+        esconderLoading();
+        fecharModalHoraExtra();
+        alert(`✅ Hora extra registrada com sucesso!\n\nColaborador: ${colab.nome}\nDia: ${estado.dia}/${estado.mes}/${estado.ano}\nHorário: ${diaInteiro ? 'DIA INTEIRO' : `${hrInicio} às ${hrFim}`}`);
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar hora extra: ${error.message}`);
+        console.error(error);
+    }
+}
+
+// ========================================
+// SINERGIA
+// ========================================
+function abrirModalSinergia() {
+    const modal = document.getElementById('modal-sinergia');
+    const select = document.getElementById('sinergia-colaborador');
+    
+    // Limpar select
+    select.innerHTML = '<option value="">-- Selecione um colaborador --</option>';
+    
+    // Preencher com colaboradores do supervisor atual
+    estado.colaboradores.forEach(colab => {
+        const option = document.createElement('option');
+        option.value = colab.wfmUser;
+        option.textContent = `${colab.nome} (${colab.wfmUser})`;
+        option.dataset.setorOrigem = colab.setor || 'N/A';
+        select.appendChild(option);
+    });
+    
+    // Limpar campos
+    document.getElementById('sinergia-tipo').value = '';
+    document.getElementById('sinergia-setor-destino').value = '';
+    document.getElementById('sinergia-obs').value = '';
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+}
+
+function fecharModalSinergia() {
+    const modal = document.getElementById('modal-sinergia');
+    modal.style.display = 'none';
+}
+
+async function salvarSinergia() {
+    const wfmUser = document.getElementById('sinergia-colaborador').value;
+    const tipo = document.getElementById('sinergia-tipo').value;
+    const setorDestino = document.getElementById('sinergia-setor-destino').value.trim();
+    const observacoes = document.getElementById('sinergia-obs').value.trim();
+    
+    // Validações
+    if (!wfmUser) {
+        alert('Selecione um colaborador');
+        return;
+    }
+    
+    if (!tipo) {
+        alert('Selecione o tipo de sinergia (S1 ou S2)');
+        return;
+    }
+    
+    if (!setorDestino) {
+        alert('Informe o setor de destino');
+        return;
+    }
+    
+    const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+    if (!colab) {
+        alert('Colaborador não encontrado');
+        return;
+    }
+    
+    mostrarLoading('Salvando sinergia...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/abs/sinergia`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                wfmUser: wfmUser,
+                nome: colab.nome,
+                setorOrigem: colab.setor || 'N/A',
+                setorDestino: setorDestino,
+                tipo: tipo,
+                observacoes: observacoes,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar sinergia');
+        }
+        
+        esconderLoading();
+        fecharModalSinergia();
+        alert(`✅ Sinergia registrada com sucesso!\n\nColaborador: ${colab.nome}\nTipo: ${tipo}\nDia: ${estado.dia}/${estado.mes}/${estado.ano}\nSetor Origem: ${colab.setor || 'N/A'}\nSetor Destino: ${setorDestino}`);
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar sinergia: ${error.message}`);
         console.error(error);
     }
 }

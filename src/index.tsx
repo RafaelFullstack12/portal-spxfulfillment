@@ -1699,6 +1699,208 @@ app.post('/api/abs/marcar-presenca', async (c) => {
 })
 
 /**
+ * API: Registrar Hora Extra
+ * POST /api/abs/hora-extra
+ * Salva na planilha de HR (aba "raw_hr")
+ */
+app.post('/api/abs/hora-extra', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { warehouse, mes, ano, dia, wfmUser, nome, diaInteiro, horaInicio, horaFim, timestamp } = body
+    
+    console.log(`[ABS API] Registrando hora extra:`, body)
+    
+    // Validar dados obrigatórios
+    if (!warehouse || !mes || !ano || !dia || !wfmUser || !nome) {
+      return c.json({ 
+        success: false, 
+        error: 'Dados incompletos',
+        campos_obrigatorios: ['warehouse', 'mes', 'ano', 'dia', 'wfmUser', 'nome']
+      }, 400)
+    }
+    
+    // ID da planilha de HR (mesma base)
+    const HR_SPREADSHEET_ID = '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w'
+    const nomeAba = 'raw_hr'
+    
+    console.log(`[ABS API] Salvando na planilha: ${HR_SPREADSHEET_ID}, aba: ${nomeAba}`)
+    
+    // Verificar se a aba existe
+    const spreadsheet = await sheetsManager.sheets.spreadsheets.get({
+      spreadsheetId: HR_SPREADSHEET_ID
+    })
+    
+    const abaExiste = spreadsheet.data.sheets?.some(
+      sheet => sheet.properties?.title === nomeAba
+    )
+    
+    if (!abaExiste) {
+      return c.json({ 
+        success: false, 
+        error: `Aba "${nomeAba}" não encontrada na planilha de HR`,
+        spreadsheet_id: HR_SPREADSHEET_ID
+      }, 404)
+    }
+    
+    // Preparar dados para inserir
+    const dataRegistro = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    const horarioTexto = diaInteiro ? 'DIA INTEIRO' : `${horaInicio} às ${horaFim}`
+    
+    const novaLinha = [
+      nome,                           // Coluna A: Nome
+      wfmUser,                        // Coluna B: WFM User
+      warehouse,                      // Coluna C: Warehouse
+      `${dia}/${mes}/${ano}`,        // Coluna D: Data
+      horarioTexto,                   // Coluna E: Horário
+      diaInteiro ? 'SIM' : 'NÃO',    // Coluna F: Dia Inteiro
+      dataRegistro                    // Coluna G: Timestamp de registro
+    ]
+    
+    // Adicionar linha na planilha
+    await sheetsManager.sheets.spreadsheets.values.append({
+      spreadsheetId: HR_SPREADSHEET_ID,
+      range: `${nomeAba}!A:G`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [novaLinha]
+      }
+    })
+    
+    console.log(`[ABS API] Hora extra registrada com sucesso`)
+    
+    return c.json({
+      success: true,
+      message: 'Hora extra registrada com sucesso',
+      dados: {
+        nome,
+        wfmUser,
+        warehouse,
+        data: `${dia}/${mes}/${ano}`,
+        horario: horarioTexto,
+        diaInteiro: diaInteiro ? 'SIM' : 'NÃO',
+        registrado_em: dataRegistro
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('[ABS API] Erro ao registrar hora extra:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Erro ao registrar hora extra',
+      message: error.message 
+    }, 500)
+  }
+})
+
+/**
+ * API: Registrar Sinergia
+ * POST /api/abs/sinergia
+ * Salva na planilha de Sinergia (aba "raw_sinergia")
+ */
+app.post('/api/abs/sinergia', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { warehouse, mes, ano, dia, wfmUser, nome, setorOrigem, setorDestino, tipo, observacoes, timestamp } = body
+    
+    console.log(`[ABS API] Registrando sinergia:`, body)
+    
+    // Validar dados obrigatórios
+    if (!warehouse || !mes || !ano || !dia || !wfmUser || !nome || !setorDestino || !tipo) {
+      return c.json({ 
+        success: false, 
+        error: 'Dados incompletos',
+        campos_obrigatorios: ['warehouse', 'mes', 'ano', 'dia', 'wfmUser', 'nome', 'setorDestino', 'tipo']
+      }, 400)
+    }
+    
+    // Validar tipo de sinergia
+    if (!['S1', 'S2'].includes(tipo)) {
+      return c.json({ 
+        success: false, 
+        error: 'Tipo de sinergia inválido. Use: S1 (Parcial) ou S2 (Total)'
+      }, 400)
+    }
+    
+    // ID da planilha de HR (mesma base para sinergia)
+    const SINERGIA_SPREADSHEET_ID = '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w'
+    const nomeAba = 'raw_sinergia'
+    
+    console.log(`[ABS API] Salvando na planilha: ${SINERGIA_SPREADSHEET_ID}, aba: ${nomeAba}`)
+    
+    // Verificar se a aba existe
+    const spreadsheet = await sheetsManager.sheets.spreadsheets.get({
+      spreadsheetId: SINERGIA_SPREADSHEET_ID
+    })
+    
+    const abaExiste = spreadsheet.data.sheets?.some(
+      sheet => sheet.properties?.title === nomeAba
+    )
+    
+    if (!abaExiste) {
+      return c.json({ 
+        success: false, 
+        error: `Aba "${nomeAba}" não encontrada na planilha`,
+        spreadsheet_id: SINERGIA_SPREADSHEET_ID
+      }, 404)
+    }
+    
+    // Preparar dados para inserir
+    const dataRegistro = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+    const tipoTexto = tipo === 'S1' ? 'Sinergia Parcial' : 'Sinergia Total'
+    
+    const novaLinha = [
+      nome,                           // Coluna A: Nome
+      wfmUser,                        // Coluna B: WFM User
+      warehouse,                      // Coluna C: Warehouse
+      `${dia}/${mes}/${ano}`,        // Coluna D: Data
+      setorOrigem || 'N/A',          // Coluna E: Setor Origem
+      setorDestino,                   // Coluna F: Setor Destino
+      tipo,                           // Coluna G: Tipo (S1/S2)
+      tipoTexto,                      // Coluna H: Descrição do Tipo
+      observacoes || '',              // Coluna I: Observações
+      dataRegistro                    // Coluna J: Timestamp de registro
+    ]
+    
+    // Adicionar linha na planilha
+    await sheetsManager.sheets.spreadsheets.values.append({
+      spreadsheetId: SINERGIA_SPREADSHEET_ID,
+      range: `${nomeAba}!A:J`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [novaLinha]
+      }
+    })
+    
+    console.log(`[ABS API] Sinergia registrada com sucesso`)
+    
+    return c.json({
+      success: true,
+      message: 'Sinergia registrada com sucesso',
+      dados: {
+        nome,
+        wfmUser,
+        warehouse,
+        data: `${dia}/${mes}/${ano}`,
+        setorOrigem: setorOrigem || 'N/A',
+        setorDestino,
+        tipo,
+        tipoTexto,
+        observacoes: observacoes || 'Nenhuma',
+        registrado_em: dataRegistro
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('[ABS API] Erro ao registrar sinergia:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Erro ao registrar sinergia',
+      message: error.message 
+    }, 500)
+  }
+})
+
+/**
  * API: Propagar desligamento (DV, DP, DF) para dias seguintes
  * POST /api/abs/propagar-desligamento
  */
