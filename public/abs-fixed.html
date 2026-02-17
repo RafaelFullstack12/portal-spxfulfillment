@@ -726,10 +726,21 @@ async function selecionarMes(mes, ano) {
         
         estado.todosColaboradores = data.colaboradores || [];
         
+        // LOG PASSO 1: CONTAGEM BRUTA
+        console.log('[DEBUG PASSO 1] Total colaboradores da API:', estado.todosColaboradores.length);
+        
         // Normalizar campo lider em TODOS os colaboradores
         estado.todosColaboradores.forEach(c => {
             c.liderNormalizado = normalizeLider(c.lider);
         });
+        
+        // LOG PASSO 2: CONTAGEM POR LIDER (BRUTA)
+        const contagemPorLider = {};
+        estado.todosColaboradores.forEach(c => {
+            contagemPorLider[c.liderNormalizado] = (contagemPorLider[c.liderNormalizado] || 0) + 1;
+        });
+        console.log('[DEBUG PASSO 2] Contagem por lider:', contagemPorLider);
+        console.log('[DEBUG PASSO 2] VERONICA THOMAZ tem:', contagemPorLider['VERONICA THOMAZ'] || 0, 'colaboradores');
         
         // Extrair lista única de supervisores (normalizados)
         const supervisoresSet = new Set();
@@ -740,6 +751,8 @@ async function selecionarMes(mes, ano) {
         });
         
         estado.todosSupervisores = Array.from(supervisoresSet).sort();
+        
+        console.log('[DEBUG] Total supervisores encontrados:', estado.todosSupervisores.length);
         
         esconderLoading();
         carregarSupervisores();
@@ -786,6 +799,11 @@ function carregarSupervisores() {
         card.onclick = () => selecionarSupervisor(supervisor);
         
         const qtd = estado.todosColaboradores.filter(c => c.liderNormalizado === supervisor).length;
+        
+        // LOG: Contagem específica
+        if (supervisor === 'VERONICA THOMAZ') {
+            console.log('[DEBUG] VERONICA THOMAZ no card:', qtd, 'colaboradores');
+        }
         
         card.innerHTML = `
             <div class="card-icon">👤</div>
@@ -849,6 +867,14 @@ function carregarCalendario() {
     const colaboradoresSupervisor = estado.todosColaboradores.filter(
         c => c.liderNormalizado === estado.supervisor
     );
+    
+    // LOG PASSO 3: Contagem após filtro de supervisor
+    console.log('[DEBUG PASSO 3 - Calendário] Supervisor selecionado:', estado.supervisor);
+    console.log('[DEBUG PASSO 3 - Calendário] Colaboradores filtrados:', colaboradoresSupervisor.length);
+    if (estado.supervisor === 'VERONICA THOMAZ') {
+        console.log('[DEBUG PASSO 3] VERONICA THOMAZ após filtro:', colaboradoresSupervisor.length);
+        console.log('[DEBUG PASSO 3] Lista de colaboradores:', colaboradoresSupervisor.map(c => c.nome));
+    }
     
     const mesIndex = MESES.indexOf(estado.mes);
     const diasNoMes = new Date(estado.ano, mesIndex + 1, 0).getDate();
@@ -992,6 +1018,12 @@ function carregarMarcacoes() {
         c => c.liderNormalizado === estado.supervisor
     );
     console.log('[carregarMarcacoes] Colaboradores filtrados:', estado.colaboradores.length);
+    
+    // LOG PASSO 3: Contagem na marcação
+    if (estado.supervisor === 'VERONICA THOMAZ') {
+        console.log('[DEBUG PASSO 3 - Marcações] VERONICA THOMAZ após filtro:', estado.colaboradores.length);
+        console.log('[DEBUG PASSO 3 - Marcações] Lista:', estado.colaboradores.map(c => c.nome));
+    }
     
     renderizarColaboradores();
     console.log('[carregarMarcacoes] renderizarColaboradores() concluído');
