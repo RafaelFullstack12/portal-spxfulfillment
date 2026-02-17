@@ -600,6 +600,12 @@ const OPCOES_PRESENCA = {
 // Siglas que identificam desligamento
 const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
 
+// Obter email do usuário do cookie
+function getUserEmail() {
+    const match = document.cookie.match(/user_email=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 const MESES = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril',
     'Maio', 'Junho', 'Julho', 'Agosto',
@@ -699,7 +705,9 @@ async function selecionarMes(mes, ano) {
     mostrarLoading('Carregando supervisores...');
     
     try {
-        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`);
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`, {
+            headers: { 'x-user-email': getUserEmail() }
+        });
         const data = await response.json();
         
         if (!data.success) {
@@ -708,11 +716,12 @@ async function selecionarMes(mes, ano) {
         
         estado.todosColaboradores = data.colaboradores || [];
         
-        // Extrair lista única de supervisores
+        // Extrair lista única de supervisores (com trim)
         const supervisoresSet = new Set();
         estado.todosColaboradores.forEach(c => {
-            if (c.lider && c.lider.trim()) {
-                supervisoresSet.add(c.lider.trim());
+            const liderNormalizado = c.lider?.trim();
+            if (liderNormalizado && liderNormalizado !== 'Não atribuído') {
+                supervisoresSet.add(liderNormalizado);
             }
         });
         
@@ -762,7 +771,7 @@ function carregarSupervisores() {
         card.className = 'card';
         card.onclick = () => selecionarSupervisor(supervisor);
         
-        const qtd = estado.todosColaboradores.filter(c => c.lider === supervisor).length;
+        const qtd = estado.todosColaboradores.filter(c => c.lider?.trim() === supervisor?.trim()).length;
         
         card.innerHTML = `
             <div class="card-icon">👤</div>
@@ -1126,8 +1135,9 @@ async function recarregarMarcacoes() {
     mostrarLoading('Recarregando dados...');
     
     try {
-        // Recarregar dados do servidor
-        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`);
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
+            headers: { 'x-user-email': getUserEmail() }
+        });
         const data = await response.json();
         
         if (!data.success) {
@@ -1142,7 +1152,7 @@ async function recarregarMarcacoes() {
         
         // Re-filtrar colaboradores do supervisor atual
         estado.colaboradores = estado.todosColaboradores.filter(
-            c => c.lider === estado.supervisor
+            c => c.lider?.trim() === estado.supervisor?.trim()
         );
         
         // Re-renderizar lista
@@ -1216,7 +1226,10 @@ async function salvarMarcacoes() {
             
             const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-email': getUserEmail()
+                },
                 body: JSON.stringify({
                     warehouse: estado.warehouse,
                     mes: estado.mes,
@@ -1335,7 +1348,10 @@ async function salvarHoraExtra() {
     try {
         const response = await fetch(`${API_BASE}/api/abs/hora-extra`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-user-email': getUserEmail()
+            },
             body: JSON.stringify({
                 warehouse: estado.warehouse,
                 mes: estado.mes,
@@ -1433,7 +1449,10 @@ async function salvarSinergia() {
     try {
         const response = await fetch(`${API_BASE}/api/abs/sinergia`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-user-email': getUserEmail()
+            },
             body: JSON.stringify({
                 warehouse: estado.warehouse,
                 mes: estado.mes,

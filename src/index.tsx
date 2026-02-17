@@ -1325,6 +1325,23 @@ app.delete('/api/admin/users/:email', async (c) => {
  * Sistema ABS - Rotas estáticas
  */
 app.get('/abs', async (c) => {
+  // Validar email no cookie
+  const email = c.req.header('cookie')?.match(/user_email=([^;]+)/)?.[1]
+  if (!email) {
+    return c.redirect('/')
+  }
+  
+  // Validar usuário e nível
+  try {
+    const user = await sheetsManager.findUserByEmail(decodeURIComponent(email))
+    if (!user || !['ADMIN', 'RH'].includes(user.nivel)) {
+      return c.html('<h1>Acesso Negado</h1><p>Apenas ADMIN e RH podem acessar o sistema ABS.</p><a href="/">Voltar</a>', 403)
+    }
+  } catch (error) {
+    console.error('[ABS] Erro ao validar usuário:', error)
+    return c.redirect('/')
+  }
+  
   try {
     // Ler arquivo HTML corrigido com JS inline
     const fs = await import('fs/promises')
@@ -1411,6 +1428,17 @@ function getDiasNoMes(mes: string, ano: number): number {
  * GET /api/abs/colaboradores/:warehouse/:mes/:ano
  */
 app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
+  // Validar autenticação
+  const email = c.req.header('x-user-email')
+  if (!email) {
+    return c.json({ success: false, error: 'Não autenticado' }, 401)
+  }
+  
+  // Validar nível de acesso
+  const user = await sheetsManager.findUserByEmail(email)
+  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) {
+    return c.json({ success: false, error: 'Acesso negado' }, 403)
+  }
   try {
     const { warehouse, mes, ano } = c.req.param()
     
@@ -1517,12 +1545,12 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
         }
         
         return {
-          nome: row[indices.colaborador],
-          wfmUser: row[indices.wfmUser] || row[indices.colaborador]?.toLowerCase().replace(/\s+/g, '.'),
-          setor: row[indices.setor] || 'Não informado',
-          lider: row[indices.lider] || 'Não atribuído',
-          cargo: row[indices.cargo] || 'Não informado',
-          escala: row[indices.escala] || 'Não informada',
+          nome: row[indices.colaborador]?.trim() || '',
+          wfmUser: (row[indices.wfmUser] || row[indices.colaborador]?.toLowerCase().replace(/\s+/g, '.')),
+          setor: row[indices.setor]?.trim() || 'Não informado',
+          lider: row[indices.lider]?.trim() || 'Não atribuído',
+          cargo: row[indices.cargo]?.trim() || 'Não informado',
+          escala: row[indices.escala]?.trim() || 'Não informada',
           dataAdmissao: row[indices.dataAdmissao] || null,
           dataDesligamento: row[indices.dataDesligamento] || null,
           warehouse,
@@ -1573,6 +1601,18 @@ app.get('/api/abs/presenca-automatica/:warehouse/:data', async (c) => {
  * POST /api/abs/marcar-presenca
  */
 app.post('/api/abs/marcar-presenca', async (c) => {
+  // Validar autenticação
+  const email = c.req.header('x-user-email')
+  if (!email) {
+    return c.json({ success: false, error: 'Não autenticado' }, 401)
+  }
+  
+  // Validar nível de acesso
+  const user = await sheetsManager.findUserByEmail(email)
+  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) {
+    return c.json({ success: false, error: 'Acesso negado' }, 403)
+  }
+  
   try {
     const body = await c.req.json()
     const { warehouse, mes, ano, dia, marcacoes } = body
@@ -1723,6 +1763,10 @@ app.post('/api/abs/marcar-presenca', async (c) => {
  * Salva na planilha de HR (aba "raw_hr")
  */
 app.post('/api/abs/hora-extra', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) return c.json({ success: false, error: 'Não autenticado' }, 401)
+  const user = await sheetsManager.findUserByEmail(email)
+  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) return c.json({ success: false, error: 'Acesso negado' }, 403)
   try {
     const body = await c.req.json()
     const { warehouse, mes, ano, dia, wfmUser, nome, diaInteiro, horaInicio, horaFim, timestamp } = body
@@ -1817,6 +1861,10 @@ app.post('/api/abs/hora-extra', async (c) => {
  * Salva na planilha de Sinergia (aba "raw_sinergia")
  */
 app.post('/api/abs/sinergia', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) return c.json({ success: false, error: 'Não autenticado' }, 401)
+  const user = await sheetsManager.findUserByEmail(email)
+  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) return c.json({ success: false, error: 'Acesso negado' }, 403)
   try {
     const body = await c.req.json()
     const { warehouse, mes, ano, dia, wfmUser, nome, setorOrigem, setorDestino, tipo, observacoes, timestamp } = body
@@ -1924,6 +1972,10 @@ app.post('/api/abs/sinergia', async (c) => {
  * POST /api/abs/propagar-desligamento
  */
 app.post('/api/abs/propagar-desligamento', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) return c.json({ success: false, error: 'Não autenticado' }, 401)
+  const user = await sheetsManager.findUserByEmail(email)
+  if (!user || !['ADMIN', 'RH'].includes(user.nivel)) return c.json({ success: false, error: 'Acesso negado' }, 403)
   try {
     const body = await c.req.json()
     const { diaInicio, mes, ano, colaborador, wfmUser, sigla, warehouse } = body
