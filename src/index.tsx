@@ -1556,7 +1556,7 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     const diasNoMes = getDiasNoMes(mes, parseInt(ano))
     
     const colaboradores = rows
-      .filter(row => row[indices.colaborador]) // Filtrar linhas vazias
+      .filter(row => row[indices.colaborador]?.trim()) // Filtrar apenas linhas completamente vazias
       .map(row => {
         const marcacoes: Record<number, any> = {}
         
