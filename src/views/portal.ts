@@ -225,6 +225,9 @@ export function renderPortal(user: User, opcoes: PortalOpcao[], setores: Setor[]
         
         <!-- JavaScript para Barra de Pesquisa -->
         <script>
+            // Salvar email no cookie para uso em outras páginas (ex: ABS)
+            document.cookie = 'user_email=${encodeURIComponent(user.email)}; path=/; max-age=86400';
+            
             const searchInput = document.getElementById('searchInput');
             const cards = document.querySelectorAll('.opcao-card');
             const noResults = document.getElementById('noResults');
