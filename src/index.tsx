@@ -1413,6 +1413,56 @@ app.get('/abs/admin', async (c) => {
 })
 
 /**
+ * Dashboard HC & Produtividade - Rota estática
+ */
+app.get('/dashboard', async (c) => {
+  // Validar email no cookie
+  const email = c.req.header('cookie')?.match(/user_email=([^;]+)/)?.[1]
+  if (!email) {
+    return c.redirect('/')
+  }
+  
+  // Validar usuário (qualquer usuário aprovado pode acessar)
+  try {
+    const user = await sheetsManager.findUserByEmail(decodeURIComponent(email))
+    
+    if (!user || user.status !== 'APROVADO') {
+      return c.html(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Acesso Negado</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+            <div class="text-center max-w-md mx-auto p-8 bg-white rounded-lg shadow-lg">
+                <i class="fas fa-lock text-red-500 text-6xl mb-4"></i>
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">Acesso Negado</h1>
+                <p class="text-gray-600 mb-6">Você precisa estar aprovado para acessar o Dashboard.</p>
+                <a href="/portal?email=${encodeURIComponent(email)}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors inline-block">
+                    Voltar ao Portal
+                </a>
+            </div>
+        </body>
+        </html>
+      `, 403)
+    }
+    
+    // Carregar dashboard.html
+    const fs = await import('fs/promises')
+    const path = await import('path')
+    const htmlPath = path.join(process.cwd(), 'public', 'dashboard.html')
+    const html = await fs.readFile(htmlPath, 'utf-8')
+    return c.html(html)
+  } catch (error) {
+    console.error('[Dashboard] Erro ao carregar:', error)
+    return c.html('<h1>Erro ao carregar Dashboard</h1><p>Verifique os logs do servidor</p>', 500)
+  }
+})
+
+/**
  * ==========================================
  * APIs DO SISTEMA ABS
  * ==========================================
