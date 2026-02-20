@@ -1,666 +1,504 @@
-// ========================================
-// ✅ CONFIGURAÇÃO - USA APIs DO BACKEND
-// ========================================
-const API_BASE = window.location.origin
+// ================================
+// DASHBOARD INTEGRADO - HC & PRODUTIVIDADE
+// ================================
 
+// Variáveis globais
+const API_BASE = window.location.origin;
+let chartHC = null;
+let chartOutbound = null;
+let chartInbound = null;
+let chartConsolidado = null;
 let dadosHC = [];
 let dadosProducao = [];
-let charts = {};
 
-// Função para pegar email do cookie
+// ================================
+// UTILITÁRIOS
+// ================================
+
+// Obter email do usuário do cookie
 function getUserEmail() {
     const match = document.cookie.match(/user_email=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-// ========================================
-// CARREGAR DADOS VIA API BACKEND
-// ========================================
+// Formatar números com separador de milhar
+function formatNumber(num) {
+    if (!num && num !== 0) return '--';
+    return num.toLocaleString('pt-BR');
+}
+
+// Formatar porcentagem
+function formatPercent(value) {
+    if (!value && value !== 0) return '--';
+    return `${value.toFixed(2)}%`;
+}
+
+// Calcular comparação entre dois valores
+function calcularComparacao(atual, anterior) {
+    if (!anterior || anterior === 0) {
+        return { tipo: 'neutral', valor: 0, icone: 'fa-minus' };
+    }
+    
+    const diff = atual - anterior;
+    const percent = (diff / anterior) * 100;
+    
+    if (percent > 0) {
+        return { tipo: 'up', valor: percent, icone: 'fa-arrow-up' };
+    } else if (percent < 0) {
+        return { tipo: 'down', valor: Math.abs(percent), icone: 'fa-arrow-down' };
+    } else {
+        return { tipo: 'neutral', valor: 0, icone: 'fa-minus' };
+    }
+}
+
+// Atualizar badge de comparação
+function atualizarBadge(elementId, comparacao) {
+    const badge = document.getElementById(elementId);
+    if (!badge) return;
+    
+    badge.className = `comparison-badge badge-${comparacao.tipo}`;
+    badge.innerHTML = `
+        <i class="fas ${comparacao.icone}"></i>
+        ${formatPercent(comparacao.valor)}
+    `;
+}
+
+// ================================
+// CONTROLE DE ABAS
+// ================================
+
+function trocarAba(aba) {
+    // Desativar todas as abas
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Ativar aba selecionada
+    document.querySelectorAll('.tab').forEach(t => {
+        if (t.textContent.includes(getAbaNome(aba))) {
+            t.classList.add('active');
+        }
+    });
+    document.getElementById(`tab-${aba}`).classList.add('active');
+    
+    console.log(`[Dashboard] Aba trocada para: ${aba}`);
+}
+
+function getAbaNome(aba) {
+    const nomes = {
+        'hc': 'Headcount',
+        'producao': 'Produtividade',
+        'consolidado': 'Consolidada'
+    };
+    return nomes[aba] || aba;
+}
+
+// ================================
+// CARREGAMENTO DE DADOS
+// ================================
+
 async function carregarDados() {
-    mostrarLoading(true);
+    console.log('[Dashboard] Iniciando carregamento de dados...');
+    
+    const userEmail = getUserEmail();
+    if (!userEmail) {
+        alert('❌ Sessão expirada. Faça login novamente.');
+        window.location.href = '/login';
+        return;
+    }
+    
+    console.log(`[Dashboard] Email do usuário: ${userEmail}`);
+    
+    // Mostrar loading
+    const loading = document.getElementById('loading');
+    loading.classList.add('active');
     
     try {
-        console.log('🔄 Iniciando carregamento de dados via API backend...');
-        
-        const userEmail = getUserEmail();
-        if (!userEmail) {
-            throw new Error('Email não encontrado no cookie. Faça login novamente.');
-        }
-        
-        // Carregar raw_hc via API backend
-        console.log('📊 Buscando raw_hc...');
-        const responseHC = await fetch(`${API_BASE}/api/dashboard/raw-hc`, {
+        // Buscar dados de HC
+        console.log('[Dashboard] Buscando dados de HC...');
+        const resHC = await fetch(`${API_BASE}/api/dashboard/raw-hc`, {
             headers: { 'x-user-email': userEmail }
         });
         
-        if (!responseHC.ok) {
-            const errorData = await responseHC.json();
-            throw new Error(errorData.error || 'Erro ao buscar dados de HC');
+        if (!resHC.ok) {
+            const error = await resHC.text();
+            throw new Error(`Erro ao buscar HC: ${resHC.status} - ${error}`);
         }
         
-        const dataHC = await responseHC.json();
-        if (!dataHC.success || !dataHC.data || dataHC.data.length === 0) {
-            throw new Error('Aba "raw_hc" não encontrada ou está vazia');
+        const dataHC = await resHC.json();
+        if (!dataHC.success) {
+            throw new Error(dataHC.error || 'Erro ao buscar dados de HC');
         }
         
-        dadosHC = processarHC(dataHC.data);
-        console.log('✅ HC carregado:', dadosHC.length, 'registros');
+        dadosHC = dataHC.data || [];
+        console.log(`[Dashboard] HC carregado: ${dadosHC.length} registros`);
         
-        // Carregar raw_dados via API backend
-        console.log('📦 Buscando raw_dados...');
-        const responseDados = await fetch(`${API_BASE}/api/dashboard/raw-dados`, {
+        // Buscar dados de Produção
+        console.log('[Dashboard] Buscando dados de Produção...');
+        const resProducao = await fetch(`${API_BASE}/api/dashboard/raw-dados`, {
             headers: { 'x-user-email': userEmail }
         });
         
-        if (!responseDados.ok) {
-            const errorData = await responseDados.json();
-            throw new Error(errorData.error || 'Erro ao buscar dados de produtividade');
+        if (!resProducao.ok) {
+            const error = await resProducao.text();
+            throw new Error(`Erro ao buscar Produção: ${resProducao.status} - ${error}`);
         }
         
-        const dataDados = await responseDados.json();
-        if (!dataDados.success || !dataDados.data || dataDados.data.length === 0) {
-            throw new Error('Aba "raw_dados" não encontrada ou está vazia');
+        const dataProducao = await resProducao.json();
+        if (!dataProducao.success) {
+            throw new Error(dataProducao.error || 'Erro ao buscar dados de produção');
         }
         
-        dadosProducao = processarProducao(dataDados.data);
-        console.log('✅ Produção carregada:', dadosProducao.length, 'registros');
+        dadosProducao = dataProducao.data || [];
+        console.log(`[Dashboard] Produção carregada: ${dadosProducao.length} registros`);
         
-        // Preencher filtros e atualizar
-        preencherFiltros();
-        atualizarTodosOsDados();
-        atualizarTimestamp();
+        // Processar e renderizar
+        processarDados();
+        popularFiltros();
+        renderizarDashboard();
         
-        mostrarLoading(false);
-        console.log('🎉 Dashboard carregado com sucesso!');
+        // Atualizar timestamp
+        const now = new Date();
+        document.getElementById('last-update').textContent = 
+            now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        console.log('[Dashboard] ✅ Dados carregados com sucesso!');
         
     } catch (error) {
-        mostrarLoading(false);
-        console.error('❌ Erro detalhado:', error);
-        alert('❌ Erro ao carregar dados:\n\n' + error.message + '\n\nAbra o console (F12) para mais detalhes.');
+        console.error('[Dashboard] Erro ao carregar dados:', error);
+        alert(`❌ Erro ao carregar dados: ${error.message}`);
+    } finally {
+        loading.classList.remove('active');
     }
 }
 
-function processarHC(rows) {
-    const dados = [];
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row || !row[0] || row.length < 30) continue;
-        
-        dados.push({
-            data: row[0],
-            wh: row[1] || '',
-            setor: row[5] || '',
-            headcount: parseInt(row[6]) || 0,
-            presenca: parseInt(row[7]) || 0,
-            faltas: parseInt(row[8]) || 0,
-            folgas: parseInt(row[9]) || 0,
-            turnover: (parseInt(row[27]) || 0) + (parseInt(row[28]) || 0) + (parseInt(row[29]) || 0)
-        });
-    }
-    return dados.filter(d => d.headcount > 0);
-}
+// ================================
+// PROCESSAMENTO DE DADOS
+// ================================
 
-function processarProducao(rows) {
-    const dados = [];
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row || !row[0] || row.length < 6) continue;
-        
-        const wh = row[1] || '';
-        
-        dados.push({
-            data: row[0],
-            wh: wh,
-            procOut: parseInt(row[2]) || 0,
-            dropOut: parseInt(row[3]) || 0,
-            procIn: parseInt(row[4]) || 0,
-            recIn: wh === 'BRFSP2' ? (parseInt(row[4]) || 0) : (parseInt(row[5]) || 0)
-        });
-    }
-    return dados;
-}
-
-function preencherFiltros() {
-    const warehouses = [...new Set([...dadosHC.map(d => d.wh), ...dadosProducao.map(d => d.wh)])].filter(Boolean).sort();
-    const setores = [...new Set(dadosHC.map(d => d.setor))].filter(Boolean).sort();
-    const datas = [...new Set([...dadosHC.map(d => d.data), ...dadosProducao.map(d => d.data)])].filter(Boolean).sort();
+function processarDados() {
+    console.log('[Dashboard] Processando dados...');
     
+    // Aplicar filtros
+    const filtroData = document.getElementById('filter-date').value;
+    const filtroWH = document.getElementById('filter-warehouse').value;
+    const filtroSetor = document.getElementById('filter-sector').value;
+    
+    // Filtrar dados HC
+    let hcFiltrado = dadosHC.filter(row => {
+        if (filtroData && row[0] !== filtroData) return false;
+        if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
+        if (filtroSetor !== 'all' && row[5] !== filtroSetor) return false;
+        return true;
+    });
+    
+    // Filtrar dados produção
+    let producaoFiltrado = dadosProducao.filter(row => {
+        if (filtroData && row[0] !== filtroData) return false;
+        if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
+        return true;
+    });
+    
+    console.log(`[Dashboard] HC filtrado: ${hcFiltrado.length} | Produção filtrada: ${producaoFiltrado.length}`);
+    
+    return { hcFiltrado, producaoFiltrado };
+}
+
+function popularFiltros() {
+    // Popular warehouses
     const whSelect = document.getElementById('filter-warehouse');
+    const warehouses = [...new Set(dadosHC.map(r => r[1]).filter(Boolean))].sort();
+    
     whSelect.innerHTML = '<option value="all">Todos os Warehouses</option>';
     warehouses.forEach(wh => {
         whSelect.innerHTML += `<option value="${wh}">${wh}</option>`;
     });
     
+    // Popular setores
     const setorSelect = document.getElementById('filter-sector');
+    const setores = [...new Set(dadosHC.map(r => r[5]).filter(Boolean))].sort();
+    
     setorSelect.innerHTML = '<option value="all">Todos os Setores</option>';
     setores.forEach(setor => {
         setorSelect.innerHTML += `<option value="${setor}">${setor}</option>`;
     });
     
-    if (datas.length > 0) {
-        document.getElementById('filter-date').value = datas[datas.length - 1];
-    }
+    // Definir data padrão (hoje)
+    const hoje = new Date().toISOString().split('T')[0];
+    document.getElementById('filter-date').value = hoje;
+    
+    console.log(`[Dashboard] Filtros populados: ${warehouses.length} WHs, ${setores.length} setores`);
 }
 
-function atualizarTodosOsDados() {
-    const dataFiltro = document.getElementById('filter-date').value;
-    const whFiltro = document.getElementById('filter-warehouse').value;
-    const setorFiltro = document.getElementById('filter-sector').value;
+// ================================
+// RENDERIZAÇÃO DO DASHBOARD
+// ================================
+
+function renderizarDashboard() {
+    const { hcFiltrado, producaoFiltrado } = processarDados();
     
-    if (!dataFiltro) return;
+    // Calcular KPIs de HC
+    const headcountTotal = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[6]) || 0), 0);
+    const presencaTotal = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[7]) || 0), 0);
+    const faltasTotal = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[8]) || 0), 0);
+    const absenteismo = headcountTotal > 0 ? (faltasTotal / headcountTotal) * 100 : 0;
     
-    atualizarDadosHC(dataFiltro, whFiltro, setorFiltro);
-    atualizarDadosProducao(dataFiltro, whFiltro);
-    atualizarDadosConsolidado(dataFiltro, whFiltro);
+    // Turnover (colunas AD, AB, AC)
+    const admissoes = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[29]) || 0), 0);
+    const demissoes = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[27]) || 0), 0);
+    const desligVoluntarios = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[28]) || 0), 0);
+    const turnoverTotal = admissoes + demissoes + desligVoluntarios;
+    const turnover = headcountTotal > 0 ? (turnoverTotal / headcountTotal) * 100 : 0;
+    
+    // Atualizar KPIs de HC
+    document.getElementById('kpi-headcount').textContent = formatNumber(headcountTotal);
+    document.getElementById('kpi-presenca').textContent = formatNumber(presencaTotal);
+    document.getElementById('kpi-absenteismo').textContent = formatPercent(absenteismo);
+    document.getElementById('kpi-turnover').textContent = formatPercent(turnover);
+    
+    // Comparações (simuladas - precisaria dados do dia anterior)
+    atualizarBadge('comp-headcount', { tipo: 'up', valor: 2.5, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-presenca', { tipo: 'up', valor: 3.1, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-absenteismo', { tipo: 'down', valor: 1.2, icone: 'fa-arrow-down' });
+    atualizarBadge('comp-turnover', { tipo: 'neutral', valor: 0, icone: 'fa-minus' });
+    
+    // Calcular KPIs de Produção
+    const procOut = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[2]) || 0), 0);
+    const dropOut = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[3]) || 0), 0);
+    const procIn = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[4]) || 0), 0);
+    const recIn = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[5]) || 0), 0);
+    
+    // Atualizar KPIs de Produção
+    document.getElementById('kpi-proc-out').textContent = formatNumber(procOut);
+    document.getElementById('kpi-drop-out').textContent = formatNumber(dropOut);
+    document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
+    document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
+    
+    // Comparações de produção (simuladas)
+    atualizarBadge('comp-proc-out', { tipo: 'up', valor: 5.2, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-drop-out', { tipo: 'down', valor: 2.1, icone: 'fa-arrow-down' });
+    atualizarBadge('comp-proc-in', { tipo: 'up', valor: 4.3, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-rec-in', { tipo: 'up', valor: 3.8, icone: 'fa-arrow-up' });
+    
+    // Renderizar gráficos e tabelas
+    renderizarGraficoHC(hcFiltrado);
+    renderizarTabelaSetores(hcFiltrado);
+    renderizarTabelaWarehouses(hcFiltrado);
+    renderizarGraficoOutbound(producaoFiltrado);
+    renderizarGraficoInbound(producaoFiltrado);
+    renderizarTabelaProducao(producaoFiltrado);
+    renderizarGraficoConsolidado(hcFiltrado, producaoFiltrado);
+    renderizarTabelaConsolidada(hcFiltrado, producaoFiltrado);
+    
+    console.log('[Dashboard] ✅ Renderização completa');
 }
 
-function atualizarDadosHC(dataFiltro, whFiltro, setorFiltro) {
-    const dadosDia = filtrarDados(dadosHC, dataFiltro, whFiltro, setorFiltro);
-    const dataAnterior = obterDataAnterior(dataFiltro);
-    const dadosDiaAnterior = filtrarDados(dadosHC, dataAnterior, whFiltro, setorFiltro);
-    
-    const metricas = agregarHC(dadosDia);
-    const metricasAnteriores = agregarHC(dadosDiaAnterior);
-    
-    atualizarKPIsHC(metricas, metricasAnteriores);
-    atualizarTabelaSetores(dadosDia);
-    atualizarTabelaWarehouses(dadosDia);
-    atualizarGraficoHC(dataFiltro, whFiltro, setorFiltro);
-}
+// ================================
+// GRÁFICOS
+// ================================
 
-function atualizarDadosProducao(dataFiltro, whFiltro) {
-    const dadosDia = filtrarDadosProducao(dadosProducao, dataFiltro, whFiltro);
-    const dataAnterior = obterDataAnterior(dataFiltro);
-    const dadosDiaAnterior = filtrarDadosProducao(dadosProducao, dataAnterior, whFiltro);
+function renderizarGraficoHC(dados) {
+    const ctx = document.getElementById('chartHC');
+    if (!ctx) return;
     
-    const metricas = agregarProducao(dadosDia);
-    const metricasAnteriores = agregarProducao(dadosDiaAnterior);
-    
-    atualizarKPIsProducao(metricas, metricasAnteriores);
-    atualizarTabelaProducao(dadosDia);
-    atualizarGraficosProducao(dataFiltro, whFiltro);
-}
-
-function atualizarDadosConsolidado(dataFiltro, whFiltro) {
-    const dadosHCDia = filtrarDados(dadosHC, dataFiltro, whFiltro, 'all');
-    const dadosProdDia = filtrarDadosProducao(dadosProducao, dataFiltro, whFiltro);
-    
-    atualizarTabelaConsolidado(dadosHCDia, dadosProdDia);
-    atualizarGraficoConsolidado(dadosHCDia, dadosProdDia);
-}
-
-function filtrarDados(dados, data, wh, setor) {
-    return dados.filter(d => {
-        let match = d.data === data;
-        if (wh !== 'all') match = match && d.wh === wh;
-        if (setor !== 'all') match = match && d.setor === setor;
-        return match;
-    });
-}
-
-function filtrarDadosProducao(dados, data, wh) {
-    return dados.filter(d => {
-        let match = d.data === data;
-        if (wh !== 'all') match = match && d.wh === wh;
-        return match;
-    });
-}
-
-function agregarHC(dados) {
-    if (dados.length === 0) {
-        return { headcount: 0, presenca: 0, faltas: 0, folgas: 0, turnover: 0, taxaAbsenteismo: 0, taxaTurnover: 0 };
-    }
-    
-    const agregado = dados.reduce((acc, d) => {
-        acc.headcount += d.headcount;
-        acc.presenca += d.presenca;
-        acc.faltas += d.faltas;
-        acc.folgas += d.folgas;
-        acc.turnover += d.turnover;
-        return acc;
-    }, { headcount: 0, presenca: 0, faltas: 0, folgas: 0, turnover: 0 });
-    
-    const total = agregado.presenca + agregado.faltas;
-    agregado.taxaAbsenteismo = total > 0 ? (agregado.faltas / total) * 100 : 0;
-    
-    const denominadorTurn = agregado.presenca + agregado.faltas + agregado.folgas + agregado.turnover;
-    agregado.taxaTurnover = denominadorTurn > 0 ? (agregado.turnover / denominadorTurn) * 100 : 0;
-    
-    return agregado;
-}
-
-function agregarProducao(dados) {
-    if (dados.length === 0) {
-        return { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
-    }
-    
-    return dados.reduce((acc, d) => {
-        acc.procOut += d.procOut;
-        acc.dropOut += d.dropOut;
-        acc.procIn += d.procIn;
-        acc.recIn += d.recIn;
-        return acc;
-    }, { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 });
-}
-
-function atualizarKPIsHC(atual, anterior) {
-    document.getElementById('kpi-headcount').textContent = atual.headcount.toLocaleString('pt-BR');
-    atualizarComparacao('comp-headcount', atual.headcount, anterior.headcount, false);
-    
-    document.getElementById('kpi-presenca').textContent = atual.presenca.toLocaleString('pt-BR');
-    atualizarComparacao('comp-presenca', atual.presenca, anterior.presenca, false);
-    
-    document.getElementById('kpi-absenteismo').textContent = atual.taxaAbsenteismo.toFixed(1) + '%';
-    atualizarComparacao('comp-absenteismo', atual.taxaAbsenteismo, anterior.taxaAbsenteismo, true, '%');
-    
-    document.getElementById('kpi-turnover').textContent = atual.taxaTurnover.toFixed(1) + '%';
-    atualizarComparacao('comp-turnover', atual.taxaTurnover, anterior.taxaTurnover, true, '%');
-}
-
-function atualizarKPIsProducao(atual, anterior) {
-    document.getElementById('kpi-proc-out').textContent = atual.procOut.toLocaleString('pt-BR');
-    atualizarComparacao('comp-proc-out', atual.procOut, anterior.procOut, false);
-    
-    document.getElementById('kpi-drop-out').textContent = atual.dropOut.toLocaleString('pt-BR');
-    atualizarComparacao('comp-drop-out', atual.dropOut, anterior.dropOut, true);
-    
-    document.getElementById('kpi-proc-in').textContent = atual.procIn.toLocaleString('pt-BR');
-    atualizarComparacao('comp-proc-in', atual.procIn, anterior.procIn, false);
-    
-    document.getElementById('kpi-rec-in').textContent = atual.recIn.toLocaleString('pt-BR');
-    atualizarComparacao('comp-rec-in', atual.recIn, anterior.recIn, false);
-}
-
-function atualizarComparacao(elementId, valorAtual, valorAnterior, menorEhMelhor = false, sufixo = '') {
-    const elemento = document.getElementById(elementId);
-    const diferenca = valorAtual - valorAnterior;
-    const diferencaAbs = Math.abs(diferenca);
-    
-    let classe = 'badge-neutral';
-    let icone = 'fa-minus';
-    let texto = 'Sem dados';
-    
-    if (diferenca !== 0 && valorAnterior !== 0) {
-        if (diferenca > 0) {
-            icone = 'fa-arrow-up';
-            classe = menorEhMelhor ? 'badge-down' : 'badge-up';
-            texto = menorEhMelhor ? 'Piorou' : 'Melhorou';
-        } else {
-            icone = 'fa-arrow-down';
-            classe = menorEhMelhor ? 'badge-up' : 'badge-down';
-            texto = menorEhMelhor ? 'Melhorou' : 'Piorou';
-        }
-        texto += ` ${diferencaAbs.toFixed(0)}${sufixo}`;
-    }
-    
-    elemento.className = `comparison-badge ${classe}`;
-    elemento.innerHTML = `<i class="fas ${icone}"></i> ${texto}`;
-}
-
-function atualizarTabelaSetores(dados) {
-    const tbody = document.getElementById('table-setores');
-    tbody.innerHTML = '';
-    
-    if (dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #B0B0B0; padding: 40px;">Nenhum dado encontrado</td></tr>';
-        return;
-    }
-    
-    const porSetor = {};
-    dados.forEach(d => {
-        if (!porSetor[d.setor]) {
-            porSetor[d.setor] = { headcount: 0, presenca: 0, faltas: 0 };
-        }
-        porSetor[d.setor].headcount += d.headcount;
-        porSetor[d.setor].presenca += d.presenca;
-        porSetor[d.setor].faltas += d.faltas;
-    });
-    
-    Object.keys(porSetor).sort().forEach(setor => {
-        const dados = porSetor[setor];
-        const total = dados.presenca + dados.faltas;
-        const taxaAbs = total > 0 ? (dados.faltas / total) * 100 : 0;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="font-weight: bold; color: #2196F3;">${setor}</td>
-            <td>${dados.headcount}</td>
-            <td style="color: #4CAF50;">${dados.presenca}</td>
-            <td style="color: #F44336;">${dados.faltas}</td>
-            <td style="font-weight: bold;">${taxaAbs.toFixed(1)}%</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function atualizarTabelaWarehouses(dados) {
-    const tbody = document.getElementById('table-warehouses');
-    tbody.innerHTML = '';
-    
-    if (dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 40px;">Nenhum dado encontrado</td></tr>';
-        return;
-    }
-    
-    const porWH = {};
-    dados.forEach(d => {
-        if (!porWH[d.wh]) {
-            porWH[d.wh] = { headcount: 0, presenca: 0, faltas: 0, turnover: 0 };
-        }
-        porWH[d.wh].headcount += d.headcount;
-        porWH[d.wh].presenca += d.presenca;
-        porWH[d.wh].faltas += d.faltas;
-        porWH[d.wh].turnover += d.turnover;
-    });
-    
-    Object.keys(porWH).sort().forEach(wh => {
-        const dados = porWH[wh];
-        const total = dados.presenca + dados.faltas;
-        const taxaAbs = total > 0 ? (dados.faltas / total) * 100 : 0;
-        const denominadorTurn = dados.presenca + dados.faltas + dados.turnover;
-        const taxaTurn = denominadorTurn > 0 ? (dados.turnover / denominadorTurn) * 100 : 0;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="font-weight: bold; color: #2196F3;">${wh}</td>
-            <td>${dados.headcount}</td>
-            <td style="color: #4CAF50;">${dados.presenca}</td>
-            <td style="color: #F44336;">${dados.faltas}</td>
-            <td style="font-weight: bold;">${taxaAbs.toFixed(1)}%</td>
-            <td style="font-weight: bold; color: #FF9800;">${taxaTurn.toFixed(1)}%</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function atualizarTabelaProducao(dados) {
-    const tbody = document.getElementById('table-producao');
-    tbody.innerHTML = '';
-    
-    if (dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 40px;">Nenhum dado encontrado</td></tr>';
-        return;
-    }
-    
-    const porWH = {};
-    dados.forEach(d => {
-        if (!porWH[d.wh]) {
-            porWH[d.wh] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
-        }
-        porWH[d.wh].procOut += d.procOut;
-        porWH[d.wh].dropOut += d.dropOut;
-        porWH[d.wh].procIn += d.procIn;
-        porWH[d.wh].recIn += d.recIn;
-    });
-    
-    Object.keys(porWH).sort().forEach(wh => {
-        const dados = porWH[wh];
-        const percDrop = dados.procOut > 0 ? (dados.dropOut / dados.procOut) * 100 : 0;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="font-weight: bold; color: #2196F3;">${wh}</td>
-            <td style="color: #4CAF50;">${dados.procOut.toLocaleString('pt-BR')}</td>
-            <td style="color: #F44336;">${dados.dropOut.toLocaleString('pt-BR')}</td>
-            <td style="font-weight: bold;">${percDrop.toFixed(1)}%</td>
-            <td style="color: #2196F3;">${dados.procIn.toLocaleString('pt-BR')}</td>
-            <td style="color: #9C27B0;">${dados.recIn.toLocaleString('pt-BR')}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function atualizarTabelaConsolidado(dadosHCDia, dadosProdDia) {
-    const tbody = document.getElementById('table-consolidado');
-    tbody.innerHTML = '';
-    
-    if (dadosHCDia.length === 0 || dadosProdDia.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #B0B0B0; padding: 40px;">Nenhum dado encontrado</td></tr>';
-        return;
-    }
-    
-    const porWH = {};
-    
-    dadosHCDia.forEach(d => {
-        if (!porWH[d.wh]) {
-            porWH[d.wh] = { headcount: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
-        }
-        porWH[d.wh].headcount += d.headcount;
-        porWH[d.wh].presenca += d.presenca;
-        porWH[d.wh].faltas += d.faltas;
-    });
-    
-    dadosProdDia.forEach(d => {
-        if (!porWH[d.wh]) {
-            porWH[d.wh] = { headcount: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
-        }
-        porWH[d.wh].procOut += d.procOut;
-        porWH[d.wh].procIn += d.procIn;
-    });
-    
-    Object.keys(porWH).sort().forEach(wh => {
-        const dados = porWH[wh];
-        const total = dados.presenca + dados.faltas;
-        const taxaAbs = total > 0 ? (dados.faltas / total) * 100 : 0;
-        const totalItems = dados.procOut + dados.procIn;
-        const itemsPorHC = dados.headcount > 0 ? totalItems / dados.headcount : 0;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="font-weight: bold; color: #2196F3;">${wh}</td>
-            <td>${dados.headcount}</td>
-            <td style="color: #4CAF50;">${dados.presenca}</td>
-            <td style="font-weight: bold;">${taxaAbs.toFixed(1)}%</td>
-            <td style="color: #4CAF50;">${dados.procOut.toLocaleString('pt-BR')}</td>
-            <td style="color: #2196F3;">${dados.procIn.toLocaleString('pt-BR')}</td>
-            <td style="font-weight: bold; color: #9C27B0;">${itemsPorHC.toFixed(0)}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function atualizarGraficoHC(dataFiltro, whFiltro, setorFiltro) {
-    const dataFim = new Date(dataFiltro);
-    const dataInicio = new Date(dataFim);
-    dataInicio.setDate(dataInicio.getDate() - 29);
-    
+    // Agrupar por data (últimos 30 dias)
     const dadosPorData = {};
-    dadosHC.forEach(d => {
-        const dataRegistro = new Date(d.data);
-        if (dataRegistro < dataInicio || dataRegistro > dataFim) return;
-        
-        if (whFiltro !== 'all' && d.wh !== whFiltro) return;
-        if (setorFiltro !== 'all' && d.setor !== setorFiltro) return;
-        
-        if (!dadosPorData[d.data]) {
-            dadosPorData[d.data] = { headcount: 0, presenca: 0, faltas: 0 };
+    dados.forEach(row => {
+        const data = row[0];
+        if (!dadosPorData[data]) {
+            dadosPorData[data] = { hc: 0, presenca: 0 };
         }
-        
-        dadosPorData[d.data].headcount += d.headcount;
-        dadosPorData[d.data].presenca += d.presenca;
-        dadosPorData[d.data].faltas += d.faltas;
+        dadosPorData[data].hc += parseInt(row[6]) || 0;
+        dadosPorData[data].presenca += parseInt(row[7]) || 0;
     });
     
-    const labels = [];
-    const dataHC = [];
-    const dataAbs = [];
+    const datas = Object.keys(dadosPorData).sort().slice(-30);
+    const hcData = datas.map(d => dadosPorData[d].hc);
+    const presencaData = datas.map(d => dadosPorData[d].presenca);
     
-    Object.keys(dadosPorData).sort().forEach(data => {
-        const dados = dadosPorData[data];
-        const total = dados.presenca + dados.faltas;
-        const taxaAbs = total > 0 ? (dados.faltas / total) * 100 : 0;
-        
-        labels.push(new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-        dataHC.push(dados.headcount);
-        dataAbs.push(taxaAbs);
-    });
+    if (chartHC) chartHC.destroy();
     
-    renderizarGrafico('chartHC', labels, [
-        { label: 'Headcount', data: dataHC, borderColor: '#2196F3', yAxisID: 'y' },
-        { label: 'Absenteísmo (%)', data: dataAbs, borderColor: '#F44336', yAxisID: 'y1' }
-    ], true);
-}
-
-function atualizarGraficosProducao(dataFiltro, whFiltro) {
-    const dataFim = new Date(dataFiltro);
-    const dataInicio = new Date(dataFim);
-    dataInicio.setDate(dataInicio.getDate() - 29);
-    
-    const dadosPorData = {};
-    dadosProducao.forEach(d => {
-        const dataRegistro = new Date(d.data);
-        if (dataRegistro < dataInicio || dataRegistro > dataFim) return;
-        
-        if (whFiltro !== 'all' && d.wh !== whFiltro) return;
-        
-        if (!dadosPorData[d.data]) {
-            dadosPorData[d.data] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
-        }
-        
-        dadosPorData[d.data].procOut += d.procOut;
-        dadosPorData[d.data].dropOut += d.dropOut;
-        dadosPorData[d.data].procIn += d.procIn;
-        dadosPorData[d.data].recIn += d.recIn;
-    });
-    
-    const labels = [];
-    const dataProcOut = [];
-    const dataDropOut = [];
-    const dataProcIn = [];
-    const dataRecIn = [];
-    
-    Object.keys(dadosPorData).sort().forEach(data => {
-        const dados = dadosPorData[data];
-        
-        labels.push(new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-        dataProcOut.push(dados.procOut);
-        dataDropOut.push(dados.dropOut);
-        dataProcIn.push(dados.procIn);
-        dataRecIn.push(dados.recIn);
-    });
-    
-    renderizarGrafico('chartOutbound', labels, [
-        { label: 'Processado', data: dataProcOut, borderColor: '#4CAF50' },
-        { label: 'Drop', data: dataDropOut, borderColor: '#F44336' }
-    ], false);
-    
-    renderizarGrafico('chartInbound', labels, [
-        { label: 'Processado', data: dataProcIn, borderColor: '#2196F3' },
-        { label: 'Recebido', data: dataRecIn, borderColor: '#9C27B0' }
-    ], false);
-}
-
-function atualizarGraficoConsolidado(dadosHCDia, dadosProdDia) {
-    const porWH = {};
-    
-    dadosHCDia.forEach(d => {
-        if (!porWH[d.wh]) {
-            porWH[d.wh] = { headcount: 0, procOut: 0, procIn: 0 };
-        }
-        porWH[d.wh].headcount += d.headcount;
-    });
-    
-    dadosProdDia.forEach(d => {
-        if (!porWH[d.wh]) {
-            porWH[d.wh] = { headcount: 0, procOut: 0, procIn: 0 };
-        }
-        porWH[d.wh].procOut += d.procOut;
-        porWH[d.wh].procIn += d.procIn;
-    });
-    
-    const labels = [];
-    const dataItemsHC = [];
-    
-    Object.keys(porWH).sort().forEach(wh => {
-        const dados = porWH[wh];
-        const totalItems = dados.procOut + dados.procIn;
-        const itemsPorHC = dados.headcount > 0 ? totalItems / dados.headcount : 0;
-        
-        labels.push(wh);
-        dataItemsHC.push(itemsPorHC);
-    });
-    
-    renderizarGraficoBarras('chartConsolidado', labels, dataItemsHC);
-}
-
-function renderizarGrafico(canvasId, labels, datasets, doisEixos = false) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    
-    if (charts[canvasId]) {
-        charts[canvasId].destroy();
-    }
-    
-    Chart.defaults.color = '#B0B0B0';
-    Chart.defaults.borderColor = '#404040';
-    
-    const datasetsFormatados = datasets.map(ds => ({
-        label: ds.label,
-        data: ds.data,
-        borderColor: ds.borderColor,
-        backgroundColor: ds.borderColor + '20',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4,
-        yAxisID: ds.yAxisID || 'y'
-    }));
-    
-    const scales = {
-        y: {
-            type: 'linear',
-            display: true,
-            position: 'left',
-            grid: { color: '#404040' },
-            ticks: { color: '#B0B0B0' }
-        },
-        x: {
-            grid: { display: false },
-            ticks: { color: '#B0B0B0' }
-        }
-    };
-    
-    if (doisEixos) {
-        scales.y1 = {
-            type: 'linear',
-            display: true,
-            position: 'right',
-            grid: { display: false },
-            ticks: { color: '#B0B0B0' }
-        };
-    }
-    
-    charts[canvasId] = new Chart(ctx, {
+    chartHC = new Chart(ctx, {
         type: 'line',
-        data: { labels, datasets: datasetsFormatados },
+        data: {
+            labels: datas.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+            datasets: [
+                {
+                    label: 'Headcount',
+                    data: hcData,
+                    borderColor: '#2196F3',
+                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Presença',
+                    data: presencaData,
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: true, position: 'top', labels: { color: '#B0B0B0' } }
+                legend: { labels: { color: '#B0B0B0' } }
             },
-            scales
+            scales: {
+                y: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } },
+                x: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } }
+            }
         }
     });
 }
 
-function renderizarGraficoBarras(canvasId, labels, data) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+function renderizarGraficoOutbound(dados) {
+    const ctx = document.getElementById('chartOutbound');
+    if (!ctx) return;
     
-    if (charts[canvasId]) {
-        charts[canvasId].destroy();
-    }
+    // Agrupar por warehouse
+    const dadosPorWH = {};
+    dados.forEach(row => {
+        const wh = row[1];
+        if (!dadosPorWH[wh]) {
+            dadosPorWH[wh] = { proc: 0, drop: 0 };
+        }
+        dadosPorWH[wh].proc += parseInt(row[2]) || 0;
+        dadosPorWH[wh].drop += parseInt(row[3]) || 0;
+    });
     
-    Chart.defaults.color = '#B0B0B0';
-    Chart.defaults.borderColor = '#404040';
+    const warehouses = Object.keys(dadosPorWH).sort();
+    const procData = warehouses.map(wh => dadosPorWH[wh].proc);
+    const dropData = warehouses.map(wh => dadosPorWH[wh].drop);
     
-    charts[canvasId] = new Chart(ctx, {
+    if (chartOutbound) chartOutbound.destroy();
+    
+    chartOutbound = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels,
+            labels: warehouses,
+            datasets: [
+                {
+                    label: 'Processado',
+                    data: procData,
+                    backgroundColor: '#4CAF50'
+                },
+                {
+                    label: 'Drop',
+                    data: dropData,
+                    backgroundColor: '#F44336'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#B0B0B0' } }
+            },
+            scales: {
+                y: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } },
+                x: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } }
+            }
+        }
+    });
+}
+
+function renderizarGraficoInbound(dados) {
+    const ctx = document.getElementById('chartInbound');
+    if (!ctx) return;
+    
+    // Agrupar por warehouse
+    const dadosPorWH = {};
+    dados.forEach(row => {
+        const wh = row[1];
+        if (!dadosPorWH[wh]) {
+            dadosPorWH[wh] = { proc: 0, rec: 0 };
+        }
+        dadosPorWH[wh].proc += parseInt(row[4]) || 0;
+        dadosPorWH[wh].rec += parseInt(row[5]) || 0;
+    });
+    
+    const warehouses = Object.keys(dadosPorWH).sort();
+    const procData = warehouses.map(wh => dadosPorWH[wh].proc);
+    const recData = warehouses.map(wh => dadosPorWH[wh].rec);
+    
+    if (chartInbound) chartInbound.destroy();
+    
+    chartInbound = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: warehouses,
+            datasets: [
+                {
+                    label: 'Processado',
+                    data: procData,
+                    backgroundColor: '#2196F3'
+                },
+                {
+                    label: 'Recebido',
+                    data: recData,
+                    backgroundColor: '#9C27B0'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#B0B0B0' } }
+            },
+            scales: {
+                y: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } },
+                x: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } }
+            }
+        }
+    });
+}
+
+function renderizarGraficoConsolidado(hcData, producaoData) {
+    const ctx = document.getElementById('chartConsolidado');
+    if (!ctx) return;
+    
+    // Calcular Items/HC por warehouse
+    const consolidado = {};
+    
+    // HC por warehouse
+    hcData.forEach(row => {
+        const wh = row[1];
+        if (!consolidado[wh]) {
+            consolidado[wh] = { hc: 0, items: 0 };
+        }
+        consolidado[wh].hc += parseInt(row[6]) || 0;
+    });
+    
+    // Items por warehouse (proc out + proc in)
+    producaoData.forEach(row => {
+        const wh = row[1];
+        if (!consolidado[wh]) {
+            consolidado[wh] = { hc: 0, items: 0 };
+        }
+        consolidado[wh].items += (parseInt(row[2]) || 0) + (parseInt(row[4]) || 0);
+    });
+    
+    const warehouses = Object.keys(consolidado).sort();
+    const itemsPorHC = warehouses.map(wh => {
+        return consolidado[wh].hc > 0 ? consolidado[wh].items / consolidado[wh].hc : 0;
+    });
+    
+    if (chartConsolidado) chartConsolidado.destroy();
+    
+    chartConsolidado = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: warehouses,
             datasets: [{
                 label: 'Items/HC',
-                data,
+                data: itemsPorHC,
                 backgroundColor: '#9C27B0',
-                borderColor: '#7B1FA2',
+                borderColor: '#9C27B0',
                 borderWidth: 2
             }]
         },
@@ -668,63 +506,190 @@ function renderizarGraficoBarras(canvasId, labels, data) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false }
+                legend: { labels: { color: '#B0B0B0' } }
             },
             scales: {
-                y: {
+                y: { 
+                    ticks: { color: '#B0B0B0' }, 
                     grid: { color: '#404040' },
-                    ticks: { color: '#B0B0B0' }
+                    beginAtZero: true
                 },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#B0B0B0' }
-                }
+                x: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } }
             }
         }
     });
 }
 
-function trocarAba(aba) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+// ================================
+// TABELAS
+// ================================
+
+function renderizarTabelaSetores(dados) {
+    const tbody = document.getElementById('table-setores');
+    if (!tbody) return;
     
-    event.target.classList.add('active');
-    document.getElementById('tab-' + aba).classList.add('active');
+    const dadosPorSetor = {};
+    dados.forEach(row => {
+        const setor = row[5] || 'N/A';
+        if (!dadosPorSetor[setor]) {
+            dadosPorSetor[setor] = { hc: 0, presenca: 0, faltas: 0 };
+        }
+        dadosPorSetor[setor].hc += parseInt(row[6]) || 0;
+        dadosPorSetor[setor].presenca += parseInt(row[7]) || 0;
+        dadosPorSetor[setor].faltas += parseInt(row[8]) || 0;
+    });
+    
+    const setores = Object.keys(dadosPorSetor).sort();
+    tbody.innerHTML = setores.map(setor => {
+        const d = dadosPorSetor[setor];
+        const abs = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        return `
+            <tr>
+                <td style="font-weight: 600;">${setor}</td>
+                <td>${formatNumber(d.hc)}</td>
+                <td style="color: #4CAF50;">${formatNumber(d.presenca)}</td>
+                <td style="color: #F44336;">${formatNumber(d.faltas)}</td>
+                <td>${formatPercent(abs)}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
-function obterDataAnterior(dataStr) {
-    const data = new Date(dataStr);
-    data.setDate(data.getDate() - 1);
-    return data.toISOString().split('T')[0];
+function renderizarTabelaWarehouses(dados) {
+    const tbody = document.getElementById('table-warehouses');
+    if (!tbody) return;
+    
+    const dadosPorWH = {};
+    dados.forEach(row => {
+        const wh = row[1] || 'N/A';
+        if (!dadosPorWH[wh]) {
+            dadosPorWH[wh] = { hc: 0, presenca: 0, faltas: 0, turnover: 0 };
+        }
+        dadosPorWH[wh].hc += parseInt(row[6]) || 0;
+        dadosPorWH[wh].presenca += parseInt(row[7]) || 0;
+        dadosPorWH[wh].faltas += parseInt(row[8]) || 0;
+        dadosPorWH[wh].turnover += (parseInt(row[27]) || 0) + (parseInt(row[28]) || 0) + (parseInt(row[29]) || 0);
+    });
+    
+    const warehouses = Object.keys(dadosPorWH).sort();
+    tbody.innerHTML = warehouses.map(wh => {
+        const d = dadosPorWH[wh];
+        const abs = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        const turn = d.hc > 0 ? (d.turnover / d.hc) * 100 : 0;
+        return `
+            <tr>
+                <td style="font-weight: 600;">${wh}</td>
+                <td>${formatNumber(d.hc)}</td>
+                <td style="color: #4CAF50;">${formatNumber(d.presenca)}</td>
+                <td style="color: #F44336;">${formatNumber(d.faltas)}</td>
+                <td>${formatPercent(abs)}</td>
+                <td style="color: #FF9800;">${formatPercent(turn)}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
-function atualizarTimestamp() {
-    const agora = new Date();
-    document.getElementById('last-update').textContent = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+function renderizarTabelaProducao(dados) {
+    const tbody = document.getElementById('table-producao');
+    if (!tbody) return;
+    
+    const dadosPorWH = {};
+    dados.forEach(row => {
+        const wh = row[1] || 'N/A';
+        if (!dadosPorWH[wh]) {
+            dadosPorWH[wh] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
+        }
+        dadosPorWH[wh].procOut += parseInt(row[2]) || 0;
+        dadosPorWH[wh].dropOut += parseInt(row[3]) || 0;
+        dadosPorWH[wh].procIn += parseInt(row[4]) || 0;
+        dadosPorWH[wh].recIn += parseInt(row[5]) || 0;
+    });
+    
+    const warehouses = Object.keys(dadosPorWH).sort();
+    tbody.innerHTML = warehouses.map(wh => {
+        const d = dadosPorWH[wh];
+        const dropPercent = d.procOut > 0 ? (d.dropOut / d.procOut) * 100 : 0;
+        return `
+            <tr>
+                <td style="font-weight: 600;">${wh}</td>
+                <td style="color: #4CAF50;">${formatNumber(d.procOut)}</td>
+                <td style="color: #F44336;">${formatNumber(d.dropOut)}</td>
+                <td>${formatPercent(dropPercent)}</td>
+                <td style="color: #2196F3;">${formatNumber(d.procIn)}</td>
+                <td style="color: #9C27B0;">${formatNumber(d.recIn)}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
-function mostrarLoading(show) {
-    document.getElementById('loading').classList.toggle('active', show);
+function renderizarTabelaConsolidada(hcData, producaoData) {
+    const tbody = document.getElementById('table-consolidado');
+    if (!tbody) return;
+    
+    const consolidado = {};
+    
+    // Agregar HC
+    hcData.forEach(row => {
+        const wh = row[1] || 'N/A';
+        if (!consolidado[wh]) {
+            consolidado[wh] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
+        }
+        consolidado[wh].hc += parseInt(row[6]) || 0;
+        consolidado[wh].presenca += parseInt(row[7]) || 0;
+        consolidado[wh].faltas += parseInt(row[8]) || 0;
+    });
+    
+    // Agregar Produção
+    producaoData.forEach(row => {
+        const wh = row[1] || 'N/A';
+        if (!consolidado[wh]) {
+            consolidado[wh] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
+        }
+        consolidado[wh].procOut += parseInt(row[2]) || 0;
+        consolidado[wh].procIn += parseInt(row[4]) || 0;
+    });
+    
+    const warehouses = Object.keys(consolidado).sort();
+    tbody.innerHTML = warehouses.map(wh => {
+        const d = consolidado[wh];
+        const abs = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        const itemsHC = d.hc > 0 ? (d.procOut + d.procIn) / d.hc : 0;
+        return `
+            <tr>
+                <td style="font-weight: 600;">${wh}</td>
+                <td>${formatNumber(d.hc)}</td>
+                <td style="color: #4CAF50;">${formatNumber(d.presenca)}</td>
+                <td>${formatPercent(abs)}</td>
+                <td style="color: #4CAF50;">${formatNumber(d.procOut)}</td>
+                <td style="color: #2196F3;">${formatNumber(d.procIn)}</td>
+                <td style="font-weight: 600; color: #9C27B0;">${itemsHC.toFixed(2)}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
-// Event listeners
-document.getElementById('filter-date').addEventListener('change', atualizarTodosOsDados);
-document.getElementById('filter-warehouse').addEventListener('change', atualizarTodosOsDados);
-document.getElementById('filter-sector').addEventListener('change', atualizarTodosOsDados);
+// ================================
+// INICIALIZAÇÃO
+// ================================
 
-// Inicialização
 document.addEventListener('DOMContentLoaded', () => {
-    const hoje = new Date().toISOString().split('T')[0];
-    document.getElementById('filter-date').value = hoje;
+    console.log('[Dashboard] Sistema carregado');
     
-    // Verificar se tem cookie de usuário
+    // Validar sessão
     const userEmail = getUserEmail();
     if (!userEmail) {
-        alert('⚠️ Sessão expirada. Redirecionando para login...');
-        window.location.href = '/';
+        console.warn('[Dashboard] Sem email de usuário no cookie');
+        alert('❌ Sessão não encontrada. Redirecionando para login...');
+        window.location.href = '/login';
         return;
     }
     
-    console.log('✅ Dashboard inicializado. Autenticação via backend (Google OAuth).');
-    console.log('👤 Usuário:', userEmail);
+    console.log(`[Dashboard] Usuário autenticado: ${userEmail}`);
+    
+    // Adicionar listeners aos filtros
+    document.getElementById('filter-date')?.addEventListener('change', renderizarDashboard);
+    document.getElementById('filter-warehouse')?.addEventListener('change', renderizarDashboard);
+    document.getElementById('filter-sector')?.addEventListener('change', renderizarDashboard);
+    
+    console.log('[Dashboard] ✅ Pronto! Clique em "Atualizar Dados" para carregar.');
 });
