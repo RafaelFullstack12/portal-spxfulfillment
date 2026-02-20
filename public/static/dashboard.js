@@ -21,6 +21,17 @@ function getUserEmail() {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
+// Converter valor do Sheets para número
+function parseNumero(valor) {
+    if (!valor || valor === '' || valor === '-') return 0;
+    if (typeof valor === 'number') return valor;
+    
+    // Remover pontos (separador de milhar brasileiro) e converter vírgula em ponto
+    const numeroStr = String(valor).replace(/\./g, '').replace(',', '.');
+    const numero = parseFloat(numeroStr);
+    return isNaN(numero) ? 0 : numero;
+}
+
 // Formatar números com separador de milhar
 function formatNumber(num) {
     if (!num && num !== 0) return '--';
@@ -183,16 +194,24 @@ function processarDados() {
     const filtroWH = document.getElementById('filter-warehouse').value;
     const filtroSetor = document.getElementById('filter-sector').value;
     
+    // Remover cabeçalho dos dados HC (primeira linha)
+    const dadosHCSemHeader = dadosHC.slice(1);
+    
     // Filtrar dados HC
-    let hcFiltrado = dadosHC.filter(row => {
+    let hcFiltrado = dadosHCSemHeader.filter(row => {
+        if (!row || row.length === 0) return false;
         if (filtroData && row[0] !== filtroData) return false;
         if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
         if (filtroSetor !== 'all' && row[5] !== filtroSetor) return false;
         return true;
     });
     
+    // Remover cabeçalho dos dados Produção
+    const dadosProducaoSemHeader = dadosProducao.slice(1);
+    
     // Filtrar dados produção
-    let producaoFiltrado = dadosProducao.filter(row => {
+    let producaoFiltrado = dadosProducaoSemHeader.filter(row => {
+        if (!row || row.length === 0) return false;
         if (filtroData && row[0] !== filtroData) return false;
         if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
         return true;
@@ -204,9 +223,16 @@ function processarDados() {
 }
 
 function popularFiltros() {
+    // Remover cabeçalho dos dados
+    const dadosHCSemHeader = dadosHC.slice(1);
+    const dadosProducaoSemHeader = dadosProducao.slice(1);
+    
     // Popular warehouses
     const whSelect = document.getElementById('filter-warehouse');
-    const warehouses = [...new Set(dadosHC.map(r => r[1]).filter(Boolean))].sort();
+    const warehouses = [...new Set([
+        ...dadosHCSemHeader.map(r => r[1]).filter(Boolean),
+        ...dadosProducaoSemHeader.map(r => r[1]).filter(Boolean)
+    ])].sort();
     
     whSelect.innerHTML = '<option value="all">Todos os Warehouses</option>';
     warehouses.forEach(wh => {
@@ -215,16 +241,25 @@ function popularFiltros() {
     
     // Popular setores
     const setorSelect = document.getElementById('filter-sector');
-    const setores = [...new Set(dadosHC.map(r => r[5]).filter(Boolean))].sort();
+    const setores = [...new Set(dadosHCSemHeader.map(r => r[5]).filter(Boolean))].sort();
     
     setorSelect.innerHTML = '<option value="all">Todos os Setores</option>';
     setores.forEach(setor => {
         setorSelect.innerHTML += `<option value="${setor}">${setor}</option>`;
     });
     
-    // Definir data padrão (hoje)
-    const hoje = new Date().toISOString().split('T')[0];
-    document.getElementById('filter-date').value = hoje;
+    // Definir data padrão - última data disponível nos dados
+    let datasPossiveis = [...new Set(dadosHCSemHeader.map(r => r[0]).filter(Boolean))];
+    if (datasPossiveis.length > 0) {
+        // Pegar a data mais recente
+        datasPossiveis.sort();
+        const ultimaData = datasPossiveis[datasPossiveis.length - 1];
+        document.getElementById('filter-date').value = ultimaData;
+    } else {
+        // Fallback: hoje
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('filter-date').value = hoje;
+    }
     
     console.log(`[Dashboard] Filtros populados: ${warehouses.length} WHs, ${setores.length} setores`);
 }
@@ -236,16 +271,16 @@ function popularFiltros() {
 function renderizarDashboard() {
     const { hcFiltrado, producaoFiltrado } = processarDados();
     
-    // Calcular KPIs de HC
-    const headcountTotal = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[6]) || 0), 0);
-    const presencaTotal = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[7]) || 0), 0);
-    const faltasTotal = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[8]) || 0), 0);
+    // Calcular KPIs de HC (índices baseados em 0, coluna G=6, H=7, I=8)
+    const headcountTotal = hcFiltrado.reduce((sum, row) => sum + parseNumero(row[6]), 0);
+    const presencaTotal = hcFiltrado.reduce((sum, row) => sum + parseNumero(row[7]), 0);
+    const faltasTotal = hcFiltrado.reduce((sum, row) => sum + parseNumero(row[8]), 0);
     const absenteismo = headcountTotal > 0 ? (faltasTotal / headcountTotal) * 100 : 0;
     
-    // Turnover (colunas AD, AB, AC)
-    const admissoes = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[29]) || 0), 0);
-    const demissoes = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[27]) || 0), 0);
-    const desligVoluntarios = hcFiltrado.reduce((sum, row) => sum + (parseInt(row[28]) || 0), 0);
+    // Turnover (colunas AB=27, AC=28, AD=29)
+    const admissoes = hcFiltrado.reduce((sum, row) => sum + parseNumero(row[29]), 0);
+    const demissoes = hcFiltrado.reduce((sum, row) => sum + parseNumero(row[27]), 0);
+    const desligVoluntarios = hcFiltrado.reduce((sum, row) => sum + parseNumero(row[28]), 0);
     const turnoverTotal = admissoes + demissoes + desligVoluntarios;
     const turnover = headcountTotal > 0 ? (turnoverTotal / headcountTotal) * 100 : 0;
     
@@ -261,11 +296,11 @@ function renderizarDashboard() {
     atualizarBadge('comp-absenteismo', { tipo: 'down', valor: 1.2, icone: 'fa-arrow-down' });
     atualizarBadge('comp-turnover', { tipo: 'neutral', valor: 0, icone: 'fa-minus' });
     
-    // Calcular KPIs de Produção
-    const procOut = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[2]) || 0), 0);
-    const dropOut = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[3]) || 0), 0);
-    const procIn = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[4]) || 0), 0);
-    const recIn = producaoFiltrado.reduce((sum, row) => sum + (parseInt(row[5]) || 0), 0);
+    // Calcular KPIs de Produção (colunas C=2, D=3, E=4, F=5)
+    const procOut = producaoFiltrado.reduce((sum, row) => sum + parseNumero(row[2]), 0);
+    const dropOut = producaoFiltrado.reduce((sum, row) => sum + parseNumero(row[3]), 0);
+    const procIn = producaoFiltrado.reduce((sum, row) => sum + parseNumero(row[4]), 0);
+    const recIn = producaoFiltrado.reduce((sum, row) => sum + parseNumero(row[5]), 0);
     
     // Atualizar KPIs de Produção
     document.getElementById('kpi-proc-out').textContent = formatNumber(procOut);
@@ -307,8 +342,8 @@ function renderizarGraficoHC(dados) {
         if (!dadosPorData[data]) {
             dadosPorData[data] = { hc: 0, presenca: 0 };
         }
-        dadosPorData[data].hc += parseInt(row[6]) || 0;
-        dadosPorData[data].presenca += parseInt(row[7]) || 0;
+        dadosPorData[data].hc += parseNumero(row[6]);
+        dadosPorData[data].presenca += parseNumero(row[7]);
     });
     
     const datas = Object.keys(dadosPorData).sort().slice(-30);
@@ -365,8 +400,8 @@ function renderizarGraficoOutbound(dados) {
         if (!dadosPorWH[wh]) {
             dadosPorWH[wh] = { proc: 0, drop: 0 };
         }
-        dadosPorWH[wh].proc += parseInt(row[2]) || 0;
-        dadosPorWH[wh].drop += parseInt(row[3]) || 0;
+        dadosPorWH[wh].proc += parseNumero(row[2]);
+        dadosPorWH[wh].drop += parseNumero(row[3]);
     });
     
     const warehouses = Object.keys(dadosPorWH).sort();
@@ -417,8 +452,8 @@ function renderizarGraficoInbound(dados) {
         if (!dadosPorWH[wh]) {
             dadosPorWH[wh] = { proc: 0, rec: 0 };
         }
-        dadosPorWH[wh].proc += parseInt(row[4]) || 0;
-        dadosPorWH[wh].rec += parseInt(row[5]) || 0;
+        dadosPorWH[wh].proc += parseNumero(row[4]);
+        dadosPorWH[wh].rec += parseNumero(row[5]);
     });
     
     const warehouses = Object.keys(dadosPorWH).sort();
@@ -471,7 +506,7 @@ function renderizarGraficoConsolidado(hcData, producaoData) {
         if (!consolidado[wh]) {
             consolidado[wh] = { hc: 0, items: 0 };
         }
-        consolidado[wh].hc += parseInt(row[6]) || 0;
+        consolidado[wh].hc += parseNumero(row[6]);
     });
     
     // Items por warehouse (proc out + proc in)
@@ -480,7 +515,7 @@ function renderizarGraficoConsolidado(hcData, producaoData) {
         if (!consolidado[wh]) {
             consolidado[wh] = { hc: 0, items: 0 };
         }
-        consolidado[wh].items += (parseInt(row[2]) || 0) + (parseInt(row[4]) || 0);
+        consolidado[wh].items += (parseNumero(row[2])) + (parseNumero(row[4]));
     });
     
     const warehouses = Object.keys(consolidado).sort();
@@ -534,9 +569,9 @@ function renderizarTabelaSetores(dados) {
         if (!dadosPorSetor[setor]) {
             dadosPorSetor[setor] = { hc: 0, presenca: 0, faltas: 0 };
         }
-        dadosPorSetor[setor].hc += parseInt(row[6]) || 0;
-        dadosPorSetor[setor].presenca += parseInt(row[7]) || 0;
-        dadosPorSetor[setor].faltas += parseInt(row[8]) || 0;
+        dadosPorSetor[setor].hc += parseNumero(row[6]);
+        dadosPorSetor[setor].presenca += parseNumero(row[7]);
+        dadosPorSetor[setor].faltas += parseNumero(row[8]);
     });
     
     const setores = Object.keys(dadosPorSetor).sort();
@@ -565,10 +600,10 @@ function renderizarTabelaWarehouses(dados) {
         if (!dadosPorWH[wh]) {
             dadosPorWH[wh] = { hc: 0, presenca: 0, faltas: 0, turnover: 0 };
         }
-        dadosPorWH[wh].hc += parseInt(row[6]) || 0;
-        dadosPorWH[wh].presenca += parseInt(row[7]) || 0;
-        dadosPorWH[wh].faltas += parseInt(row[8]) || 0;
-        dadosPorWH[wh].turnover += (parseInt(row[27]) || 0) + (parseInt(row[28]) || 0) + (parseInt(row[29]) || 0);
+        dadosPorWH[wh].hc += parseNumero(row[6]);
+        dadosPorWH[wh].presenca += parseNumero(row[7]);
+        dadosPorWH[wh].faltas += parseNumero(row[8]);
+        dadosPorWH[wh].turnover += (parseNumero(row[27])) + (parseNumero(row[28])) + (parseNumero(row[29]));
     });
     
     const warehouses = Object.keys(dadosPorWH).sort();
@@ -599,10 +634,10 @@ function renderizarTabelaProducao(dados) {
         if (!dadosPorWH[wh]) {
             dadosPorWH[wh] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
         }
-        dadosPorWH[wh].procOut += parseInt(row[2]) || 0;
-        dadosPorWH[wh].dropOut += parseInt(row[3]) || 0;
-        dadosPorWH[wh].procIn += parseInt(row[4]) || 0;
-        dadosPorWH[wh].recIn += parseInt(row[5]) || 0;
+        dadosPorWH[wh].procOut += parseNumero(row[2]);
+        dadosPorWH[wh].dropOut += parseNumero(row[3]);
+        dadosPorWH[wh].procIn += parseNumero(row[4]);
+        dadosPorWH[wh].recIn += parseNumero(row[5]);
     });
     
     const warehouses = Object.keys(dadosPorWH).sort();
@@ -634,9 +669,9 @@ function renderizarTabelaConsolidada(hcData, producaoData) {
         if (!consolidado[wh]) {
             consolidado[wh] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
         }
-        consolidado[wh].hc += parseInt(row[6]) || 0;
-        consolidado[wh].presenca += parseInt(row[7]) || 0;
-        consolidado[wh].faltas += parseInt(row[8]) || 0;
+        consolidado[wh].hc += parseNumero(row[6]);
+        consolidado[wh].presenca += parseNumero(row[7]);
+        consolidado[wh].faltas += parseNumero(row[8]);
     });
     
     // Agregar Produção
@@ -645,8 +680,8 @@ function renderizarTabelaConsolidada(hcData, producaoData) {
         if (!consolidado[wh]) {
             consolidado[wh] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
         }
-        consolidado[wh].procOut += parseInt(row[2]) || 0;
-        consolidado[wh].procIn += parseInt(row[4]) || 0;
+        consolidado[wh].procOut += parseNumero(row[2]);
+        consolidado[wh].procIn += parseNumero(row[4]);
     });
     
     const warehouses = Object.keys(consolidado).sort();
