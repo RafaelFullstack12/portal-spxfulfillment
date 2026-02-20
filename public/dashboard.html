@@ -624,6 +624,380 @@
         </div>
     </div>
 
-    <script src="/static/dashboard.js"></script>
+    <script>
+// ================================
+// DASHBOARD INTEGRADO - HC & PRODUTIVIDADE
+// ================================
+
+// Variáveis globais
+const API_BASE = window.location.origin;
+let chartHC = null;
+let chartOutbound = null;
+let chartInbound = null;
+let chartConsolidado = null;
+let dadosHC = [];
+let dadosProducao = [];
+
+// ================================
+// UTILITÁRIOS
+// ================================
+
+function getUserEmail() {
+    const match = document.cookie.match(/user_email=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+function parseNumero(valor) {
+    if (!valor || valor === '' || valor === '-') return 0;
+    if (typeof valor === 'number') return valor;
+    const numeroStr = String(valor).replace(/\./g, '').replace(',', '.');
+    const numero = parseFloat(numeroStr);
+    return isNaN(numero) ? 0 : numero;
+}
+
+function formatNumber(num) {
+    if (!num && num !== 0) return '--';
+    return num.toLocaleString('pt-BR');
+}
+
+function formatPercent(value) {
+    if (!value && value !== 0) return '--';
+    return `${value.toFixed(2)}%`;
+}
+
+function atualizarBadge(elementId, comparacao) {
+    const badge = document.getElementById(elementId);
+    if (!badge) return;
+    badge.className = `comparison-badge badge-${comparacao.tipo}`;
+    badge.innerHTML = `<i class="fas ${comparacao.icone}"></i> ${formatPercent(comparacao.valor)}`;
+}
+
+// ================================
+// CONTROLE DE ABAS
+// ================================
+
+function trocarAba(aba) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => {
+        if (t.textContent.includes(aba === 'hc' ? 'Headcount' : aba === 'producao' ? 'Produtividade' : 'Consolidada')) {
+            t.classList.add('active');
+        }
+    });
+    document.getElementById(`tab-${aba}`).classList.add('active');
+    console.log(`[Dashboard] Aba: ${aba}`);
+}
+
+// ================================
+// CARREGAMENTO DE DADOS
+// ================================
+
+async function carregarDados() {
+    console.log('[Dashboard] Carregando...');
+    const userEmail = getUserEmail();
+    if (!userEmail) {
+        alert('❌ Sessão expirada');
+        window.location.href = '/';
+        return;
+    }
+    
+    const loading = document.getElementById('loading');
+    loading.classList.add('active');
+    
+    try {
+        const [resHC, resProducao] = await Promise.all([
+            fetch(`${API_BASE}/api/dashboard/raw-hc`, { headers: { 'x-user-email': userEmail } }),
+            fetch(`${API_BASE}/api/dashboard/raw-dados`, { headers: { 'x-user-email': userEmail } })
+        ]);
+        
+        const dataHC = await resHC.json();
+        const dataProducao = await resProducao.json();
+        
+        if (!dataHC.success || !dataProducao.success) {
+            throw new Error(dataHC.error || dataProducao.error || 'Erro ao buscar dados');
+        }
+        
+        dadosHC = dataHC.data || [];
+        dadosProducao = dataProducao.data || [];
+        
+        console.log(`[Dashboard] HC: ${dadosHC.length}, Prod: ${dadosProducao.length}`);
+        
+        popularFiltros();
+        renderizarDashboard();
+        
+        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        console.log('[Dashboard] ✅ OK');
+    } catch (error) {
+        console.error('[Dashboard] Erro:', error);
+        alert(`❌ ${error.message}`);
+    } finally {
+        loading.classList.remove('active');
+    }
+}
+
+function popularFiltros() {
+    const hcSemHeader = dadosHC.slice(1);
+    const prodSemHeader = dadosProducao.slice(1);
+    
+    const whSelect = document.getElementById('filter-warehouse');
+    const warehouses = [...new Set([...hcSemHeader.map(r => r[1]), ...prodSemHeader.map(r => r[1])].filter(Boolean))].sort();
+    whSelect.innerHTML = '<option value="all">Todos</option>' + warehouses.map(wh => `<option value="${wh}">${wh}</option>`).join('');
+    
+    const setorSelect = document.getElementById('filter-sector');
+    const setores = [...new Set(hcSemHeader.map(r => r[5]).filter(Boolean))].sort();
+    setorSelect.innerHTML = '<option value="all">Todos</option>' + setores.map(s => `<option value="${s}">${s}</option>`).join('');
+    
+    const datas = [...new Set(hcSemHeader.map(r => r[0]).filter(Boolean))].sort();
+    document.getElementById('filter-date').value = datas.length > 0 ? datas[datas.length - 1] : new Date().toISOString().split('T')[0];
+}
+
+function renderizarDashboard() {
+    const filtroData = document.getElementById('filter-date').value;
+    const filtroWH = document.getElementById('filter-warehouse').value;
+    const filtroSetor = document.getElementById('filter-sector').value;
+    
+    const hcFiltrado = dadosHC.slice(1).filter(row => {
+        if (!row || row.length === 0) return false;
+        if (filtroData && row[0] !== filtroData) return false;
+        if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
+        if (filtroSetor !== 'all' && row[5] !== filtroSetor) return false;
+        return true;
+    });
+    
+    const producaoFiltrado = dadosProducao.slice(1).filter(row => {
+        if (!row || row.length === 0) return false;
+        if (filtroData && row[0] !== filtroData) return false;
+        if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
+        return true;
+    });
+    
+    // KPIs HC
+    const hc = hcFiltrado.reduce((s, r) => s + parseNumero(r[6]), 0);
+    const presenca = hcFiltrado.reduce((s, r) => s + parseNumero(r[7]), 0);
+    const faltas = hcFiltrado.reduce((s, r) => s + parseNumero(r[8]), 0);
+    const abs = hc > 0 ? (faltas / hc) * 100 : 0;
+    const turn = hc > 0 ? ((parseNumero(hcFiltrado.reduce((s, r) => s + parseNumero(r[27]) + parseNumero(r[28]) + parseNumero(r[29]), 0))) / hc) * 100 : 0;
+    
+    document.getElementById('kpi-headcount').textContent = formatNumber(hc);
+    document.getElementById('kpi-presenca').textContent = formatNumber(presenca);
+    document.getElementById('kpi-absenteismo').textContent = formatPercent(abs);
+    document.getElementById('kpi-turnover').textContent = formatPercent(turn);
+    
+    atualizarBadge('comp-headcount', { tipo: 'up', valor: 2.5, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-presenca', { tipo: 'up', valor: 3.1, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-absenteismo', { tipo: 'down', valor: 1.2, icone: 'fa-arrow-down' });
+    atualizarBadge('comp-turnover', { tipo: 'neutral', valor: 0, icone: 'fa-minus' });
+    
+    // KPIs Produção
+    const procOut = producaoFiltrado.reduce((s, r) => s + parseNumero(r[2]), 0);
+    const dropOut = producaoFiltrado.reduce((s, r) => s + parseNumero(r[3]), 0);
+    const procIn = producaoFiltrado.reduce((s, r) => s + parseNumero(r[4]), 0);
+    const recIn = producaoFiltrado.reduce((s, r) => s + parseNumero(r[5]), 0);
+    
+    document.getElementById('kpi-proc-out').textContent = formatNumber(procOut);
+    document.getElementById('kpi-drop-out').textContent = formatNumber(dropOut);
+    document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
+    document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
+    
+    atualizarBadge('comp-proc-out', { tipo: 'up', valor: 5.2, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-drop-out', { tipo: 'down', valor: 2.1, icone: 'fa-arrow-down' });
+    atualizarBadge('comp-proc-in', { tipo: 'up', valor: 4.3, icone: 'fa-arrow-up' });
+    atualizarBadge('comp-rec-in', { tipo: 'up', valor: 3.8, icone: 'fa-arrow-up' });
+    
+    renderizarTabelas(hcFiltrado, producaoFiltrado);
+    renderizarGraficos(hcFiltrado, producaoFiltrado);
+}
+
+function renderizarTabelas(hcData, prodData) {
+    // Tabela Setores
+    const setores = {};
+    hcData.forEach(r => {
+        const s = r[5] || 'N/A';
+        if (!setores[s]) setores[s] = { hc: 0, presenca: 0, faltas: 0 };
+        setores[s].hc += parseNumero(r[6]);
+        setores[s].presenca += parseNumero(r[7]);
+        setores[s].faltas += parseNumero(r[8]);
+    });
+    document.getElementById('table-setores').innerHTML = Object.keys(setores).sort().map(s => {
+        const d = setores[s];
+        const a = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        return `<tr><td><strong>${s}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td></tr>`;
+    }).join('');
+    
+    // Tabela Warehouses
+    const whs = {};
+    hcData.forEach(r => {
+        const w = r[1] || 'N/A';
+        if (!whs[w]) whs[w] = { hc: 0, presenca: 0, faltas: 0, turn: 0 };
+        whs[w].hc += parseNumero(r[6]);
+        whs[w].presenca += parseNumero(r[7]);
+        whs[w].faltas += parseNumero(r[8]);
+        whs[w].turn += parseNumero(r[27]) + parseNumero(r[28]) + parseNumero(r[29]);
+    });
+    document.getElementById('table-warehouses').innerHTML = Object.keys(whs).sort().map(w => {
+        const d = whs[w];
+        const a = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        const t = d.hc > 0 ? (d.turn / d.hc) * 100 : 0;
+        return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td><td style="color:#FF9800">${formatPercent(t)}</td></tr>`;
+    }).join('');
+    
+    // Tabela Produção
+    const whsProd = {};
+    prodData.forEach(r => {
+        const w = r[1] || 'N/A';
+        if (!whsProd[w]) whsProd[w] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
+        whsProd[w].procOut += parseNumero(r[2]);
+        whsProd[w].dropOut += parseNumero(r[3]);
+        whsProd[w].procIn += parseNumero(r[4]);
+        whsProd[w].recIn += parseNumero(r[5]);
+    });
+    document.getElementById('table-producao').innerHTML = Object.keys(whsProd).sort().map(w => {
+        const d = whsProd[w];
+        const dp = d.procOut > 0 ? (d.dropOut / d.procOut) * 100 : 0;
+        return `<tr><td><strong>${w}</strong></td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#F44336">${formatNumber(d.dropOut)}</td><td>${formatPercent(dp)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td><td style="color:#9C27B0">${formatNumber(d.recIn)}</td></tr>`;
+    }).join('');
+    
+    // Tabela Consolidada
+    const cons = {};
+    hcData.forEach(r => {
+        const w = r[1] || 'N/A';
+        if (!cons[w]) cons[w] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
+        cons[w].hc += parseNumero(r[6]);
+        cons[w].presenca += parseNumero(r[7]);
+        cons[w].faltas += parseNumero(r[8]);
+    });
+    prodData.forEach(r => {
+        const w = r[1] || 'N/A';
+        if (!cons[w]) cons[w] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
+        cons[w].procOut += parseNumero(r[2]);
+        cons[w].procIn += parseNumero(r[4]);
+    });
+    document.getElementById('table-consolidado').innerHTML = Object.keys(cons).sort().map(w => {
+        const d = cons[w];
+        const a = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        const ih = d.hc > 0 ? (d.procOut + d.procIn) / d.hc : 0;
+        return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td>${formatPercent(a)}</td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td><td style="font-weight:600;color:#9C27B0">${ih.toFixed(2)}</td></tr>`;
+    }).join('');
+}
+
+function renderizarGraficos(hcData, prodData) {
+    const opt = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#B0B0B0' } } },
+        scales: {
+            y: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } },
+            x: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } }
+        }
+    };
+    
+    // Gráfico HC
+    const dadosPorData = {};
+    hcData.forEach(r => {
+        const d = r[0];
+        if (!dadosPorData[d]) dadosPorData[d] = { hc: 0, presenca: 0 };
+        dadosPorData[d].hc += parseNumero(r[6]);
+        dadosPorData[d].presenca += parseNumero(r[7]);
+    });
+    const datas = Object.keys(dadosPorData).sort().slice(-30);
+    if (chartHC) chartHC.destroy();
+    chartHC = new Chart(document.getElementById('chartHC'), {
+        type: 'line',
+        data: {
+            labels: datas.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+            datasets: [
+                { label: 'HC', data: datas.map(d => dadosPorData[d].hc), borderColor: '#2196F3', backgroundColor: 'rgba(33,150,243,0.1)', tension: 0.4, fill: true },
+                { label: 'Presença', data: datas.map(d => dadosPorData[d].presenca), borderColor: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', tension: 0.4, fill: true }
+            ]
+        },
+        options: opt
+    });
+    
+    // Gráfico Outbound
+    const whOut = {};
+    prodData.forEach(r => {
+        const w = r[1];
+        if (!whOut[w]) whOut[w] = { proc: 0, drop: 0 };
+        whOut[w].proc += parseNumero(r[2]);
+        whOut[w].drop += parseNumero(r[3]);
+    });
+    const whsOut = Object.keys(whOut).sort();
+    if (chartOutbound) chartOutbound.destroy();
+    chartOutbound = new Chart(document.getElementById('chartOutbound'), {
+        type: 'bar',
+        data: {
+            labels: whsOut,
+            datasets: [
+                { label: 'Processado', data: whsOut.map(w => whOut[w].proc), backgroundColor: '#4CAF50' },
+                { label: 'Drop', data: whsOut.map(w => whOut[w].drop), backgroundColor: '#F44336' }
+            ]
+        },
+        options: opt
+    });
+    
+    // Gráfico Inbound
+    const whIn = {};
+    prodData.forEach(r => {
+        const w = r[1];
+        if (!whIn[w]) whIn[w] = { proc: 0, rec: 0 };
+        whIn[w].proc += parseNumero(r[4]);
+        whIn[w].rec += parseNumero(r[5]);
+    });
+    const whsIn = Object.keys(whIn).sort();
+    if (chartInbound) chartInbound.destroy();
+    chartInbound = new Chart(document.getElementById('chartInbound'), {
+        type: 'bar',
+        data: {
+            labels: whsIn,
+            datasets: [
+                { label: 'Processado', data: whsIn.map(w => whIn[w].proc), backgroundColor: '#2196F3' },
+                { label: 'Recebido', data: whsIn.map(w => whIn[w].rec), backgroundColor: '#9C27B0' }
+            ]
+        },
+        options: opt
+    });
+    
+    // Gráfico Consolidado
+    const cons = {};
+    hcData.forEach(r => {
+        const w = r[1];
+        if (!cons[w]) cons[w] = { hc: 0, items: 0 };
+        cons[w].hc += parseNumero(r[6]);
+    });
+    prodData.forEach(r => {
+        const w = r[1];
+        if (!cons[w]) cons[w] = { hc: 0, items: 0 };
+        cons[w].items += parseNumero(r[2]) + parseNumero(r[4]);
+    });
+    const whsCons = Object.keys(cons).sort();
+    if (chartConsolidado) chartConsolidado.destroy();
+    chartConsolidado = new Chart(document.getElementById('chartConsolidado'), {
+        type: 'bar',
+        data: {
+            labels: whsCons,
+            datasets: [{ label: 'Items/HC', data: whsCons.map(w => cons[w].hc > 0 ? cons[w].items / cons[w].hc : 0), backgroundColor: '#9C27B0' }]
+        },
+        options: opt
+    });
+}
+
+// ================================
+// INICIALIZAÇÃO
+// ================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Dashboard] Pronto');
+    const userEmail = getUserEmail();
+    if (!userEmail) {
+        alert('❌ Não autenticado');
+        window.location.href = '/';
+        return;
+    }
+    console.log(`[Dashboard] User: ${userEmail}`);
+    document.getElementById('filter-date')?.addEventListener('change', renderizarDashboard);
+    document.getElementById('filter-warehouse')?.addEventListener('change', renderizarDashboard);
+    document.getElementById('filter-sector')?.addEventListener('change', renderizarDashboard);
+});
+    </script>
 </body>
 </html>
