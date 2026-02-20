@@ -1,54 +1,68 @@
 // ========================================
-// ✅ CONFIGURAÇÃO COM SUA API KEY
+// ✅ CONFIGURAÇÃO - USA APIs DO BACKEND
 // ========================================
-const SHEET_ID = '1fD7pvbKwGwMHsww0IMQjkEqE4ohuBKv81MNoyV8tgbc';
-const API_KEY = 'AIzaSyCaEdXbkqRYHaSeo-O6bzpPSqADUufOcOg';
+const API_BASE = window.location.origin
 
 let dadosHC = [];
 let dadosProducao = [];
 let charts = {};
 
+// Função para pegar email do cookie
+function getUserEmail() {
+    const match = document.cookie.match(/user_email=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 // ========================================
-// CARREGAR DADOS COM TRATAMENTO ROBUSTO
+// CARREGAR DADOS VIA API BACKEND
 // ========================================
 async function carregarDados() {
     mostrarLoading(true);
     
     try {
-        console.log('🔄 Iniciando carregamento de dados...');
+        console.log('🔄 Iniciando carregamento de dados via API backend...');
         
-        // Carregar raw_hc
-        const urlHC = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/raw_hc?key=${API_KEY}`;
-        const responseHC = await fetch(urlHC);
+        const userEmail = getUserEmail();
+        if (!userEmail) {
+            throw new Error('Email não encontrado no cookie. Faça login novamente.');
+        }
+        
+        // Carregar raw_hc via API backend
+        console.log('📊 Buscando raw_hc...');
+        const responseHC = await fetch(`${API_BASE}/api/dashboard/raw-hc`, {
+            headers: { 'x-user-email': userEmail }
+        });
         
         if (!responseHC.ok) {
             const errorData = await responseHC.json();
-            throw new Error(interpretarErroAPI(errorData, 'raw_hc'));
+            throw new Error(errorData.error || 'Erro ao buscar dados de HC');
         }
         
         const dataHC = await responseHC.json();
-        if (!dataHC.values || dataHC.values.length === 0) {
+        if (!dataHC.success || !dataHC.data || dataHC.data.length === 0) {
             throw new Error('Aba "raw_hc" não encontrada ou está vazia');
         }
         
-        dadosHC = processarHC(dataHC.values);
+        dadosHC = processarHC(dataHC.data);
         console.log('✅ HC carregado:', dadosHC.length, 'registros');
         
-        // Carregar raw_dados
-        const urlDados = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/raw_dados?key=${API_KEY}`;
-        const responseDados = await fetch(urlDados);
+        // Carregar raw_dados via API backend
+        console.log('📦 Buscando raw_dados...');
+        const responseDados = await fetch(`${API_BASE}/api/dashboard/raw-dados`, {
+            headers: { 'x-user-email': userEmail }
+        });
         
         if (!responseDados.ok) {
             const errorData = await responseDados.json();
-            throw new Error(interpretarErroAPI(errorData, 'raw_dados'));
+            throw new Error(errorData.error || 'Erro ao buscar dados de produtividade');
         }
         
         const dataDados = await responseDados.json();
-        if (!dataDados.values || dataDados.values.length === 0) {
+        if (!dataDados.success || !dataDados.data || dataDados.data.length === 0) {
             throw new Error('Aba "raw_dados" não encontrada ou está vazia');
         }
         
-        dadosProducao = processarProducao(dataDados.values);
+        dadosProducao = processarProducao(dataDados.data);
         console.log('✅ Produção carregada:', dadosProducao.length, 'registros');
         
         // Preencher filtros e atualizar
@@ -64,21 +78,6 @@ async function carregarDados() {
         console.error('❌ Erro detalhado:', error);
         alert('❌ Erro ao carregar dados:\n\n' + error.message + '\n\nAbra o console (F12) para mais detalhes.');
     }
-}
-
-function interpretarErroAPI(errorData, aba) {
-    const message = errorData.error?.message || '';
-    
-    if (message.includes('API_KEY_INVALID') || message.includes('API key not valid')) {
-        return 'API Key inválida! Verifique se a Google Sheets API está ativada no Google Cloud Console.';
-    }
-    if (message.includes('PERMISSION_DENIED')) {
-        return 'Permissão negada! Verifique se a planilha está compartilhada como "Qualquer pessoa com o link pode visualizar".';
-    }
-    if (message.includes('Unable to parse range')) {
-        return `Aba "${aba}" não encontrada. Verifique se o nome está correto na planilha.`;
-    }
-    return `Erro ao acessar aba "${aba}": ${message}`;
 }
 
 function processarHC(rows) {
@@ -717,5 +716,15 @@ document.getElementById('filter-sector').addEventListener('change', atualizarTod
 document.addEventListener('DOMContentLoaded', () => {
     const hoje = new Date().toISOString().split('T')[0];
     document.getElementById('filter-date').value = hoje;
-    console.log('✅ Dashboard inicializado com API Key válida. Clique em "Atualizar Dados" para começar.');
+    
+    // Verificar se tem cookie de usuário
+    const userEmail = getUserEmail();
+    if (!userEmail) {
+        alert('⚠️ Sessão expirada. Redirecionando para login...');
+        window.location.href = '/';
+        return;
+    }
+    
+    console.log('✅ Dashboard inicializado. Autenticação via backend (Google OAuth).');
+    console.log('👤 Usuário:', userEmail);
 });

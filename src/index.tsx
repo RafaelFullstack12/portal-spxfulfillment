@@ -2245,4 +2245,95 @@ app.post('/api/abs/propagar-desligamento', async (c) => {
   }
 })
 
+/**
+ * ==========================================
+ * APIs DO DASHBOARD HC & PRODUTIVIDADE
+ * ==========================================
+ */
+
+// ID da planilha do Dashboard
+const DASHBOARD_SPREADSHEET_ID = '1fD7pvbKwGwMHsww0IMQjkEqE4ohuBKv81MNoyV8tgbc'
+
+/**
+ * API: Buscar dados raw_hc
+ */
+app.get('/api/dashboard/raw-hc', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) {
+    return c.json({ success: false, error: 'Não autenticado' }, 401)
+  }
+
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    if (!user || user.status !== 'APROVADO') {
+      return c.json({ success: false, error: 'Acesso negado' }, 403)
+    }
+
+    console.log('[Dashboard API] Buscando dados raw_hc...')
+
+    const response = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId: DASHBOARD_SPREADSHEET_ID,
+      range: 'raw_hc!A:AG'
+    })
+
+    const rows = response.data.values || []
+    console.log(`[Dashboard API] raw_hc: ${rows.length} linhas encontradas`)
+
+    return c.json({
+      success: true,
+      data: rows,
+      total: rows.length
+    })
+
+  } catch (error: any) {
+    console.error('[Dashboard API] Erro ao buscar raw_hc:', error)
+    return c.json({
+      success: false,
+      error: 'Erro ao buscar dados de HC',
+      message: error.message
+    }, 500)
+  }
+})
+
+/**
+ * API: Buscar dados raw_dados
+ */
+app.get('/api/dashboard/raw-dados', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) {
+    return c.json({ success: false, error: 'Não autenticado' }, 401)
+  }
+
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    if (!user || user.status !== 'APROVADO') {
+      return c.json({ success: false, error: 'Acesso negado' }, 403)
+    }
+
+    console.log('[Dashboard API] Buscando dados raw_dados...')
+
+    const response = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId: DASHBOARD_SPREADSHEET_ID,
+      range: 'raw_dados!A:F'
+    })
+
+    const rows = response.data.values || []
+    console.log(`[Dashboard API] raw_dados: ${rows.length} linhas encontradas`)
+
+    return c.json({
+      success: true,
+      data: rows,
+      total: rows.length
+    })
+
+  } catch (error: any) {
+    console.error('[Dashboard API] Erro ao buscar raw_dados:', error)
+    return c.json({
+      success: false,
+      error: 'Erro ao buscar dados de produtividade',
+      message: error.message
+    }, 500)
+  }
+})
+
 export default app
