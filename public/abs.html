@@ -1384,49 +1384,120 @@ Salvo em raw_hr.`);
     });
 
     // ==========================================
-    // INTEGRAÇÃO COM APIS REAIS
+    // INTEGRAÇÃO COM APIS REAIS - OTIMIZADO
     // ==========================================
 
-    let colaboradoresCache = [];
-    let presencasAutomaticasCache = {};
-    let mapColaboradores = {}; // Mapa indexado por wfmUser para lookup O(1)
-    let marcacoesModificadas = {}; // Rastrear mudanças locais
-    let siglasDesligamento = ['DV', 'DP', 'DF'];
+    // CONFIG
+    const WAREHOUSE = 'SP';
+    const API_BASE = '';
+    const SIGLAS_DESLIGAMENTO = ['DV','DP','DF'];
+    const SIGLAS_COM_PERIODO = ['AM','AF','AL'];
+    const OPCOES_PRESENCA = {
+        'P': {nome: 'P - Presente'},
+        'F': {nome: 'F - Falta'},
+        'FJ': {nome: 'FJ - Falta Justificada'},
+        'FE': {nome: 'FE - Férias'},
+        'FO': {nome: 'FO - Folga'},
+        'DSR': {nome: 'DSR - Descanso Semanal'},
+        'AM': {nome: 'AM - Atestado Médico'},
+        'AF': {nome: 'AF - Afastamento'},
+        'AL': {nome: 'AL - Atraso Longo'},
+        'BH': {nome: 'BH - Banco de Horas'},
+        'TR': {nome: 'TR - Treinamento'},
+        'SU': {nome: 'SU - Suspensão'},
+        'PR': {nome: 'PR - Pré-Contratação'},
+        'S1': {nome: 'S1 - Saída 1h'},
+        'S2': {nome: 'S2 - Saída 2h'},
+        'DV': {nome: 'DV - Desligamento Voluntário'},
+        'DP': {nome: 'DP - Desligamento Pedido'},
+        'DF': {nome: 'DF - Desligamento Força'},
+        'NC': {nome: 'NC - Não Compareceu'}
+    };
 
-    /**
-     * Pré-calcular flag de desligamento para cada colaborador (O(n))
-     */
-    function preCalcularDesligamentos(colaboradores) {
-        colaboradores.forEach(colab => {
-            let temDeslig = false;
-            if (colab.marcacoes) {
-                for (let dia in colab.marcacoes) {
-                    const sigla = colab.marcacoes[dia]?.sigla;
-                    if (siglasDesligamento.includes(sigla)) {
-                        temDeslig = true;
+    let periodoAtual = null;
+
+    function normalizeLider(valor){
+        if(!valor) return 'NÃO ATRIBUÍDO';
+        return valor.trim().toUpperCase().normalize('NFD')
+            .replace(/[\u0300-\u036f]/g,'');
+    }
+
+    function getUserEmail(){
+        const match = document.cookie.match(/user_email=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    // ESTADO OTIMIZADO
+    let estado = {
+        warehouse: WAREHOUSE,
+        mes:null,
+        ano:null,
+        supervisor:null,
+        dia:null,
+
+        todosColaboradores:[],
+        colaboradores:[],
+
+        mapTodosColaboradores:{},
+        mapColaboradores:{},
+
+        marcacoesModificadas:{},
+        filtroStatus:'todos'
+    };
+
+    let presencasAutomaticasCache = {};
+
+    // CARREGAR MÊS (COM PRÉ-CÁLCULO)
+    async function selecionarMes(mes,ano){
+        estado.mes=mes;
+        estado.ano=ano;
+
+        const response=await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`,{
+            headers:{'x-user-email':getUserEmail()}
+        });
+
+        const data=await response.json();
+        estado.todosColaboradores=data.colaboradores||[];
+
+        estado.mapTodosColaboradores={};
+
+        estado.todosColaboradores.forEach(c=>{
+            c.liderNormalizado=normalizeLider(c.lider);
+
+            // pré cálculo desligamento O(1)
+            c.temDesligamento=false;
+            if(c.marcacoes){
+                for(const d in c.marcacoes){
+                    if(SIGLAS_DESLIGAMENTO.includes(c.marcacoes[d].sigla)){
+                        c.temDesligamento=true;
                         break;
                     }
                 }
             }
-            colab.temDesligamento = temDeslig;
+
+            estado.mapTodosColaboradores[c.wfmUser]=c;
         });
+
+        carregarSupervisores();
     }
 
-    /**
-     * Criar mapas indexados para lookup O(1)
-     */
-    function criarMapasIndexados() {
-        mapColaboradores = {};
-        colaboradoresCache.forEach(colab => {
-            mapColaboradores[colab.wfmUser] = colab;
-        });
+    // O(1)
+    function temDesligamentoNoMes(colab){
+        return colab.temDesligamento===true;
     }
 
-    /**
-     * Verificar se colaborador tem desligamento no mês (O(1))
-     */
-    function temDesligamentoNoMes(colab) {
-        return colab.temDesligamento === true;
+    // CARREGAR MARCAÇÕES
+    function carregarMarcacoes(){
+        estado.colaboradores=estado.todosColaboradores
+            .filter(c=>c.liderNormalizado===estado.supervisor);
+
+        estado.mapColaboradores={};
+        estado.colaboradores.forEach(c=>{
+            estado.mapColaboradores[c.wfmUser]=c;
+        });
+
+        renderizarColaboradores();
+        atualizarEstatisticas();
     }
 
     /**
@@ -1436,28 +1507,12 @@ Salvo em raw_hr.`);
         try {
             console.log(`[ABS] Carregando colaboradores: ${warehouse} - ${mes}/${ano}`);
             
-            const response = await fetch(`/api/abs/colaboradores/${warehouse}/${mes}/${ano}`);
-            const data = await response.json();
-            
-            if (!data.success) {
-                console.error('[ABS] Erro ao carregar colaboradores:', data.error);
-                return [];
-            }
-            
-            colaboradoresCache = data.colaboradores;
-            console.log(`[ABS] ${colaboradoresCache.length} colaboradores carregados`);
-            
-            // Pré-calcular desligamentos e criar mapas
-            preCalcularDesligamentos(colaboradoresCache);
-            criarMapasIndexados();
+            await selecionarMes(mes, ano);
             
             // Buscar presença automática para este dia
             await carregarPresencaAutomatica(warehouse, dia);
             
-            // Renderizar lista
-            renderizarColaboradores(dia);
-            
-            return colaboradoresCache;
+            return estado.todosColaboradores;
             
         } catch (error) {
             console.error('[ABS] Erro ao carregar colaboradores:', error);
@@ -1496,17 +1551,17 @@ Salvo em raw_hr.`);
         }
     }
 
-    /**
-     * Renderizar lista de colaboradores com dados reais (otimizado)
-     */
-    function renderizarColaboradores(dia) {
-        const container = document.querySelector('#tela-marcacao .space-y-3');
-        if (!container) return;
+    // RENDER ULTRA OTIMIZADO
+    function renderizarColaboradores(){
+        const list=document.querySelector('#tela-marcacao .space-y-3');
+        const busca=document.getElementById('busca-colaborador')?.value.toLowerCase()||'';
+
+        if (!list) return;
+
+        list.innerHTML='';
         
-        container.innerHTML = ''; // Limpar lista atual
-        
-        if (colaboradoresCache.length === 0) {
-            container.innerHTML = `
+        if (estado.colaboradores.length === 0) {
+            list.innerHTML = `
                 <div class="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-6 text-center">
                     <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
                     <p class="text-gray-300">Nenhum colaborador encontrado para este warehouse/mês.</p>
@@ -1515,144 +1570,151 @@ Salvo em raw_hr.`);
             `;
             return;
         }
-        
-        const fragment = document.createDocumentFragment();
-        let marcados = 0;
-        let pendentes = 0;
-        let automaticos = 0;
-        
-        colaboradoresCache.forEach(colab => {
-            // Pular se tem desligamento pré-calculado
-            if (temDesligamentoNoMes(colab)) return;
-            
-            const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
-            const modificacaoLocal = marcacoesModificadas[colab.wfmUser];
-            const marcacaoDia = colab.marcacoes?.[dia];
-            const jaFoiMarcado = !!marcacaoDia || !!modificacaoLocal;
-            
-            if (temPresencaAutomatica) automaticos++;
-            if (jaFoiMarcado) marcados++;
-            else pendentes++;
-            
-            const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
-            const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
-            const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
-            
-            let badgeHtml = '';
-            if (temPresencaAutomatica) {
-                badgeHtml = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">🤖 AUTO</span>`;
-            } else if (!jaFoiMarcado) {
-                badgeHtml = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">⚠️ PENDENTE</span>`;
-            } else if (modificacaoLocal) {
-                badgeHtml = `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">✏️ EDITADO</span>`;
-            }
-            
-            const siglaAtual = modificacaoLocal || marcacaoDia?.sigla || 'P';
-            
-            const div = document.createElement('div');
-            div.className = `bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}`;
-            div.innerHTML = `
-                <div class="flex items-center flex-1">
-                    <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
-                        <i class="fas ${icon} text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <h3 class="font-bold">${colab.nome}</h3>
-                            ${badgeHtml}
-                        </div>
-                        <p class="text-gray-400 text-sm">
-                            WFM: ${colab.wfmUser} | 
-                            Supervisor: ${colab.supervisor}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <select class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
-                            onchange="marcarPresenca('${colab.wfmUser}', '${colab.nome}', this.value, ${dia})">
-                        <option value="P" ${siglaAtual === 'P' ? 'selected' : ''}>P - Presente</option>
-                        <option value="F" ${siglaAtual === 'F' ? 'selected' : ''}>F - Falta</option>
-                        <option value="FJ" ${siglaAtual === 'FJ' ? 'selected' : ''}>FJ - Falta Justificada</option>
-                        <option value="FE" ${siglaAtual === 'FE' ? 'selected' : ''}>FE - Férias</option>
-                        <option value="FO" ${siglaAtual === 'FO' ? 'selected' : ''}>FO - Folga</option>
-                        <option value="DSR" ${siglaAtual === 'DSR' ? 'selected' : ''}>DSR - Descanso Semanal</option>
-                        <option value="AM" ${siglaAtual === 'AM' ? 'selected' : ''}>AM - Atestado Médico</option>
-                        <option value="AF" ${siglaAtual === 'AF' ? 'selected' : ''}>AF - Afastamento</option>
-                        <option value="AL" ${siglaAtual === 'AL' ? 'selected' : ''}>AL - Atraso Longo</option>
-                        <option value="BH" ${siglaAtual === 'BH' ? 'selected' : ''}>BH - Banco de Horas</option>
-                        <option value="TR" ${siglaAtual === 'TR' ? 'selected' : ''}>TR - Treinamento</option>
-                        <option value="SU" ${siglaAtual === 'SU' ? 'selected' : ''}>SU - Suspensão</option>
-                        <option value="PR" ${siglaAtual === 'PR' ? 'selected' : ''}>PR - Pré-Contratação</option>
-                        <option value="S1" ${siglaAtual === 'S1' ? 'selected' : ''}>S1 - Saída 1h</option>
-                        <option value="S2" ${siglaAtual === 'S2' ? 'selected' : ''}>S2 - Saída 2h</option>
-                        <option value="DV" ${siglaAtual === 'DV' ? 'selected' : ''}>DV - Desligamento Voluntário</option>
-                        <option value="DP" ${siglaAtual === 'DP' ? 'selected' : ''}>DP - Desligamento Pedido</option>
-                        <option value="DF" ${siglaAtual === 'DF' ? 'selected' : ''}>DF - Desligamento Força</option>
-                        <option value="NC" ${siglaAtual === 'NC' ? 'selected' : ''}>NC - Não Compareceu</option>
-                    </select>
-                    <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
-                            class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-clock mr-1"></i> HE
-                    </button>
-                    <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-exchange-alt mr-1"></i> SIN
-                    </button>
-                </div>
-            `;
-            
-            fragment.appendChild(div);
+
+        const frag=document.createDocumentFragment();
+
+        estado.colaboradores.forEach(colab=>{
+            if(colab.temDesligamento) return;
+
+            if(busca && !colab.nome.toLowerCase().includes(busca)
+                     && !colab.wfmUser.toLowerCase().includes(busca)) return;
+
+            const item=criarItemColaborador(colab);
+            frag.appendChild(item);
         });
-        
-        container.appendChild(fragment);
+
+        list.appendChild(frag);
         
         // Atualizar estatísticas no header
         const statsElement = document.querySelector('#tela-marcacao .text-green-400.font-bold.text-xl');
         if (statsElement) {
-            statsElement.textContent = `${marcados}/${colaboradoresCache.length}`;
+            let marcados = 0;
+            estado.colaboradores.forEach(c => {
+                if (c.temDesligamento) return;
+                const sigla = estado.marcacoesModificadas[c.wfmUser] ?? c.marcacoes?.[estado.dia]?.sigla;
+                if (sigla) marcados++;
+            });
+            statsElement.textContent = `${marcados}/${estado.colaboradores.length}`;
         }
         
-        console.log(`[ABS] Lista renderizada: ${marcados} marcados, ${pendentes} pendentes, ${automaticos} automáticos`);
+        console.log(`[ABS] Lista renderizada`);
     }
 
-    /**
-     * Marcar presença de um colaborador (otimizado)
-     */
-    async function marcarPresenca(wfmUser, nome, sigla, dia) {
-        try {
-            console.log(`[ABS] Marcando presença: ${nome} (${wfmUser}) - ${sigla} - Dia ${dia}`);
+    // ITEM INDIVIDUAL (ULTRA)
+    function criarItemColaborador(colab){
+        let marcacaoAtual=
+            estado.marcacoesModificadas[colab.wfmUser]
+            ?? colab.marcacoes?.[estado.dia]?.sigla
+            ?? '';
+
+        const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
+        const jaFoiMarcado = !!marcacaoAtual;
+
+        const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
+        const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
+        const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
+
+        let badgeHtml = '';
+        if (temPresencaAutomatica) {
+            badgeHtml = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">🤖 AUTO</span>`;
+        } else if (!jaFoiMarcado) {
+            badgeHtml = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">⚠️ PENDENTE</span>`;
+        } else if (estado.marcacoesModificadas[colab.wfmUser]) {
+            badgeHtml = `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">✏️ EDITADO</span>`;
+        }
+
+        const siglaAtual = marcacaoAtual || 'P';
+
+        const div=document.createElement('div');
+        div.className=`bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}`;
+        div.dataset.wfm=colab.wfmUser;
+
+        div.innerHTML=`
+            <div class="flex items-center flex-1">
+                <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                    <i class="fas ${icon} text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold">${colab.nome}</h3>
+                        ${badgeHtml}
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        WFM: ${colab.wfmUser} | Supervisor: ${colab.supervisor || colab.lider || 'N/A'}
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <select class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
+                    data-wfm="${colab.wfmUser}"
+                    onchange="marcarPresenca(this)">
+                    ${gerarOptions(siglaAtual)}
+                </select>
+                <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
+                        class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
+                    <i class="fas fa-clock mr-1"></i> HE
+                </button>
+                <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
+                    <i class="fas fa-exchange-alt mr-1"></i> SIN
+                </button>
+            </div>
+        `;
+
+        return div;
+    }
+
+    function gerarOptions(selecionado){
+        return Object.entries(OPCOES_PRESENCA)
+            .map(([sigla,info])=>
+                `<option value="${sigla}" ${selecionado===sigla?'selected':''}>${info.nome}</option>`
+            ).join('');
+    }
+
+    // ATUALIZAÇÃO INDIVIDUAL (SEM REBUILD)
+    function marcarPresenca(select){
+        const wfmUser=select.dataset.wfm;
+        const sigla=select.value;
+        const colab = estado.mapColaboradores[wfmUser];
+
+        if (!colab) return;
+
+        // Verificar se é desligamento
+        if (SIGLAS_DESLIGAMENTO.includes(sigla)) {
+            const confirmar = confirm(`⚠️ ATENÇÃO: Auto-Propagação de Desligamento\n\nVocê está marcando ${colab.nome} como:\n${sigla}\n\nEsta marcação será propagada automaticamente para todos os dias seguintes do mês.\n\nDeseja confirmar?`);
             
-            // Verificar se é desligamento (DV, DP, DF)
-            if (siglasDesligamento.includes(sigla)) {
-                const confirmar = confirm(`⚠️ ATENÇÃO: Auto-Propagação de Desligamento\n\nVocê está marcando ${nome} como:\n${sigla}\n\nEsta marcação será propagada automaticamente para todos os dias seguintes do mês.\n\nDeseja confirmar?`);
-                
-                if (!confirmar) {
-                    // Reverter select
-                    event.target.value = 'P';
-                    return;
-                }
-                
-                // Propagar desligamento
-                await propagarDesligamento(wfmUser, nome, sigla, dia);
+            if (!confirmar) {
+                // Reverter select
+                select.value = colab.marcacoes?.[estado.dia]?.sigla || 'P';
+                return;
             }
-            
-            // Armazenar modificação local
-            marcacoesModificadas[wfmUser] = sigla;
-            
+        }
+
+        estado.marcacoesModificadas[wfmUser]=sigla;
+
+        atualizarBadgeIndividual(wfmUser,sigla);
+        atualizarEstatisticas();
+
+        // Salvar no backend
+        salvarMarcacao(wfmUser, colab.nome, sigla);
+    }
+
+    async function salvarMarcacao(wfmUser, nome, sigla) {
+        try {
             const response = await fetch('/api/abs/marcar-presenca', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    dia,
-                    mes: 'Fevereiro',
-                    ano: 2026,
+                    dia: estado.dia,
+                    mes: estado.mes,
+                    ano: estado.ano,
                     colaborador: nome,
                     wfmUser,
                     sigla,
-                    supervisor: supervisorSelecionado || 'Sistema',
-                    warehouse: warehouseSelecionado,
+                    supervisor: estado.supervisor || 'Sistema',
+                    warehouse: estado.warehouse,
                     tipo: 'manual'
                 })
             });
@@ -1661,28 +1723,98 @@ Salvo em raw_hr.`);
             
             if (!data.success) {
                 alert('❌ Erro ao marcar presença: ' + data.error);
-                delete marcacoesModificadas[wfmUser];
+                delete estado.marcacoesModificadas[wfmUser];
                 return;
             }
             
             console.log('[ABS] Presença marcada com sucesso!');
             
-            // Atualizar apenas o colaborador modificado no mapa
-            const colab = mapColaboradores[wfmUser];
+            // Atualizar no mapa local
+            const colab = estado.mapColaboradores[wfmUser];
             if (colab) {
                 if (!colab.marcacoes) colab.marcacoes = {};
-                colab.marcacoes[dia] = { sigla, tipo: 'manual' };
-                delete marcacoesModificadas[wfmUser];
+                colab.marcacoes[estado.dia] = { sigla, tipo: 'manual' };
+                delete estado.marcacoesModificadas[wfmUser];
             }
-            
-            // Re-renderizar apenas se necessário
-            renderizarColaboradores(dia);
             
         } catch (error) {
             console.error('[ABS] Erro ao marcar presença:', error);
-            delete marcacoesModificadas[wfmUser];
+            delete estado.marcacoesModificadas[wfmUser];
             alert('❌ Erro ao marcar presença. Verifique o console.');
         }
+    }
+
+    function atualizarBadgeIndividual(wfmUser,sigla){
+        const item=document.querySelector(`[data-wfm="${wfmUser}"]`);
+        if(!item) return;
+
+        let badge=item.querySelector('.badge');
+        if(!badge){
+            badge=document.createElement('span');
+            badge.className='badge';
+            const nomeDiv = item.querySelector('.colaborador-nome') || item.querySelector('h3');
+            if (nomeDiv) nomeDiv.appendChild(badge);
+        }
+
+        if(!sigla){
+            badge.textContent='PENDENTE';
+            badge.style.background='#FFC107';
+        }else{
+            badge.textContent='MARCADO';
+            badge.style.background='#4CAF50';
+        }
+    }
+
+    // ESTATÍSTICA LEVE
+    function atualizarEstatisticas(){
+        let total=0;
+        let marcados=0;
+
+        estado.colaboradores.forEach(c=>{
+            if(c.temDesligamento) return;
+
+            total++;
+            const sigla=
+                estado.marcacoesModificadas[c.wfmUser]
+                ?? c.marcacoes?.[estado.dia]?.sigla;
+
+            if(sigla) marcados++;
+        });
+
+        const statTotal = document.getElementById('stat-marcacao-total');
+        const statMarcados = document.getElementById('stat-marcacao-marcados');
+        const statPendentes = document.getElementById('stat-marcacao-pendentes');
+        
+        if (statTotal) statTotal.textContent=total;
+        if (statMarcados) statMarcados.textContent=marcados;
+        if (statPendentes) statPendentes.textContent=total-marcados;
+    }
+
+    // RECARGA INCREMENTAL
+    async function recarregarMarcacoes(){
+        const response=await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`,{
+            headers:{'x-user-email':getUserEmail()}
+        });
+
+        const data=await response.json();
+        const novos=data.colaboradores||[];
+
+        novos.forEach(novo=>{
+            const existente=estado.mapTodosColaboradores[novo.wfmUser];
+            if(existente){
+                existente.marcacoes=novo.marcacoes;
+            }
+        });
+
+        estado.marcacoesModificadas={};
+
+        renderizarColaboradores();
+        atualizarEstatisticas();
+    }
+
+    function carregarSupervisores() {
+        // Implementar lógica de supervisores se necessário
+        console.log('[ABS] Supervisores carregados');
     }
 
     /**
@@ -1726,45 +1858,7 @@ Salvo em raw_hr.`);
         }
     }
 
-    /**
-     * Recarregar marcações (merge de dados sem recriar arrays)
-     */
-    async function recarregarMarcacoes(dia) {
-        try {
-            console.log(`[ABS] Recarregando marcações do dia ${dia}`);
-            
-            const response = await fetch(`/api/abs/colaboradores/${warehouseSelecionado}/Fevereiro/2026`);
-            const data = await response.json();
-            
-            if (!data.success) {
-                console.error('[ABS] Erro ao recarregar:', data.error);
-                return;
-            }
-            
-            // Merge: atualizar apenas colaboradores que mudaram
-            data.colaboradores.forEach(novoColab => {
-                const colabExistente = mapColaboradores[novoColab.wfmUser];
-                if (colabExistente) {
-                    // Atualizar apenas marcações
-                    colabExistente.marcacoes = novoColab.marcacoes;
-                }
-            });
-            
-            // Re-calcular flags de desligamento
-            preCalcularDesligamentos(colaboradoresCache);
-            
-            // Limpar modificações locais
-            marcacoesModificadas = {};
-            
-            // Re-renderizar
-            renderizarColaboradores(dia);
-            
-            console.log('[ABS] Marcações atualizadas com sucesso');
-            
-        } catch (error) {
-            console.error('[ABS] Erro ao recarregar marcações:', error);
-        }
-    }
+
 
     /**
      * Hook para carregar colaboradores ao entrar na tela de marcação
