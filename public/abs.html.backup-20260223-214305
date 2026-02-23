@@ -1428,7 +1428,7 @@ Salvo em raw_hr.`);
     }
 
     // ==========================================
-    // ESTADO OTIMIZADO COM ESTRUTURAS O(1)
+    // ESTADO OTIMIZADO
     // ==========================================
     let estado = {
         warehouse: WAREHOUSE,
@@ -1441,20 +1441,8 @@ Salvo em raw_hr.`);
         todosColaboradores: [],
         todosSupervisores: [],
 
-        // 🔥 OTIMIZAÇÃO 2: Maps para lookup O(1)
-        mapTodosColaboradores: new Map(),
-        mapColaboradores: new Map(),
-
-        // 🔥 OTIMIZAÇÃO 2: Índices computados
-        indices: {
-            desligadosNoMes: new Set(),      // wfmUser com desligamento
-            porSupervisor: new Map(),        // supervisor -> [wfmUser]
-            estatisticas: {
-                total: 0,
-                marcados: 0,
-                pendentes: 0
-            }
-        },
+        mapTodosColaboradores: {},
+        mapColaboradores: {},
 
         marcacoesModificadas: {},
         filtroStatus: 'todos'
@@ -1462,80 +1450,38 @@ Salvo em raw_hr.`);
 
     let presencasAutomaticasCache = {};
 
-    // ==========================================
-    // OTIMIZAÇÃO 3: PROCESSAMENTO INICIAL (UMA PASSADA O(n))
-    // ==========================================
-    function processarDadosInicial(colaboradores) {
-        console.log('[Performance] Processando dados inicial...');
-        
-        // Limpar estruturas
-        estado.mapTodosColaboradores.clear();
-        estado.indices.desligadosNoMes.clear();
-        estado.indices.porSupervisor.clear();
-        
-        const supervisoresSet = new Set();
-        
-        // 🔥 UMA ÚNICA ITERAÇÃO para popular tudo
-        colaboradores.forEach(c => {
-            // Normalizar líder
-            c.liderNormalizado = normalizeLider(c.lider);
-            
-            // Pré-calcular desligamento
-            c.temDesligamento = false;
-            if (c.marcacoes) {
-                for (const dia in c.marcacoes) {
-                    if (SIGLAS_DESLIGAMENTO.includes(c.marcacoes[dia].sigla)) {
-                        c.temDesligamento = true;
-                        estado.indices.desligadosNoMes.add(c.wfmUser);
+    // CARREGAR MÊS (COM PRÉ-CÁLCULO)
+    async function selecionarMes(mes,ano){
+        estado.mes=mes;
+        estado.ano=ano;
+
+        const response=await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`,{
+            headers:{'x-user-email':getUserEmail()}
+        });
+
+        const data=await response.json();
+        estado.todosColaboradores=data.colaboradores||[];
+
+        estado.mapTodosColaboradores={};
+
+        estado.todosColaboradores.forEach(c=>{
+            c.liderNormalizado=normalizeLider(c.lider);
+
+            // pré cálculo desligamento O(1)
+            c.temDesligamento=false;
+            if(c.marcacoes){
+                for(const d in c.marcacoes){
+                    if(SIGLAS_DESLIGAMENTO.includes(c.marcacoes[d].sigla)){
+                        c.temDesligamento=true;
                         break;
                     }
                 }
             }
-            
-            // Popular mapa principal
-            estado.mapTodosColaboradores.set(c.wfmUser, c);
-            
-            // Indexar por supervisor
-            if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
-                supervisoresSet.add(c.liderNormalizado);
-                
-                if (!estado.indices.porSupervisor.has(c.liderNormalizado)) {
-                    estado.indices.porSupervisor.set(c.liderNormalizado, []);
-                }
-                estado.indices.porSupervisor.get(c.liderNormalizado).push(c.wfmUser);
-            }
-        });
-        
-        estado.todosColaboradores = colaboradores;
-        estado.todosSupervisores = Array.from(supervisoresSet).sort();
-        
-        console.log('[Performance] Processamento concluído:', {
-            total: colaboradores.length,
-            supervisores: estado.todosSupervisores.length,
-            desligados: estado.indices.desligadosNoMes.size
-        });
-    }
 
-    // CARREGAR MÊS (COM PRÉ-CÁLCULO)
-    async function selecionarMes(mes, ano) {
-        estado.mes = mes;
-        estado.ano = ano;
-
-        mostrarLoading('Carregando supervisores...');
-
-        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`, {
-            headers: { 'x-user-email': getUserEmail() }
+            estado.mapTodosColaboradores[c.wfmUser]=c;
         });
 
-        const data = await response.json();
-        
-        // 🔥 USAR PROCESSAMENTO OTIMIZADO
-        processarDadosInicial(data.colaboradores || []);
-
-        esconderLoading();
         carregarSupervisores();
-        mostrarTela('supervisores');
-    }
     }
 
     // ==========================================
@@ -1599,36 +1545,25 @@ Salvo em raw_hr.`);
     // ==========================================
     // CARREGAR MARCAÇÕES OTIMIZADO
     // ==========================================
-    // ==========================================
-    // OTIMIZAÇÃO 2: Filtro com cache O(k)
-    // ==========================================
-    function atualizarFiltroSupervisor() {
-        // Usar índice pré-computado O(1)
-        const wfmUsers = estado.indices.porSupervisor.get(estado.supervisor) || [];
-        estado.colaboradores = wfmUsers
-            .map(wfm => estado.mapTodosColaboradores.get(wfm))
-            .filter(Boolean);
-        
-        // Atualizar mapa de colaboradores filtrados
-        estado.mapColaboradores.clear();
-        estado.colaboradores.forEach(c => {
-            estado.mapColaboradores.set(c.wfmUser, c);
-        });
-    }
-
     function carregarMarcacoes() {
 
         const list = document.getElementById('colaboradores-list');
         const infoDia = document.getElementById('info-dia');
 
-        if (list) list.innerHTML = '';
-        if (infoDia) infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
+        list.innerHTML = '';
+        infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
 
-        // 🔥 OTIMIZAÇÃO 2: Usar filtro com cache
-        atualizarFiltroSupervisor();
+        estado.colaboradores = estado.todosColaboradores.filter(
+            c => c.liderNormalizado === estado.supervisor
+        );
 
-        // 🔥 OTIMIZAÇÃO 6: Render inicial otimizado
-        renderizarListaInicial();
+        estado.mapColaboradores = {};
+        estado.colaboradores.forEach(c => {
+            estado.mapColaboradores[c.wfmUser] = c;
+        });
+
+        renderizarColaboradores();
+        atualizarEstatisticas();
     }
 
     /**
@@ -1683,9 +1618,10 @@ Salvo em raw_hr.`);
     }
 
     // ==========================================
-    // OTIMIZAÇÃO 6: RENDER INICIAL COM DOCUMENTFRAGMENT
+    // RENDER OTIMIZADO
     // ==========================================
-    function renderizarListaInicial() {
+    function renderizarColaboradores() {
+
         const list = document.getElementById('colaboradores-list');
         const busca = document.getElementById('busca-colaborador')?.value.toLowerCase() || '';
 
@@ -1704,96 +1640,11 @@ Salvo em raw_hr.`);
             return;
         }
 
-        // 🔥 OTIMIZAÇÃO 6: Construir em memória com DocumentFragment
         const fragment = document.createDocumentFragment();
 
         estado.colaboradores.forEach(colab => {
 
-            // 🔥 OTIMIZAÇÃO 1: Usar Set para verificação O(1)
-            if (estado.indices.desligadosNoMes.has(colab.wfmUser)) return;
-
-            if (busca &&
-                !colab.nome.toLowerCase().includes(busca) &&
-                !colab.wfmUser.toLowerCase().includes(busca)) return;
-
-            let marcacaoAtual =
-                estado.marcacoesModificadas[colab.wfmUser]
-                ?? colab.marcacoes?.[estado.dia]?.sigla
-                ?? '';
-
-            const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
-            const jaFoiMarcado = !!marcacaoAtual;
-
-            const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
-            const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
-            const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
-
-            let badgeHtml = '';
-            if (temPresencaAutomatica) {
-                badgeHtml = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">🤖 AUTO</span>`;
-            } else if (!jaFoiMarcado) {
-                badgeHtml = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">⚠️ PENDENTE</span>`;
-            } else if (estado.marcacoesModificadas[colab.wfmUser]) {
-                badgeHtml = `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">✏️ EDITADO</span>`;
-            }
-
-            const siglaAtual = marcacaoAtual || 'P';
-
-            const item = document.createElement('div');
-            item.className = `bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}`;
-            item.dataset.wfm = colab.wfmUser;
-
-            let selectOptions = '';
-            for (const [sigla, info] of Object.entries(OPCOES_PRESENCA)) {
-                selectOptions += `<option value="${sigla}" ${siglaAtual === sigla ? 'selected' : ''}>${info.nome}</option>`;
-            }
-
-            item.innerHTML = `
-                <div class="flex items-center flex-1">
-                    <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
-                        <i class="fas ${icon} text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <h3 class="font-bold">${colab.nome}</h3>
-                            ${badgeHtml}
-                        </div>
-                        <p class="text-gray-400 text-sm">
-                            WFM: ${colab.wfmUser} | Supervisor: ${colab.supervisor || colab.lider || 'N/A'}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <select class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
-                        data-wfm="${colab.wfmUser}"
-                        onchange="marcarPresenca(this)">
-                        ${selectOptions}
-                    </select>
-                    <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
-                            class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-clock mr-1"></i> HE
-                    </button>
-                    <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-exchange-alt mr-1"></i> SIN
-                    </button>
-                </div>
-            `;
-
-            fragment.appendChild(item);
-        });
-
-        // 🔥 OTIMIZAÇÃO 6: Inserção em lote (1 reflow)
-        list.appendChild(fragment);
-        
-        // 🔥 OTIMIZAÇÃO 5: Estatísticas desacopladas
-        recalcularEstatisticas();
-    }
-
-    // Manter renderizarColaboradores como alias para compatibilidade
-    function renderizarColaboradores() {
-        renderizarListaInicial();
-    }
+            if (colab.temDesligamento) return;
 
             if (busca &&
                 !colab.nome.toLowerCase().includes(busca) &&
@@ -1886,32 +1737,6 @@ Salvo em raw_hr.`);
     // ==========================================
     // ATUALIZAÇÃO INDIVIDUAL
     // ==========================================
-    // ==========================================
-    // OTIMIZAÇÃO 4: ATUALIZAÇÃO INDIVIDUAL DE DOM O(1)
-    // ==========================================
-    function atualizarColaboradorDOM(wfmUser, sigla) {
-        const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
-        if (!item) return;
-        
-        // Atualizar apenas o select
-        const select = item.querySelector('.marcacao-select');
-        if (select && select.value !== sigla) {
-            select.value = sigla;
-        }
-        
-        // Atualizar apenas o badge
-        const badge = item.querySelector('.badge') || item.querySelector('span[class*="bg-"]');
-        if (badge) {
-            if (!sigla || sigla === '') {
-                badge.textContent = '⚠️ PENDENTE';
-                badge.className = 'bg-yellow-600 text-white text-xs px-2 py-1 rounded-full';
-            } else {
-                badge.textContent = '✏️ EDITADO';
-                badge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded-full';
-            }
-        }
-    }
-
     function marcarPresenca(select) {
 
         const wfmUser = select.dataset.wfm;
@@ -1919,28 +1744,40 @@ Salvo em raw_hr.`);
 
         estado.marcacoesModificadas[wfmUser] = sigla;
 
-        // 🔥 OTIMIZAÇÃO 4: Atualizar APENAS 1 elemento (não rebuild)
-        atualizarColaboradorDOM(wfmUser, sigla);
-        
-        // 🔥 OTIMIZAÇÃO 5: Estatísticas sem tocar DOM da lista
-        recalcularEstatisticas();
+        atualizarItemIndividual(wfmUser, sigla);
+        atualizarEstatisticas();
     }
 
-    // Manter compatibilidade
     function atualizarItemIndividual(wfmUser, sigla) {
-        atualizarColaboradorDOM(wfmUser, sigla);
+
+        const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
+        if (!item) return;
+
+        const badge = item.querySelector('.badge') || item.querySelector('span[class*="badge"]');
+
+        if (!sigla) {
+            if (badge) {
+                badge.textContent = '⚠️ PENDENTE';
+                badge.className = 'bg-yellow-600 text-white text-xs px-2 py-1 rounded-full';
+            }
+        } else {
+            if (badge) {
+                badge.textContent = '✏️ EDITADO';
+                badge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded-full';
+            }
+        }
     }
 
     // ==========================================
-    // OTIMIZAÇÃO 5: ESTATÍSTICAS DESACOPLADAS (SEM TOCAR DOM DA LISTA)
+    // ESTATÍSTICAS LEVES
     // ==========================================
-    function recalcularEstatisticas() {
+    function atualizarEstatisticas() {
+
         let total = 0;
         let marcados = 0;
 
         estado.colaboradores.forEach(c => {
-            // 🔥 OTIMIZAÇÃO 1: Usar Set O(1)
-            if (estado.indices.desligadosNoMes.has(c.wfmUser)) return;
+            if (c.temDesligamento) return;
 
             total++;
             const sigla =
@@ -1950,7 +1787,6 @@ Salvo em raw_hr.`);
             if (sigla) marcados++;
         });
 
-        // 🔥 Atualizar APENAS os 3 números (zero rebuild de lista)
         const statTotal = document.getElementById('stat-marcacao-total');
         const statMarcados = document.getElementById('stat-marcacao-marcados');
         const statPendentes = document.getElementById('stat-marcacao-pendentes');
@@ -1958,82 +1794,28 @@ Salvo em raw_hr.`);
         if (statTotal) statTotal.textContent = total;
         if (statMarcados) statMarcados.textContent = marcados;
         if (statPendentes) statPendentes.textContent = total - marcados;
-        
-        // Cache para reuso
-        estado.indices.estatisticas = { total, marcados, pendentes: total - marcados };
-    }
-
-    // Manter compatibilidade
-    function atualizarEstatisticas() {
-        recalcularEstatisticas();
     }
 
     // ==========================================
-    // OTIMIZAÇÃO 7: RECARGA INCREMENTAL (MERGE SEM RECRIAR)
+    // RECARGA INCREMENTAL
     // ==========================================
     async function recarregarMarcacoes() {
 
         mostrarLoading('Recarregando dados...');
 
-        try {
-            const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
-                headers: { 'x-user-email': getUserEmail() }
-            });
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
+            headers: { 'x-user-email': getUserEmail() }
+        });
 
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.error || 'Erro ao recarregar');
+        const data = await response.json();
+        const novos = data.colaboradores || [];
+
+        novos.forEach(novo => {
+            const existente = estado.mapTodosColaboradores[novo.wfmUser];
+            if (existente) {
+                existente.marcacoes = novo.marcacoes;
             }
-
-            const novos = data.colaboradores || [];
-
-            // 🔥 OTIMIZAÇÃO 7: Atualização incremental (preservar referências)
-            novos.forEach(novoColab => {
-                const existente = estado.mapTodosColaboradores.get(novoColab.wfmUser);
-                if (existente) {
-                    // Atualizar apenas marcações (mantém objeto)
-                    existente.marcacoes = novoColab.marcacoes;
-                    
-                    // Re-calcular flag de desligamento
-                    existente.temDesligamento = false;
-                    if (existente.marcacoes) {
-                        for (const dia in existente.marcacoes) {
-                            if (SIGLAS_DESLIGAMENTO.includes(existente.marcacoes[dia].sigla)) {
-                                existente.temDesligamento = true;
-                                estado.indices.desligadosNoMes.add(existente.wfmUser);
-                                break;
-                            }
-                        }
-                    }
-                    if (!existente.temDesligamento) {
-                        estado.indices.desligadosNoMes.delete(existente.wfmUser);
-                    }
-                } else {
-                    // Novo colaborador
-                    novoColab.liderNormalizado = normalizeLider(novoColab.lider);
-                    estado.todosColaboradores.push(novoColab);
-                    estado.mapTodosColaboradores.set(novoColab.wfmUser, novoColab);
-                }
-            });
-
-            // Limpar modificações locais
-            estado.marcacoesModificadas = {};
-
-            // Re-filtrar sem recriar
-            atualizarFiltroSupervisor();
-
-            // Render otimizado
-            renderizarListaInicial();
-
-            esconderLoading();
-            
-        } catch (error) {
-            esconderLoading();
-            alert(`Erro ao recarregar: ${error.message}`);
-            console.error(error);
-        }
-    }
+        });
 
         estado.marcacoesModificadas = {};
 
