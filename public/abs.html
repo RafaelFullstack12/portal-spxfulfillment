@@ -2059,6 +2059,18 @@ Salvo em raw_hr.`);
      */
     const irParaOriginal = window.irPara;
     window.irPara = function(telaId) {
+        // 🔥 VERIFICAR SE JÁ ESTAMOS NA TELA DE MARCAÇÃO
+        const telaAtual = document.querySelector('.tela.active');
+        const jaEstamosNaTela = telaAtual && telaAtual.id === telaId;
+        
+        console.log(`[ABS] irPara(${telaId}) - Tela atual: ${telaAtual?.id}, Já na tela: ${jaEstamosNaTela}`);
+        
+        // Se já estamos na tela de marcação, NÃO recarregar
+        if (jaEstamosNaTela && telaId === 'tela-marcacao') {
+            console.log('[ABS] ✅ JÁ NA TELA DE MARCAÇÃO - Ignorando reload completo');
+            return;
+        }
+        
         irParaOriginal(telaId);
         
         // 🔥 NÃO RECARREGAR SE ESTÁ SALVANDO
