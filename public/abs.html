@@ -922,11 +922,21 @@
 
         <!-- Botões de Ação -->
         <div class="flex gap-4">
-            <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-all shadow-lg">
+            <button onclick="salvarMarcacoes()" 
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-all shadow-lg">
                 <i class="fas fa-save mr-2"></i>
                 Salvar Todas as Marcações
             </button>
-            <button onclick="irPara('tela-calendario')" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg transition-all">
+            
+            <button onclick="recarregarManual()" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-all"
+                    title="Buscar dados atualizados da planilha">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Recarregar
+            </button>
+            
+            <button onclick="irPara('tela-calendario')" 
+                    class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg transition-all">
                 <i class="fas fa-times mr-2"></i>
                 Cancelar
             </button>
@@ -1897,6 +1907,111 @@ Salvo em raw_hr.`);
     }
 
     // ==========================================
+    // SALVAMENTO SEM RECARGA AUTOMÁTICA
+    // ==========================================
+    async function salvarMarcacoes() {
+        const modificacoes = Object.keys(estado.marcacoesModificadas);
+        
+        if (modificacoes.length === 0) {
+            alert('ℹ️ Nenhuma marcação foi modificada.');
+            return;
+        }
+
+        const confirmacao = confirm(
+            `💾 SALVAR MARCAÇÕES\n\n` +
+            `${modificacoes.length} marcação(ões) será(ão) salva(s).\n\n` +
+            `Deseja continuar?`
+        );
+        
+        if (!confirmacao) return;
+
+        mostrarLoading(`Salvando ${modificacoes.length} marcação(ões)...`);
+
+        try {
+            // Preparar payload para API
+            const payload = {
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                supervisor: estado.supervisor,
+                marcacoes: modificacoes.map(wfmUser => {
+                    const colab = estado.mapColaboradores.get(wfmUser);
+                    return {
+                        wfmUser: wfmUser,
+                        nome: colab?.nome || 'N/A',
+                        sigla: estado.marcacoesModificadas[wfmUser],
+                        lider: colab?.lider || colab?.supervisor
+                    };
+                })
+            };
+
+            // Enviar para servidor
+            const response = await fetch(`${API_BASE}/api/abs/salvar-marcacoes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-email': getUserEmail()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            esconderLoading();
+
+            if (!result.success) {
+                throw new Error(result.error || 'Erro ao salvar');
+            }
+
+            // 🔥 ATUALIZAR CACHE LOCAL (SEM RECARREGAR PÁGINA)
+            modificacoes.forEach(wfmUser => {
+                const colab = estado.mapColaboradores.get(wfmUser);
+                if (colab) {
+                    if (!colab.marcacoes) colab.marcacoes = {};
+                    colab.marcacoes[estado.dia] = {
+                        sigla: estado.marcacoesModificadas[wfmUser],
+                        data: new Date().toISOString()
+                    };
+                }
+            });
+
+            // Limpar modificações e atualizar badges visuais
+            estado.marcacoesModificadas = {};
+            
+            modificacoes.forEach(wfmUser => {
+                const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
+                if (item) {
+                    const badge = item.querySelector('span[class*="bg-blue-600"]');
+                    if (badge) {
+                        badge.textContent = '✅ SALVO';
+                        badge.className = 'bg-green-600 text-white text-xs px-2 py-1 rounded-full';
+                    }
+                }
+            });
+
+            alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
+
+        } catch (error) {
+            esconderLoading();
+            alert(`❌ Erro: ${error.message}`);
+            console.error('[ABS] Erro ao salvar:', error);
+        }
+    }
+
+    // Função para recarga manual opcional
+    async function recarregarManual() {
+        if (Object.keys(estado.marcacoesModificadas).length > 0) {
+            const confirmacao = confirm(
+                '⚠️ Há marcações não salvas.\n\nRecarregar irá perdê-las.\n\nContinuar?'
+            );
+            if (!confirmacao) return;
+        }
+        
+        await recarregarMarcacoes();
+        alert('✅ Dados atualizados!');
+    }
+
+    // ==========================================
     // FUNÇÕES AUXILIARES DE UI
     // ==========================================
     function mostrarLoading(mensagem = 'Carregando...') {
@@ -1972,16 +2087,23 @@ Salvo em raw_hr.`);
 
 
     /**
-     * Hook para carregar colaboradores ao entrar na tela de marcação
+     * Hook OTIMIZADO: Só carrega se necessário (ELIMINA RECARGA AUTOMÁTICA)
      */
     const irParaOriginal = window.irPara;
     window.irPara = function(telaId) {
         irParaOriginal(telaId);
         
-        // Se for tela de marcação, carregar colaboradores
         if (telaId === 'tela-marcacao' && warehouseSelecionado) {
-            const dia = 16; // Dia atual (seria dinâmico na implementação real)
-            carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
+            // 🔥 SÓ CARREGA SE AINDA NÃO TIVER DADOS NA MEMÓRIA
+            if (estado.colaboradores.length === 0 || estado.warehouse !== warehouseSelecionado) {
+                const dia = 16;
+                carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
+            } else {
+                // 🔥 DADOS JÁ EXISTEM: APENAS RE-RENDERIZA (SEM FETCH)
+                console.log('[ABS] Dados já em memória, evitando fetch desnecessário');
+                renderizarListaInicial();
+                recalcularEstatisticas();
+            }
         }
     };
 </script>
