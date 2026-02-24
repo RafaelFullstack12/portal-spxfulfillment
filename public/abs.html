@@ -1525,7 +1525,8 @@ Salvo em raw_hr.`);
      */
     async function carregarColaboradores(warehouse, mes, ano, dia) {
         try {
-            console.log(`[ABS] Carregando colaboradores: ${warehouse} - ${mes}/${ano} - Dia ${dia}`);
+            console.log(`[ABS] 🔄 carregarColaboradores() CHAMADO: ${warehouse} - ${mes}/${ano} - Dia ${dia}`);
+            console.trace('[ABS] Stack trace para debug:');
             
             // 🔥 VERIFICAR CACHE ANTES DE FAZER FETCH
             const precisaCarregar = 
@@ -1714,15 +1715,14 @@ Salvo em raw_hr.`);
         const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
         if (!item) return;
         
-        // Atualizar apenas o select
-        const select = item.querySelector('.marcacao-select');
-        if (select && select.value !== sigla) {
-            select.value = sigla;
-        }
-        
-        // Atualizar apenas o badge
-        const badge = item.querySelector('.badge') || item.querySelector('span[class*="bg-"]');
+        // Atualizar apenas o badge (o select já foi atualizado pelo onchange)
+        const badge = item.querySelector('span[class*="bg-"]');
         if (badge) {
+            // Verificar se já é automático (não mudar)
+            if (badge.textContent.includes('🤖 AUTO')) {
+                return;
+            }
+            
             if (!sigla || sigla === '') {
                 badge.textContent = '⚠️ PENDENTE';
                 badge.className = 'bg-yellow-600 text-white text-xs px-2 py-1 rounded-full';
@@ -1734,10 +1734,13 @@ Salvo em raw_hr.`);
     }
 
     function marcarPresenca(select) {
-
+        console.log('[ABS] 📝 Marcando presença - INÍCIO');
+        
         const wfmUser = select.dataset.wfm;
         const sigla = select.value;
 
+        console.log(`[ABS] Colaborador: ${wfmUser}, Sigla: ${sigla}`);
+        
         estado.marcacoesModificadas[wfmUser] = sigla;
 
         // 🔥 OTIMIZAÇÃO 4: Atualizar APENAS 1 elemento (não rebuild)
@@ -1745,6 +1748,8 @@ Salvo em raw_hr.`);
         
         // 🔥 OTIMIZAÇÃO 5: Estatísticas sem tocar DOM da lista
         recalcularEstatisticas();
+        
+        console.log('[ABS] ✅ Marcação concluída - SEM RELOAD');
     }
 
     // ==========================================
@@ -1857,12 +1862,16 @@ Salvo em raw_hr.`);
      * - NÃO faz fetch/reload dos dados
      */
     async function salvarMarcacoes() {
+        console.log('[ABS] 💾 SALVANDO MARCAÇÕES - INÍCIO');
+        
         const modificacoes = Object.keys(estado.marcacoesModificadas);
         
         if (modificacoes.length === 0) {
             alert('ℹ️ Nenhuma marcação foi modificada.');
             return;
         }
+
+        console.log(`[ABS] ${modificacoes.length} marcações a salvar:`, modificacoes);
 
         const confirmacao = confirm(
             `💾 SALVAR MARCAÇÕES\n\n` +
@@ -1937,6 +1946,8 @@ Salvo em raw_hr.`);
             });
 
             alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
+            
+            console.log('[ABS] ✅ SALVAMENTO CONCLUÍDO - SEM RELOAD/FETCH');
 
         } catch (error) {
             esconderLoading();
