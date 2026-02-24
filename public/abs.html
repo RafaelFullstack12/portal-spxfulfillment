@@ -1463,7 +1463,7 @@ Salvo em raw_hr.`);
         estado.mes = mes;
         estado.ano = ano;
 
-        mostrarLoading('Carregando supervisores...');
+        // mostrarLoading('Carregando supervisores...'); // DESABILITADO
 
         const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`, {
             headers: { 'x-user-email': getUserEmail() }
@@ -1790,7 +1790,7 @@ Salvo em raw_hr.`);
     // ==========================================
     async function recarregarMarcacoes() {
 
-        mostrarLoading('Recarregando dados...');
+        // mostrarLoading('Recarregando dados...'); // DESABILITADO
 
         try {
             const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
