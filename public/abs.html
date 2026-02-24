@@ -1948,11 +1948,15 @@ Salvo em raw_hr.`);
                 }
             });
 
-            alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
-            
             console.log('[ABS] ✅ SALVAMENTO CONCLUÍDO - SEM RELOAD/FETCH');
             
-            salvandoMarcacoes = false; // Desativar flag
+            alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
+            
+            // 🔥 Desativar flag DEPOIS do alert (alert é bloqueante)
+            setTimeout(() => {
+                salvandoMarcacoes = false;
+                console.log('[ABS] 🔓 Flag salvandoMarcacoes desativada');
+            }, 100);
 
         } catch (error) {
             salvandoMarcacoes = false; // Desativar flag também em erro
