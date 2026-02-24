@@ -146,6 +146,49 @@
             </div>
         </div>
 
+        <!-- Estatísticas Gerais -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Colaboradores Ativos</p>
+                        <p class="text-3xl font-bold text-white">482</p>
+                        <p class="text-xs text-green-400 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Data Desligamento vazia
+                        </p>
+                    </div>
+                    <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Supervisores Ativos</p>
+                        <p class="text-3xl font-bold text-white">24</p>
+                    </div>
+                    <div class="bg-purple-600 w-12 h-12 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-user-tie text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Pendências Total</p>
+                        <p class="text-3xl font-bold text-yellow-400">12</p>
+                    </div>
+                    <div class="bg-yellow-600 w-12 h-12 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Cards de Warehouses -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
@@ -165,6 +208,21 @@
 
                     <h3 class="text-2xl font-bold mb-2 text-white">Pernambuco</h3>
                     <p class="text-purple-100 text-lg font-bold mb-1">FBS PE - Jaboatão</p>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-purple-100">
+                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
+                            </span>
+                            <span class="font-bold text-white">156</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-purple-100">
+                                <i class="fas fa-user-tie mr-2"></i>Supervisores
+                            </span>
+                            <span class="font-bold text-white">8</span>
+                        </div>
+                    </div>
 
                     <button class="w-full bg-white text-purple-700 font-bold px-4 py-3 rounded-lg hover:bg-purple-50 transition-all shadow-lg">
                         <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
@@ -189,6 +247,21 @@
                     <h3 class="text-2xl font-bold mb-2 text-white">Goiás</h3>
                     <p class="text-pink-100 text-lg font-bold mb-1">FBS GO - Aparecida</p>
 
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-pink-100">
+                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
+                            </span>
+                            <span class="font-bold text-white">189</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-pink-100">
+                                <i class="fas fa-user-tie mr-2"></i>Supervisores
+                            </span>
+                            <span class="font-bold text-white">9</span>
+                        </div>
+                    </div>
+
                     <button class="w-full bg-white text-pink-700 font-bold px-4 py-3 rounded-lg hover:bg-pink-50 transition-all shadow-lg">
                         <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
                     </button>
@@ -211,6 +284,21 @@
 
                     <h3 class="text-2xl font-bold mb-2 text-white">São Paulo</h3>
                     <p class="text-cyan-100 text-lg font-bold mb-1">FBS SP - Franco da Rocha</p>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-cyan-100">
+                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
+                            </span>
+                            <span class="font-bold text-white">137</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+                            <span class="text-cyan-100">
+                                <i class="fas fa-user-tie mr-2"></i>Supervisores
+                            </span>
+                            <span class="font-bold text-white">7</span>
+                        </div>
+                    </div>
 
                     <button class="w-full bg-white text-cyan-700 font-bold px-4 py-3 rounded-lg hover:bg-cyan-50 transition-all shadow-lg">
                         <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
@@ -239,12 +327,27 @@
                         Sistema ABS - <span id="warehouse-nome">São Paulo</span>
                     </h1>
                     <p class="text-gray-400">Selecione o Mês - 2026</p>
+                    <p class="text-yellow-400 text-sm mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Apenas o mês atual pode ser editado.
+                    </p>
                 </div>
             </div>
         </div>
 
         <!-- Grid de Meses -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Janeiro - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Janeiro</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
             <!-- Fevereiro (mês atual - destaque) -->
             <div onclick="irPara('tela-supervisores')" class="card-hover bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 cursor-pointer border-2 border-green-400 shadow-2xl">
                 <h3 class="text-xl font-bold mb-2">Fevereiro</h3>
@@ -256,19 +359,48 @@
                 </button>
             </div>
 
-            <!-- Meses bloqueados -->
-            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
-                <h3 class="text-xl font-bold mb-2 text-gray-400">Janeiro</h3>
-                <p class="text-gray-400 text-sm mb-4">
-                    <i class="fas fa-lock mr-2"></i>Bloqueado
-                </p>
-            </div>
-
+            <!-- Março - BLOQUEADO -->
             <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
                 <h3 class="text-xl font-bold mb-2 text-gray-400">Março</h3>
                 <p class="text-gray-400 text-sm mb-4">
                     <i class="fas fa-lock mr-2"></i>Bloqueado
                 </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Abril - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Abril</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Maio - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Maio</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
+            </div>
+
+            <!-- Junho - BLOQUEADO -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
+                <h3 class="text-xl font-bold mb-2 text-gray-400">Junho</h3>
+                <p class="text-gray-400 text-sm mb-4">
+                    <i class="fas fa-lock mr-2"></i>Bloqueado
+                </p>
+                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
+                    Bloqueado
+                </button>
             </div>
         </div>
     </div>
@@ -293,6 +425,16 @@
                     <p class="text-gray-400">São Paulo (SP) - Franco da Rocha</p>
                 </div>
             </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
+            <label class="text-gray-400 text-sm mb-2 block">
+                <i class="fas fa-search mr-2"></i>Buscar Supervisor
+            </label>
+            <input type="text" 
+                   placeholder="Nome do supervisor..." 
+                   class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
         </div>
 
         <!-- Lista de Supervisores -->
@@ -324,6 +466,39 @@
                         <p class="text-gray-400 text-sm">19 colaboradores</p>
                         <div class="flex gap-2 mt-2">
                             <span class="text-xs bg-green-600 px-2 py-1 rounded">19 marcados</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+                </div>
+            </div>
+
+            <div onclick="selecionarSupervisor('Pedro Costa Silva')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-orange-500">
+                <div class="flex items-center">
+                    <div class="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
+                        PC
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold">Pedro Costa Silva</h3>
+                        <p class="text-gray-400 text-sm">22 colaboradores</p>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded">15 marcados</span>
+                            <span class="text-xs bg-yellow-600 px-2 py-1 rounded">7 pendentes</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+                </div>
+            </div>
+
+            <div onclick="selecionarSupervisor('Ana Paula Rocha')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-pink-500">
+                <div class="flex items-center">
+                    <div class="bg-pink-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
+                        AP
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold">Ana Paula Rocha</h3>
+                        <p class="text-gray-400 text-sm">18 colaboradores</p>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-xs bg-green-600 px-2 py-1 rounded">18 marcados</span>
                         </div>
                     </div>
                     <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
@@ -368,11 +543,149 @@
                 <div class="text-center font-bold text-gray-400 p-2">Sex</div>
                 <div class="text-center font-bold text-gray-400 p-2">Sáb</div>
 
+                <!-- Dias do mês - TODOS CLICÁVEIS -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">1</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">2</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">3</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">4</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">5</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-yellow-700 rounded-lg p-3 text-center cursor-pointer border border-yellow-500">
+                    <div class="text-lg font-bold">6</div>
+                    <div class="text-xs text-yellow-200">⚠️ Pendente</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">7</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+
+                <!-- Segunda semana -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">8</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">9</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">10</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-yellow-700 rounded-lg p-3 text-center cursor-pointer border border-yellow-500">
+                    <div class="text-lg font-bold">11</div>
+                    <div class="text-xs text-yellow-200">⚠️ Pendente</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">12</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">13</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">14</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
+
+                <!-- Terceira semana -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
+                    <div class="text-lg font-bold">15</div>
+                    <div class="text-xs text-green-200">✅ Completo</div>
+                </div>
                 <!-- Dia atual (16) - Destacado -->
                 <div onclick="irPara('tela-marcacao')" class="bg-gradient-to-br from-green-600 to-green-800 rounded-lg p-3 text-center cursor-pointer border-2 border-green-400 card-hover">
                     <div class="text-2xl font-bold">16</div>
                     <div class="text-xs text-green-200">✅ HOJE</div>
                     <div class="text-xs text-yellow-300 mt-1">6 pendentes</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">17</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">18</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">19</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">20</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">21</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+
+                <!-- Quarta semana -->
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">22</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">23</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">24</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">25</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">26</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">27</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
+                    <div class="text-lg font-bold">28</div>
+                    <div class="text-xs text-gray-400">Futuro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="mt-6 bg-gray-800 rounded-xl p-4 shadow-xl">
+            <h3 class="font-bold mb-3">Legenda:</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-green-600 rounded"></div>
+                    <span>Completo</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-yellow-600 rounded"></div>
+                    <span>Pendente</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-gray-700 rounded"></div>
+                    <span>Não iniciado</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-blue-600 rounded border-2 border-blue-400"></div>
+                    <span>Hoje</span>
                 </div>
             </div>
         </div>
@@ -410,6 +723,19 @@
             </div>
         </div>
 
+        <!-- Alerta de Presença Automática -->
+        <div class="bg-blue-900/30 border border-blue-500/50 rounded-xl p-4 mb-6 flex items-start">
+            <div class="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                <i class="fas fa-robot text-white"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-bold text-blue-400 mb-1">🤖 Marcação Automática Ativa</h3>
+                <p class="text-gray-300 text-sm">
+                    18 colaboradores tiveram presença marcada automaticamente via sistema de ponto eletrônico (raw_scan).
+                </p>
+            </div>
+        </div>
+
         <!-- Busca -->
         <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -420,8 +746,7 @@
                     <input type="text" 
                            id="busca-colaborador"
                            placeholder="Nome ou WFM User..." 
-                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
-                           onkeyup="renderizarListaInicial()">
+                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
                 </div>
                 <div>
                     <label class="text-gray-400 text-sm mb-2 block">
@@ -431,6 +756,7 @@
                         <option>Todos</option>
                         <option>Marcados</option>
                         <option>Pendentes</option>
+                        <option>Automáticos</option>
                     </select>
                 </div>
             </div>
@@ -443,7 +769,135 @@
                 Colaboradores (24 total)
             </h2>
 
-            <div id="colaboradores-list" class="space-y-3"></div>
+            <div id="colaboradores-list" class="space-y-3">
+                
+                <!-- Colaborador 1: PRESENÇA AUTOMÁTICA -->
+                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 border-green-500">
+                    <div class="flex items-center flex-1">
+                        <div class="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold">João Silva Santos</h3>
+                                <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full badge-auto">
+                                    🤖 AUTO
+                                    <div class="tooltip-auto">
+                                        <div class="font-bold text-blue-400 mb-2">
+                                            <i class="fas fa-robot mr-1"></i>
+                                            Presença Automática
+                                        </div>
+                                        <div class="text-xs space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">WFM User:</span>
+                                                <span class="text-white">joao.silva</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">Primeira batida:</span>
+                                                <span class="text-green-400">07:45</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">Horário esperado:</span>
+                                                <span class="text-white">08:00</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">Tolerância:</span>
+                                                <span class="text-green-400">✅ Dentro (±1h)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <p class="text-gray-400 text-sm">
+                                WFM: joao.silva | Operador Inbound | Admissão: 15/01/2024
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select class="bg-gray-600 text-white px-4 py-2 rounded-lg border border-green-500 focus:outline-none">
+                            <option value="P" selected>P - Presente</option>
+                            <option value="F">F - Falta Injustificada</option>
+                            <option value="FJ">FJ - Falta Justificada</option>
+                            <option value="FE">FE - Férias</option>
+                            <option value="FO">FO - Folga</option>
+                            <option value="DSR">DSR - Descanso Semanal Remunerado</option>
+                            <option value="AM">AM - Atestado Médico</option>
+                            <option value="AF">AF - Afastamento (1º à 15º dia)</option>
+                            <option value="AL">AL - Afastamento INSS (16º dia+)</option>
+                            <option value="BH">BH - Banco de Horas</option>
+                            <option value="TR">TR - Transferência Fixa</option>
+                            <option value="SU">SU - Suspensão</option>
+                            <option value="PR">PR - Promoção</option>
+                            <option value="S1">S1 - Sinergia Enviada</option>
+                            <option value="S2">S2 - Sinergia Recebida</option>
+                            <option value="DF">DF - Desligamento Forçado</option>
+                            <option value="DV">DV - Desligamento Voluntário</option>
+                            <option value="DP">DP - Desligamento Planejado</option>
+                            <option value="NC">NC - Não Contratado</option>
+                        </select>
+                        <button onclick="abrirModalHoraExtra('João Silva Santos', 'joao.silva')" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1"
+                                title="Registrar Hora Extra">
+                            <i class="fas fa-clock"></i>
+                            <span class="text-xs">HE</span>
+                        </button>
+                        <button onclick="abrirModalSinergia('João Silva Santos', 'joao.silva', 'Inbound')" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1"
+                                title="Registrar Sinergia">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span class="text-xs">SIN</span>
+                        </button>
+                        <span class="text-green-400">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Colaborador 2: PENDENTE -->
+                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 border-yellow-500">
+                    <div class="flex items-center flex-1">
+                        <div class="bg-yellow-600 w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                            <i class="fas fa-question text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold">Ana Paula Oliveira</h3>
+                                <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">
+                                    ⚠️ SEM SCAN
+                                </span>
+                            </div>
+                            <p class="text-gray-400 text-sm">
+                                WFM: ana.oliveira | Operador Flow | Admissão: 05/09/2023
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select class="bg-gray-600 text-white px-4 py-2 rounded-lg border border-yellow-500 focus:outline-none">
+                            <option value="" selected>Selecione...</option>
+                            <option value="P">P - Presente</option>
+                            <option value="F">F - Falta Injustificada</option>
+                            <option value="FJ">FJ - Falta Justificada</option>
+                            <option value="FE">FE - Férias</option>
+                            <option value="FO">FO - Folga</option>
+                            <option value="DSR">DSR - Descanso Semanal Remunerado</option>
+                        </select>
+                        <button onclick="abrirModalHoraExtra('Ana Paula Oliveira', 'ana.oliveira')" 
+                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                            <i class="fas fa-clock"></i>
+                            <span class="text-xs">HE</span>
+                        </button>
+                        <button onclick="abrirModalSinergia('Ana Paula Oliveira', 'ana.oliveira', 'Flow')" 
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span class="text-xs">SIN</span>
+                        </button>
+                        <span class="text-yellow-400">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         <!-- Estatísticas -->
@@ -680,72 +1134,15 @@
 </div>
 
 <script>
-    // ==========================================
-    // CONFIGURAÇÃO GLOBAL
-    // ==========================================
-    const API_BASE = '';
-    const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
-    const OPCOES_PRESENCA = {
-        'P': {nome: 'P - Presente'},
-        'F': {nome: 'F - Falta'},
-        'FJ': {nome: 'FJ - Falta Justificada'},
-        'FE': {nome: 'FE - Férias'},
-        'FO': {nome: 'FO - Folga'},
-        'DSR': {nome: 'DSR - Descanso Semanal'},
-        'AM': {nome: 'AM - Atestado Médico'},
-        'AF': {nome: 'AF - Afastamento'},
-        'AL': {nome: 'AL - Atraso Longo'},
-        'BH': {nome: 'BH - Banco de Horas'},
-        'TR': {nome: 'TR - Treinamento'},
-        'SU': {nome: 'SU - Suspensão'},
-        'PR': {nome: 'PR - Pré-Contratação'},
-        'S1': {nome: 'S1 - Saída 1h'},
-        'S2': {nome: 'S2 - Saída 2h'},
-        'DV': {nome: 'DV - Desligamento Voluntário'},
-        'DP': {nome: 'DP - Desligamento Pedido'},
-        'DF': {nome: 'DF - Desligamento Força'},
-        'NC': {nome: 'NC - Não Compareceu'}
-    };
-
-    // ==========================================
-    // ESTADO GLOBAL OTIMIZADO
-    // ==========================================
-    let warehouseSelecionado = null;
-    let supervisorSelecionado = null;
-    let presencasAutomaticasCache = {};
-
-    let estado = {
-        warehouse: null,
-        mes: null,
-        ano: null,
-        supervisor: null,
-        dia: null,
-        colaboradores: [],
-        todosColaboradores: [],
-        todosSupervisores: [],
-        mapTodosColaboradores: new Map(),
-        mapColaboradores: new Map(),
-        indices: {
-            desligadosNoMes: new Set(),
-            porSupervisor: new Map(),
-            estatisticas: {
-                total: 0,
-                marcados: 0,
-                pendentes: 0
-            }
-        },
-        marcacoesModificadas: {},
-        filtroStatus: 'todos'
-    };
-
-    // ==========================================
-    // NAVEGAÇÃO ENTRE TELAS
-    // ==========================================
+    // Navegação entre telas
     function irPara(telaId) {
         document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
         document.getElementById(telaId).classList.add('active');
         window.scrollTo(0, 0);
     }
+
+    let warehouseSelecionado = null;
+    let supervisorSelecionado = null;
 
     function selecionarWarehouse(codigo) {
         warehouseSelecionado = codigo;
@@ -759,488 +1156,7 @@
         irPara('tela-calendario');
     }
 
-    // ==========================================
-    // FUNÇÕES AUXILIARES
-    // ==========================================
-    function normalizeLider(valor) {
-        if (!valor) return 'NÃO ATRIBUÍDO';
-        return valor.trim().toUpperCase().normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '');
-    }
-
-    function getUserEmail() {
-        const match = document.cookie.match(/user_email=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : null;
-    }
-
-    function mostrarLoading(mensagem = 'Carregando...') {
-        console.log(`[Loading] ${mensagem}`);
-    }
-    
-    function esconderLoading() {
-        console.log('[Loading] Ocultado');
-    }
-
-    // ==========================================
-    // PROCESSAMENTO DE DADOS OTIMIZADO
-    // ==========================================
-    function processarDadosInicial(colaboradores) {
-        console.log('[Performance] Processando dados inicial...');
-        
-        estado.mapTodosColaboradores.clear();
-        estado.indices.desligadosNoMes.clear();
-        estado.indices.porSupervisor.clear();
-        
-        const supervisoresSet = new Set();
-        
-        colaboradores.forEach(c => {
-            c.liderNormalizado = normalizeLider(c.lider);
-            
-            c.temDesligamento = false;
-            if (c.marcacoes) {
-                for (const dia in c.marcacoes) {
-                    if (SIGLAS_DESLIGAMENTO.includes(c.marcacoes[dia].sigla)) {
-                        c.temDesligamento = true;
-                        estado.indices.desligadosNoMes.add(c.wfmUser);
-                        break;
-                    }
-                }
-            }
-            
-            estado.mapTodosColaboradores.set(c.wfmUser, c);
-            
-            if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
-                supervisoresSet.add(c.liderNormalizado);
-                
-                if (!estado.indices.porSupervisor.has(c.liderNormalizado)) {
-                    estado.indices.porSupervisor.set(c.liderNormalizado, []);
-                }
-                estado.indices.porSupervisor.get(c.liderNormalizado).push(c.wfmUser);
-            }
-        });
-        
-        estado.todosColaboradores = colaboradores;
-        estado.todosSupervisores = Array.from(supervisoresSet).sort();
-        
-        console.log('[Performance] Processamento concluído:', {
-            total: colaboradores.length,
-            supervisores: estado.todosSupervisores.length,
-            desligados: estado.indices.desligadosNoMes.size
-        });
-    }
-
-    async function selecionarMes(mes, ano) {
-        estado.mes = mes;
-        estado.ano = ano;
-
-        mostrarLoading('Carregando colaboradores...');
-
-        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`, {
-            headers: { 'x-user-email': getUserEmail() }
-        });
-
-        const data = await response.json();
-        processarDadosInicial(data.colaboradores || []);
-
-        esconderLoading();
-    }
-
-    async function carregarPresencaAutomatica(warehouse, dia) {
-        try {
-            const data = `${String(dia).padStart(2, '0')}/02/2026`;
-            
-            console.log(`[ABS] Carregando presença automática: ${warehouse} - ${data}`);
-            
-            const response = await fetch(`/api/abs/presenca-automatica/${warehouse}/${data}`);
-            const result = await response.json();
-            
-            if (!result.success) {
-                console.error('[ABS] Erro ao carregar presença automática:', result.error);
-                return;
-            }
-            
-            presencasAutomaticasCache = {};
-            result.presencas.forEach(p => {
-                presencasAutomaticasCache[p.wfmUser] = p;
-            });
-            
-            console.log(`[ABS] ${result.presencas.length} presenças automáticas carregadas`);
-            
-        } catch (error) {
-            console.error('[ABS] Erro ao carregar presença automática:', error);
-        }
-    }
-
-    // ==========================================
-    // CARREGAMENTO INTELIGENTE COM CACHE
-    // ==========================================
-    async function carregarColaboradores(warehouse, mes, ano, dia) {
-        try {
-            console.log(`[ABS] Carregando colaboradores: ${warehouse} - ${mes}/${ano}`);
-            
-            const precisaCarregar = 
-                estado.todosColaboradores.length === 0 || 
-                estado.warehouse !== warehouse ||
-                estado.mes !== mes ||
-                estado.ano !== ano;
-            
-            if (precisaCarregar) {
-                console.log('[ABS] Cache vazio ou dados diferentes, carregando...');
-                estado.warehouse = warehouse;
-                estado.dia = dia;
-                await selecionarMes(mes, ano);
-            } else {
-                console.log('[ABS] Usando dados em cache, pulando fetch');
-                estado.dia = dia;
-            }
-            
-            await carregarPresencaAutomatica(warehouse, dia);
-            carregarMarcacoes();
-            
-            return estado.todosColaboradores;
-            
-        } catch (error) {
-            console.error('[ABS] Erro ao carregar colaboradores:', error);
-            return [];
-        }
-    }
-
-    function atualizarFiltroSupervisor() {
-        const wfmUsers = estado.indices.porSupervisor.get(estado.supervisor) || [];
-        estado.colaboradores = wfmUsers
-            .map(wfm => estado.mapTodosColaboradores.get(wfm))
-            .filter(Boolean);
-        
-        estado.mapColaboradores.clear();
-        estado.colaboradores.forEach(c => {
-            estado.mapColaboradores.set(c.wfmUser, c);
-        });
-    }
-
-    function carregarMarcacoes() {
-        const list = document.getElementById('colaboradores-list');
-        const infoDia = document.getElementById('info-dia');
-
-        if (list) list.innerHTML = '';
-        if (infoDia) infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
-
-        atualizarFiltroSupervisor();
-        renderizarListaInicial();
-    }
-
-    // ==========================================
-    // RENDERIZAÇÃO OTIMIZADA
-    // ==========================================
-    function renderizarListaInicial() {
-        const list = document.getElementById('colaboradores-list');
-        const busca = document.getElementById('busca-colaborador')?.value.toLowerCase() || '';
-
-        if (!list) return;
-
-        list.innerHTML = '';
-        
-        if (estado.colaboradores.length === 0) {
-            list.innerHTML = `
-                <div class="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-6 text-center">
-                    <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
-                    <p class="text-gray-300">Nenhum colaborador encontrado para este warehouse/mês.</p>
-                    <p class="text-gray-400 text-sm mt-2">Verifique se há dados na planilha ABS.</p>
-                </div>
-            `;
-            return;
-        }
-
-        const fragment = document.createDocumentFragment();
-
-        estado.colaboradores.forEach(colab => {
-            if (estado.indices.desligadosNoMes.has(colab.wfmUser)) return;
-
-            if (busca &&
-                !colab.nome.toLowerCase().includes(busca) &&
-                !colab.wfmUser.toLowerCase().includes(busca)) return;
-
-            let marcacaoAtual =
-                estado.marcacoesModificadas[colab.wfmUser]
-                ?? colab.marcacoes?.[estado.dia]?.sigla
-                ?? '';
-
-            const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
-            const jaFoiMarcado = !!marcacaoAtual;
-
-            const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
-            const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
-            const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
-
-            let badgeHtml = '';
-            if (temPresencaAutomatica) {
-                badgeHtml = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">🤖 AUTO</span>`;
-            } else if (!jaFoiMarcado) {
-                badgeHtml = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">⚠️ PENDENTE</span>`;
-            } else if (estado.marcacoesModificadas[colab.wfmUser]) {
-                badgeHtml = `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">✏️ EDITADO</span>`;
-            }
-
-            const siglaAtual = marcacaoAtual || 'P';
-
-            const item = document.createElement('div');
-            item.className = `bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}`;
-            item.dataset.wfm = colab.wfmUser;
-
-            let selectOptions = '';
-            for (const [sigla, info] of Object.entries(OPCOES_PRESENCA)) {
-                selectOptions += `<option value="${sigla}" ${siglaAtual === sigla ? 'selected' : ''}>${info.nome}</option>`;
-            }
-
-            item.innerHTML = `
-                <div class="flex items-center flex-1">
-                    <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
-                        <i class="fas ${icon} text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <h3 class="font-bold">${colab.nome}</h3>
-                            ${badgeHtml}
-                        </div>
-                        <p class="text-gray-400 text-sm">
-                            WFM: ${colab.wfmUser} | Supervisor: ${colab.supervisor || colab.lider || 'N/A'}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <select class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
-                        data-wfm="${colab.wfmUser}"
-                        onchange="marcarPresenca(this)">
-                        ${selectOptions}
-                    </select>
-                    <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
-                            class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-clock mr-1"></i> HE
-                    </button>
-                    <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-exchange-alt mr-1"></i> SIN
-                    </button>
-                </div>
-            `;
-
-            fragment.appendChild(item);
-        });
-
-        list.appendChild(fragment);
-        recalcularEstatisticas();
-    }
-
-    // ==========================================
-    // MARCAÇÃO E ESTATÍSTICAS
-    // ==========================================
-    function marcarPresenca(select) {
-        const wfmUser = select.dataset.wfm;
-        const sigla = select.value;
-
-        estado.marcacoesModificadas[wfmUser] = sigla;
-
-        // Atualizar apenas o badge do item específico
-        const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
-        if (item) {
-            const badge = item.querySelector('span[class*="bg-"]');
-            if (badge) {
-                if (!sigla || sigla === '') {
-                    badge.textContent = '⚠️ PENDENTE';
-                    badge.className = 'bg-yellow-600 text-white text-xs px-2 py-1 rounded-full';
-                } else {
-                    badge.textContent = '✏️ EDITADO';
-                    badge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded-full';
-                }
-            }
-        }
-        
-        recalcularEstatisticas();
-    }
-
-    function recalcularEstatisticas() {
-        let total = 0;
-        let marcados = 0;
-
-        estado.colaboradores.forEach(c => {
-            if (estado.indices.desligadosNoMes.has(c.wfmUser)) return;
-
-            total++;
-            const sigla =
-                estado.marcacoesModificadas[c.wfmUser]
-                ?? c.marcacoes?.[estado.dia]?.sigla;
-
-            if (sigla) marcados++;
-        });
-
-        const statTotal = document.getElementById('stat-marcacao-total');
-        const statMarcados = document.getElementById('stat-marcacao-marcados');
-        const statPendentes = document.getElementById('stat-marcacao-pendentes');
-        
-        if (statTotal) statTotal.textContent = total;
-        if (statMarcados) statMarcados.textContent = marcados;
-        if (statPendentes) statPendentes.textContent = total - marcados;
-        
-        estado.indices.estatisticas = { total, marcados, pendentes: total - marcados };
-    }
-
-    // ==========================================
-    // SALVAMENTO SEM RECARGA AUTOMÁTICA
-    // ==========================================
-    async function salvarMarcacoes() {
-        const modificacoes = Object.keys(estado.marcacoesModificadas);
-        
-        if (modificacoes.length === 0) {
-            alert('ℹ️ Nenhuma marcação foi modificada.');
-            return;
-        }
-
-        const confirmacao = confirm(
-            `💾 SALVAR MARCAÇÕES\n\n` +
-            `${modificacoes.length} marcação(ões) será(ão) salva(s).\n\n` +
-            `Deseja continuar?`
-        );
-        
-        if (!confirmacao) return;
-
-        mostrarLoading(`Salvando ${modificacoes.length} marcação(ões)...`);
-
-        try {
-            const payload = {
-                warehouse: estado.warehouse,
-                mes: estado.mes,
-                ano: estado.ano,
-                dia: estado.dia,
-                supervisor: estado.supervisor,
-                marcacoes: modificacoes.map(wfmUser => {
-                    const colab = estado.mapColaboradores.get(wfmUser);
-                    return {
-                        wfmUser: wfmUser,
-                        nome: colab?.nome || 'N/A',
-                        sigla: estado.marcacoesModificadas[wfmUser],
-                        lider: colab?.lider || colab?.supervisor
-                    };
-                })
-            };
-
-            const response = await fetch(`${API_BASE}/api/abs/salvar-marcacoes`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-email': getUserEmail()
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            esconderLoading();
-
-            if (!result.success) {
-                throw new Error(result.error || 'Erro ao salvar');
-            }
-
-            // 🔥 ATUALIZAR CACHE LOCAL (SEM RECARREGAR PÁGINA)
-            modificacoes.forEach(wfmUser => {
-                const colab = estado.mapColaboradores.get(wfmUser);
-                if (colab) {
-                    if (!colab.marcacoes) colab.marcacoes = {};
-                    colab.marcacoes[estado.dia] = {
-                        sigla: estado.marcacoesModificadas[wfmUser],
-                        data: new Date().toISOString()
-                    };
-                }
-            });
-
-            // Limpar modificações e atualizar badges
-            estado.marcacoesModificadas = {};
-            
-            modificacoes.forEach(wfmUser => {
-                const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
-                if (item) {
-                    const badge = item.querySelector('span[class*="bg-blue-600"]');
-                    if (badge) {
-                        badge.textContent = '✅ SALVO';
-                        badge.className = 'bg-green-600 text-white text-xs px-2 py-1 rounded-full';
-                    }
-                }
-            });
-
-            alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
-
-        } catch (error) {
-            esconderLoading();
-            alert(`❌ Erro: ${error.message}`);
-            console.error('[ABS] Erro ao salvar:', error);
-        }
-    }
-
-    // ==========================================
-    // RECARGA MANUAL OPCIONAL
-    // ==========================================
-    async function recarregarManual() {
-        if (Object.keys(estado.marcacoesModificadas).length > 0) {
-            const confirmacao = confirm(
-                '⚠️ Há marcações não salvas.\n\nRecarregar irá perdê-las.\n\nContinuar?'
-            );
-            if (!confirmacao) return;
-        }
-        
-        mostrarLoading('Recarregando dados...');
-
-        try {
-            const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
-                headers: { 'x-user-email': getUserEmail() }
-            });
-
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.error || 'Erro ao recarregar');
-            }
-
-            const novos = data.colaboradores || [];
-
-            novos.forEach(novoColab => {
-                const existente = estado.mapTodosColaboradores.get(novoColab.wfmUser);
-                if (existente) {
-                    existente.marcacoes = novoColab.marcacoes;
-                    
-                    existente.temDesligamento = false;
-                    if (existente.marcacoes) {
-                        for (const dia in existente.marcacoes) {
-                            if (SIGLAS_DESLIGAMENTO.includes(existente.marcacoes[dia].sigla)) {
-                                existente.temDesligamento = true;
-                                estado.indices.desligadosNoMes.add(existente.wfmUser);
-                                break;
-                            }
-                        }
-                    }
-                    if (!existente.temDesligamento) {
-                        estado.indices.desligadosNoMes.delete(existente.wfmUser);
-                    }
-                } else {
-                    novoColab.liderNormalizado = normalizeLider(novoColab.lider);
-                    estado.todosColaboradores.push(novoColab);
-                    estado.mapTodosColaboradores.set(novoColab.wfmUser, novoColab);
-                }
-            });
-
-            estado.marcacoesModificadas = {};
-            atualizarFiltroSupervisor();
-            renderizarListaInicial();
-
-            esconderLoading();
-            alert('✅ Dados atualizados!');
-            
-        } catch (error) {
-            esconderLoading();
-            alert(`Erro ao recarregar: ${error.message}`);
-            console.error(error);
-        }
-    }
-
-    // ==========================================
-    // MODAIS (Sinergia e Hora Extra)
-    // ==========================================
+    // Modal Sinergia
     let sinColaboradorAtual = { nome: '', wfmUser: '', setorAtual: '' };
 
     function abrirModalSinergia(nome, wfmUser, setorAtual) {
@@ -1303,6 +1219,7 @@ Salvo em raw_sinergia.`);
         fecharModalSinergia();
     }
 
+    // Modal Hora Extra
     let heColaboradorAtual = { nome: '', wfmUser: '' };
 
     function abrirModalHoraExtra(nome, wfmUser) {
@@ -1408,32 +1325,725 @@ Salvo em raw_hr.`);
     });
 
     // ==========================================
-    // HOOK OTIMIZADO: SÓ CARREGA SE NECESSÁRIO (ZERO RECARGAS DESNECESSÁRIAS)
+    // CONFIGURAÇÃO GLOBAL
     // ==========================================
+    const WAREHOUSE = 'SP';
+    const API_BASE = '';
+
+    const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
+    const SIGLAS_COM_PERIODO = ['AM', 'AF', 'AL'];
+
+    const OPCOES_PRESENCA = {
+        'P': {nome: 'P - Presente'},
+        'F': {nome: 'F - Falta'},
+        'FJ': {nome: 'FJ - Falta Justificada'},
+        'FE': {nome: 'FE - Férias'},
+        'FO': {nome: 'FO - Folga'},
+        'DSR': {nome: 'DSR - Descanso Semanal'},
+        'AM': {nome: 'AM - Atestado Médico'},
+        'AF': {nome: 'AF - Afastamento'},
+        'AL': {nome: 'AL - Atraso Longo'},
+        'BH': {nome: 'BH - Banco de Horas'},
+        'TR': {nome: 'TR - Treinamento'},
+        'SU': {nome: 'SU - Suspensão'},
+        'PR': {nome: 'PR - Pré-Contratação'},
+        'S1': {nome: 'S1 - Saída 1h'},
+        'S2': {nome: 'S2 - Saída 2h'},
+        'DV': {nome: 'DV - Desligamento Voluntário'},
+        'DP': {nome: 'DP - Desligamento Pedido'},
+        'DF': {nome: 'DF - Desligamento Força'},
+        'NC': {nome: 'NC - Não Compareceu'}
+    };
+
+    let periodoAtual = null;
+
+    function normalizeLider(valor) {
+        if (!valor) return 'NÃO ATRIBUÍDO';
+        return valor.trim().toUpperCase().normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function getUserEmail() {
+        const match = document.cookie.match(/user_email=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    // ==========================================
+    // ESTADO OTIMIZADO COM ESTRUTURAS O(1)
+    // ==========================================
+    let estado = {
+        warehouse: WAREHOUSE,
+        mes: null,
+        ano: null,
+        supervisor: null,
+        dia: null,
+
+        colaboradores: [],
+        todosColaboradores: [],
+        todosSupervisores: [],
+
+        // 🔥 OTIMIZAÇÃO 2: Maps para lookup O(1)
+        mapTodosColaboradores: new Map(),
+        mapColaboradores: new Map(),
+
+        // 🔥 OTIMIZAÇÃO 2: Índices computados
+        indices: {
+            desligadosNoMes: new Set(),      // wfmUser com desligamento
+            porSupervisor: new Map(),        // supervisor -> [wfmUser]
+            estatisticas: {
+                total: 0,
+                marcados: 0,
+                pendentes: 0
+            }
+        },
+
+        marcacoesModificadas: {},
+        filtroStatus: 'todos'
+    };
+
+    let presencasAutomaticasCache = {};
+
+    // ==========================================
+    // OTIMIZAÇÃO 3: PROCESSAMENTO INICIAL (UMA PASSADA O(n))
+    // ==========================================
+    function processarDadosInicial(colaboradores) {
+        console.log('[Performance] Processando dados inicial...');
+        
+        // Limpar estruturas
+        estado.mapTodosColaboradores.clear();
+        estado.indices.desligadosNoMes.clear();
+        estado.indices.porSupervisor.clear();
+        
+        const supervisoresSet = new Set();
+        
+        // 🔥 UMA ÚNICA ITERAÇÃO para popular tudo
+        colaboradores.forEach(c => {
+            // Normalizar líder
+            c.liderNormalizado = normalizeLider(c.lider);
+            
+            // Pré-calcular desligamento
+            c.temDesligamento = false;
+            if (c.marcacoes) {
+                for (const dia in c.marcacoes) {
+                    if (SIGLAS_DESLIGAMENTO.includes(c.marcacoes[dia].sigla)) {
+                        c.temDesligamento = true;
+                        estado.indices.desligadosNoMes.add(c.wfmUser);
+                        break;
+                    }
+                }
+            }
+            
+            // Popular mapa principal
+            estado.mapTodosColaboradores.set(c.wfmUser, c);
+            
+            // Indexar por supervisor
+            if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
+                supervisoresSet.add(c.liderNormalizado);
+                
+                if (!estado.indices.porSupervisor.has(c.liderNormalizado)) {
+                    estado.indices.porSupervisor.set(c.liderNormalizado, []);
+                }
+                estado.indices.porSupervisor.get(c.liderNormalizado).push(c.wfmUser);
+            }
+        });
+        
+        estado.todosColaboradores = colaboradores;
+        estado.todosSupervisores = Array.from(supervisoresSet).sort();
+        
+        console.log('[Performance] Processamento concluído:', {
+            total: colaboradores.length,
+            supervisores: estado.todosSupervisores.length,
+            desligados: estado.indices.desligadosNoMes.size
+        });
+    }
+
+    // CARREGAR MÊS (COM PRÉ-CÁLCULO)
+    async function selecionarMes(mes, ano) {
+        estado.mes = mes;
+        estado.ano = ano;
+
+        mostrarLoading('Carregando supervisores...');
+
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`, {
+            headers: { 'x-user-email': getUserEmail() }
+        });
+
+        const data = await response.json();
+        
+        // 🔥 USAR PROCESSAMENTO OTIMIZADO
+        processarDadosInicial(data.colaboradores || []);
+
+        esconderLoading();
+        carregarSupervisores();
+        mostrarTela('supervisores');
+    }
+
+    // ==========================================
+    // O(1) DESLIGAMENTO
+    // ==========================================
+    function temDesligamentoNoMes(colab) {
+        return colab.temDesligamento === true;
+    }
+
+    // ==========================================
+    // CARREGAR MARCAÇÕES OTIMIZADO
+    // ==========================================
+    // ==========================================
+    // OTIMIZAÇÃO 2: Filtro com cache O(k)
+    // ==========================================
+    function atualizarFiltroSupervisor() {
+        // Usar índice pré-computado O(1)
+        const wfmUsers = estado.indices.porSupervisor.get(estado.supervisor) || [];
+        estado.colaboradores = wfmUsers
+            .map(wfm => estado.mapTodosColaboradores.get(wfm))
+            .filter(Boolean);
+        
+        // Atualizar mapa de colaboradores filtrados
+        estado.mapColaboradores.clear();
+        estado.colaboradores.forEach(c => {
+            estado.mapColaboradores.set(c.wfmUser, c);
+        });
+    }
+
+    function carregarMarcacoes() {
+
+        const list = document.getElementById('colaboradores-list');
+        const infoDia = document.getElementById('info-dia');
+
+        if (list) list.innerHTML = '';
+        if (infoDia) infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
+
+        // 🔥 OTIMIZAÇÃO 2: Usar filtro com cache
+        atualizarFiltroSupervisor();
+
+        // 🔥 OTIMIZAÇÃO 6: Render inicial otimizado
+        renderizarListaInicial();
+    }
+
+    /**
+     * Buscar colaboradores de um warehouse para o mês selecionado
+     */
+    async function carregarColaboradores(warehouse, mes, ano, dia) {
+        try {
+            console.log(`[ABS] Carregando colaboradores: ${warehouse} - ${mes}/${ano} - Dia ${dia}`);
+            
+            // 🔥 VERIFICAR CACHE ANTES DE FAZER FETCH
+            const precisaCarregar = 
+                estado.todosColaboradores.length === 0 || 
+                estado.warehouse !== warehouse ||
+                estado.mes !== mes ||
+                estado.ano !== ano;
+            
+            const mudouDia = estado.dia !== dia;
+            
+            if (precisaCarregar) {
+                console.log('[ABS] Cache vazio ou dados diferentes, carregando...');
+                estado.warehouse = warehouse;
+                estado.dia = dia;
+                await selecionarMes(mes, ano);
+                // Buscar presença automática apenas na primeira carga
+                await carregarPresencaAutomatica(warehouse, dia);
+            } else {
+                console.log('[ABS] ✅ USANDO CACHE - Sem fetch/reload');
+                estado.dia = dia;
+                
+                // Se mudou o dia, recarregar presença automática apenas
+                if (mudouDia) {
+                    console.log('[ABS] Dia mudou, recarregando presença automática...');
+                    await carregarPresencaAutomatica(warehouse, dia);
+                }
+            }
+            
+            // Carregar/Re-renderizar marcações para o dia (usa cache)
+            carregarMarcacoes();
+            
+            return estado.todosColaboradores;
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao carregar colaboradores:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Buscar presença automática do raw_scan
+     */
+    async function carregarPresencaAutomatica(warehouse, dia) {
+        try {
+            // Formatar data como DD/MM/YYYY
+            const data = `${String(dia).padStart(2, '0')}/02/2026`;
+            
+            console.log(`[ABS] Carregando presença automática: ${warehouse} - ${data}`);
+            
+            const response = await fetch(`/api/abs/presenca-automatica/${warehouse}/${data}`);
+            const result = await response.json();
+            
+            if (!result.success) {
+                console.error('[ABS] Erro ao carregar presença automática:', result.error);
+                return;
+            }
+            
+            // Armazenar em cache
+            presencasAutomaticasCache = {};
+            result.presencas.forEach(p => {
+                presencasAutomaticasCache[p.wfmUser] = p;
+            });
+            
+            console.log(`[ABS] ${result.presencas.length} presenças automáticas carregadas`);
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao carregar presença automática:', error);
+        }
+    }
+
+    // ==========================================
+    // OTIMIZAÇÃO 6: RENDER INICIAL COM DOCUMENTFRAGMENT
+    // ==========================================
+    function renderizarListaInicial() {
+        const list = document.getElementById('colaboradores-list');
+        const busca = document.getElementById('busca-colaborador')?.value.toLowerCase() || '';
+
+        if (!list) return;
+
+        list.innerHTML = '';
+        
+        if (estado.colaboradores.length === 0) {
+            list.innerHTML = `
+                <div class="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-6 text-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
+                    <p class="text-gray-300">Nenhum colaborador encontrado para este warehouse/mês.</p>
+                    <p class="text-gray-400 text-sm mt-2">Verifique se há dados na planilha ABS.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // 🔥 OTIMIZAÇÃO 6: Construir em memória com DocumentFragment
+        const fragment = document.createDocumentFragment();
+
+        estado.colaboradores.forEach(colab => {
+
+            // 🔥 OTIMIZAÇÃO 1: Usar Set para verificação O(1)
+            if (estado.indices.desligadosNoMes.has(colab.wfmUser)) return;
+
+            if (busca &&
+                !colab.nome.toLowerCase().includes(busca) &&
+                !colab.wfmUser.toLowerCase().includes(busca)) return;
+
+            let marcacaoAtual =
+                estado.marcacoesModificadas[colab.wfmUser]
+                ?? colab.marcacoes?.[estado.dia]?.sigla
+                ?? '';
+
+            const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
+            const jaFoiMarcado = !!marcacaoAtual;
+
+            const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
+            const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
+            const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
+
+            let badgeHtml = '';
+            if (temPresencaAutomatica) {
+                badgeHtml = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">🤖 AUTO</span>`;
+            } else if (!jaFoiMarcado) {
+                badgeHtml = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">⚠️ PENDENTE</span>`;
+            } else if (estado.marcacoesModificadas[colab.wfmUser]) {
+                badgeHtml = `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">✏️ EDITADO</span>`;
+            }
+
+            const siglaAtual = marcacaoAtual || 'P';
+
+            const item = document.createElement('div');
+            item.className = `bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}`;
+            item.dataset.wfm = colab.wfmUser;
+
+            let selectOptions = '';
+            for (const [sigla, info] of Object.entries(OPCOES_PRESENCA)) {
+                selectOptions += `<option value="${sigla}" ${siglaAtual === sigla ? 'selected' : ''}>${info.nome}</option>`;
+            }
+
+            item.innerHTML = `
+                <div class="flex items-center flex-1">
+                    <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
+                        <i class="fas ${icon} text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold">${colab.nome}</h3>
+                            ${badgeHtml}
+                        </div>
+                        <p class="text-gray-400 text-sm">
+                            WFM: ${colab.wfmUser} | Supervisor: ${colab.supervisor || colab.lider || 'N/A'}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
+                        data-wfm="${colab.wfmUser}"
+                        onchange="marcarPresenca(this)">
+                        ${selectOptions}
+                    </select>
+                    <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
+                            class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
+                        <i class="fas fa-clock mr-1"></i> HE
+                    </button>
+                    <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
+                        <i class="fas fa-exchange-alt mr-1"></i> SIN
+                    </button>
+                </div>
+            `;
+
+            fragment.appendChild(item);
+        });
+
+        // 🔥 OTIMIZAÇÃO 6: Inserção em lote (1 reflow)
+        list.appendChild(fragment);
+        
+        // 🔥 OTIMIZAÇÃO 5: Estatísticas desacopladas
+        recalcularEstatisticas();
+    }
+
+    // ==========================================
+    // ATUALIZAÇÃO INDIVIDUAL
+    // ==========================================
+    // ==========================================
+    // OTIMIZAÇÃO 4: ATUALIZAÇÃO INDIVIDUAL DE DOM O(1)
+    // ==========================================
+    function atualizarColaboradorDOM(wfmUser, sigla) {
+        const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
+        if (!item) return;
+        
+        // Atualizar apenas o select
+        const select = item.querySelector('.marcacao-select');
+        if (select && select.value !== sigla) {
+            select.value = sigla;
+        }
+        
+        // Atualizar apenas o badge
+        const badge = item.querySelector('.badge') || item.querySelector('span[class*="bg-"]');
+        if (badge) {
+            if (!sigla || sigla === '') {
+                badge.textContent = '⚠️ PENDENTE';
+                badge.className = 'bg-yellow-600 text-white text-xs px-2 py-1 rounded-full';
+            } else {
+                badge.textContent = '✏️ EDITADO';
+                badge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded-full';
+            }
+        }
+    }
+
+    function marcarPresenca(select) {
+
+        const wfmUser = select.dataset.wfm;
+        const sigla = select.value;
+
+        estado.marcacoesModificadas[wfmUser] = sigla;
+
+        // 🔥 OTIMIZAÇÃO 4: Atualizar APENAS 1 elemento (não rebuild)
+        atualizarColaboradorDOM(wfmUser, sigla);
+        
+        // 🔥 OTIMIZAÇÃO 5: Estatísticas sem tocar DOM da lista
+        recalcularEstatisticas();
+    }
+
+    // ==========================================
+    // OTIMIZAÇÃO 5: ESTATÍSTICAS DESACOPLADAS (SEM TOCAR DOM DA LISTA)
+    // ==========================================
+    function recalcularEstatisticas() {
+        let total = 0;
+        let marcados = 0;
+
+        estado.colaboradores.forEach(c => {
+            // 🔥 OTIMIZAÇÃO 1: Usar Set O(1)
+            if (estado.indices.desligadosNoMes.has(c.wfmUser)) return;
+
+            total++;
+            const sigla =
+                estado.marcacoesModificadas[c.wfmUser]
+                ?? c.marcacoes?.[estado.dia]?.sigla;
+
+            if (sigla) marcados++;
+        });
+
+        // 🔥 Atualizar APENAS os 3 números (zero rebuild de lista)
+        const statTotal = document.getElementById('stat-marcacao-total');
+        const statMarcados = document.getElementById('stat-marcacao-marcados');
+        const statPendentes = document.getElementById('stat-marcacao-pendentes');
+        
+        if (statTotal) statTotal.textContent = total;
+        if (statMarcados) statMarcados.textContent = marcados;
+        if (statPendentes) statPendentes.textContent = total - marcados;
+        
+        // Cache para reuso
+        estado.indices.estatisticas = { total, marcados, pendentes: total - marcados };
+    }
+
+    // ==========================================
+    // OTIMIZAÇÃO 7: RECARGA INCREMENTAL (MERGE SEM RECRIAR)
+    // ==========================================
+    async function recarregarMarcacoes() {
+
+        mostrarLoading('Recarregando dados...');
+
+        try {
+            const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
+                headers: { 'x-user-email': getUserEmail() }
+            });
+
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Erro ao recarregar');
+            }
+
+            const novos = data.colaboradores || [];
+
+            // 🔥 OTIMIZAÇÃO 7: Atualização incremental (preservar referências)
+            novos.forEach(novoColab => {
+                const existente = estado.mapTodosColaboradores.get(novoColab.wfmUser);
+                if (existente) {
+                    // Atualizar apenas marcações (mantém objeto)
+                    existente.marcacoes = novoColab.marcacoes;
+                    
+                    // Re-calcular flag de desligamento
+                    existente.temDesligamento = false;
+                    if (existente.marcacoes) {
+                        for (const dia in existente.marcacoes) {
+                            if (SIGLAS_DESLIGAMENTO.includes(existente.marcacoes[dia].sigla)) {
+                                existente.temDesligamento = true;
+                                estado.indices.desligadosNoMes.add(existente.wfmUser);
+                                break;
+                            }
+                        }
+                    }
+                    if (!existente.temDesligamento) {
+                        estado.indices.desligadosNoMes.delete(existente.wfmUser);
+                    }
+                } else {
+                    // Novo colaborador
+                    novoColab.liderNormalizado = normalizeLider(novoColab.lider);
+                    estado.todosColaboradores.push(novoColab);
+                    estado.mapTodosColaboradores.set(novoColab.wfmUser, novoColab);
+                }
+            });
+
+            // Limpar modificações locais
+            estado.marcacoesModificadas = {};
+
+            // Re-filtrar sem recriar
+            atualizarFiltroSupervisor();
+
+            // Render otimizado
+            renderizarListaInicial();
+
+            esconderLoading();
+            
+        } catch (error) {
+            esconderLoading();
+            alert(`Erro ao recarregar: ${error.message}`);
+            console.error(error);
+        }
+    }
+
+    // ==========================================
+    // SALVAMENTO SEM RECARGA AUTOMÁTICA
+    // ==========================================
+    /**
+     * Salva marcações modificadas SEM recarregar a página
+     * - Envia apenas as modificações para o servidor
+     * - Atualiza o cache local após sucesso
+     * - Muda badges de "EDITADO" para "SALVO"
+     * - NÃO faz fetch/reload dos dados
+     */
+    async function salvarMarcacoes() {
+        const modificacoes = Object.keys(estado.marcacoesModificadas);
+        
+        if (modificacoes.length === 0) {
+            alert('ℹ️ Nenhuma marcação foi modificada.');
+            return;
+        }
+
+        const confirmacao = confirm(
+            `💾 SALVAR MARCAÇÕES\n\n` +
+            `${modificacoes.length} marcação(ões) será(ão) salva(s).\n\n` +
+            `Deseja continuar?`
+        );
+        
+        if (!confirmacao) return;
+
+        mostrarLoading(`Salvando ${modificacoes.length} marcação(ões)...`);
+
+        try {
+            // Preparar payload para API
+            const payload = {
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                supervisor: estado.supervisor,
+                marcacoes: modificacoes.map(wfmUser => {
+                    const colab = estado.mapColaboradores.get(wfmUser);
+                    return {
+                        wfmUser: wfmUser,
+                        nome: colab?.nome || 'N/A',
+                        sigla: estado.marcacoesModificadas[wfmUser],
+                        lider: colab?.lider || colab?.supervisor
+                    };
+                })
+            };
+
+            // Enviar para servidor
+            const response = await fetch(`${API_BASE}/api/abs/salvar-marcacoes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-email': getUserEmail()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            esconderLoading();
+
+            if (!result.success) {
+                throw new Error(result.error || 'Erro ao salvar');
+            }
+
+            // 🔥 ATUALIZAR CACHE LOCAL (SEM RECARREGAR PÁGINA)
+            modificacoes.forEach(wfmUser => {
+                const colab = estado.mapColaboradores.get(wfmUser);
+                if (colab) {
+                    if (!colab.marcacoes) colab.marcacoes = {};
+                    colab.marcacoes[estado.dia] = {
+                        sigla: estado.marcacoesModificadas[wfmUser],
+                        data: new Date().toISOString()
+                    };
+                }
+            });
+
+            // Limpar modificações e atualizar badges visuais
+            estado.marcacoesModificadas = {};
+            
+            modificacoes.forEach(wfmUser => {
+                const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
+                if (item) {
+                    const badge = item.querySelector('span[class*="bg-blue-600"]');
+                    if (badge) {
+                        badge.textContent = '✅ SALVO';
+                        badge.className = 'bg-green-600 text-white text-xs px-2 py-1 rounded-full';
+                    }
+                }
+            });
+
+            alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
+
+        } catch (error) {
+            esconderLoading();
+            alert(`❌ Erro: ${error.message}`);
+            console.error('[ABS] Erro ao salvar:', error);
+        }
+    }
+
+    // Função para recarga manual opcional
+    async function recarregarManual() {
+        if (Object.keys(estado.marcacoesModificadas).length > 0) {
+            const confirmacao = confirm(
+                '⚠️ Há marcações não salvas.\n\nRecarregar irá perdê-las.\n\nContinuar?'
+            );
+            if (!confirmacao) return;
+        }
+        
+        await recarregarMarcacoes();
+        alert('✅ Dados atualizados!');
+    }
+
+    // ==========================================
+    // FUNÇÕES AUXILIARES DE UI
+    // ==========================================
+    function mostrarLoading(mensagem = 'Carregando...') {
+        console.log(`[Loading] ${mensagem}`);
+        // Implementação visual pode ser adicionada aqui
+    }
+    
+    function esconderLoading() {
+        console.log('[Loading] Ocultado');
+        // Implementação visual pode ser adicionada aqui
+    }
+    
+    function mostrarTela(telaId) {
+        // Adaptar para o sistema de telas existente
+        const telaMap = {
+            'supervisores': 'tela-supervisores',
+            'calendario': 'tela-calendario',
+            'marcacao': 'tela-marcacao'
+        };
+        
+        const telaCompleta = telaMap[telaId] || telaId;
+        if (window.irPara) {
+            window.irPara(telaCompleta);
+        }
+    }
+
+    function carregarSupervisores() {
+        // Implementar lógica de supervisores se necessário
+        console.log('[ABS] Supervisores carregados');
+    }
+
+    /**
+     * Propagar desligamento para dias seguintes
+     */
+    async function propagarDesligamento(wfmUser, nome, sigla, diaInicio) {
+        try {
+            console.log(`[ABS] Propagando desligamento: ${nome} - ${sigla} - A partir do dia ${diaInicio}`);
+            
+            const response = await fetch('/api/abs/propagar-desligamento', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    diaInicio,
+                    mes: 'Fevereiro',
+                    ano: 2026,
+                    colaborador: nome,
+                    wfmUser,
+                    sigla,
+                    supervisor: supervisorSelecionado || 'Sistema',
+                    warehouse: warehouseSelecionado
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                alert('❌ Erro ao propagar desligamento: ' + data.error);
+                return;
+            }
+            
+            alert(`✅ Propagação concluída!\n\n${nome} foi marcado como ${sigla} em ${data.diasPropagados.length} dias`);
+            
+            console.log('[ABS] Desligamento propagado com sucesso:', data);
+            
+        } catch (error) {
+            console.error('[ABS] Erro ao propagar desligamento:', error);
+            alert('❌ Erro ao propagar desligamento. Verifique o console.');
+        }
+    }
+
+
+
+    /**
+     * Hook OTIMIZADO: Só carrega se necessário (ELIMINA RECARGA AUTOMÁTICA)
+     */
     const irParaOriginal = window.irPara;
     window.irPara = function(telaId) {
         irParaOriginal(telaId);
         
         if (telaId === 'tela-marcacao' && warehouseSelecionado) {
             const dia = 16;
-            
-            // 🔥 VERIFICAÇÃO INTELIGENTE: Só carrega se realmente necessário
-            const precisaCarregar =
-                estado.todosColaboradores.length === 0 ||
-                estado.warehouse !== warehouseSelecionado ||
-                estado.mes !== 'Fevereiro' ||
-                estado.ano !== 2026 ||
-                estado.dia !== dia;
-
-            if (precisaCarregar) {
-                console.log('[ABS] Navegação: carregando dados necessários...');
-                carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
-            } else {
-                console.log('[ABS] Navegação: usando cache local, sem recarregar');
-                // Apenas re-renderiza lista e estatísticas, SEM novos fetchs
-                renderizarListaInicial();
-                recalcularEstatisticas();
-            }
+            // 🔥 SEMPRE CHAMA carregarColaboradores, mas ELE decide se faz fetch ou usa cache
+            carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
         }
     };
 </script>
