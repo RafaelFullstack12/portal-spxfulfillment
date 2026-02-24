@@ -1597,10 +1597,28 @@ Salvo em raw_hr.`);
         try {
             console.log(`[ABS] Carregando colaboradores: ${warehouse} - ${mes}/${ano}`);
             
-            await selecionarMes(mes, ano);
+            // 🔥 VERIFICAR CACHE ANTES DE FAZER FETCH
+            const precisaCarregar = 
+                estado.todosColaboradores.length === 0 || 
+                estado.warehouse !== warehouse ||
+                estado.mes !== mes ||
+                estado.ano !== ano;
             
-            // Buscar presença automática para este dia
+            if (precisaCarregar) {
+                console.log('[ABS] Cache vazio ou dados diferentes, carregando...');
+                estado.warehouse = warehouse;
+                estado.dia = dia;
+                await selecionarMes(mes, ano);
+            } else {
+                console.log('[ABS] Usando dados em cache, pulando fetch');
+                estado.dia = dia;
+            }
+            
+            // Buscar presença automática para este dia (sempre necessário para o dia específico)
             await carregarPresencaAutomatica(warehouse, dia);
+            
+            // Carregar marcações para o dia
+            carregarMarcacoes();
             
             return estado.todosColaboradores;
             
@@ -2094,16 +2112,9 @@ Salvo em raw_hr.`);
         irParaOriginal(telaId);
         
         if (telaId === 'tela-marcacao' && warehouseSelecionado) {
-            // 🔥 SÓ CARREGA SE AINDA NÃO TIVER DADOS NA MEMÓRIA
-            if (estado.colaboradores.length === 0 || estado.warehouse !== warehouseSelecionado) {
-                const dia = 16;
-                carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
-            } else {
-                // 🔥 DADOS JÁ EXISTEM: APENAS RE-RENDERIZA (SEM FETCH)
-                console.log('[ABS] Dados já em memória, evitando fetch desnecessário');
-                renderizarListaInicial();
-                recalcularEstatisticas();
-            }
+            const dia = 16;
+            // 🔥 SEMPRE CHAMA carregarColaboradores, mas ELE decide se faz fetch ou usa cache
+            carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
         }
     };
 </script>
