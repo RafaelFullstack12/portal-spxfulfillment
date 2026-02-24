@@ -1143,6 +1143,7 @@
 
     let warehouseSelecionado = null;
     let supervisorSelecionado = null;
+    let salvandoMarcacoes = false; // Flag para evitar reload durante salvamento
 
     function selecionarWarehouse(codigo) {
         warehouseSelecionado = codigo;
@@ -1864,6 +1865,8 @@ Salvo em raw_hr.`);
     async function salvarMarcacoes() {
         console.log('[ABS] 💾 SALVANDO MARCAÇÕES - INÍCIO');
         
+        salvandoMarcacoes = true; // Ativar flag
+        
         const modificacoes = Object.keys(estado.marcacoesModificadas);
         
         if (modificacoes.length === 0) {
@@ -1948,8 +1951,11 @@ Salvo em raw_hr.`);
             alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
             
             console.log('[ABS] ✅ SALVAMENTO CONCLUÍDO - SEM RELOAD/FETCH');
+            
+            salvandoMarcacoes = false; // Desativar flag
 
         } catch (error) {
+            salvandoMarcacoes = false; // Desativar flag também em erro
             esconderLoading();
             alert(`❌ Erro: ${error.message}`);
             console.error('[ABS] Erro ao salvar:', error);
@@ -2050,6 +2056,12 @@ Salvo em raw_hr.`);
     const irParaOriginal = window.irPara;
     window.irPara = function(telaId) {
         irParaOriginal(telaId);
+        
+        // 🔥 NÃO RECARREGAR SE ESTÁ SALVANDO
+        if (salvandoMarcacoes) {
+            console.log('[ABS] ⚠️ Salvando marcações - ignorando reload');
+            return;
+        }
         
         if (telaId === 'tela-marcacao' && warehouseSelecionado) {
             const dia = 16;
