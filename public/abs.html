@@ -3,2091 +3,1830 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema ABS - Fluxo Completo</title>
-    <!-- VERSÃO 2.0 - LOADING DESABILITADO -->
+    <title>Sistema ABS - Controle de Absenteísmo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
-            min-height: 100vh;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .card-hover { 
-            transition: all 0.3s ease; 
-            position: relative;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
             overflow: hidden;
         }
-        .card-hover::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .card-hover:hover::before {
-            left: 100%;
-        }
-        .card-hover:hover { 
-            transform: translateY(-8px); 
-            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-        }
-        .badge-pulse { 
-            animation: pulse 2s infinite; 
-        }
-        @keyframes pulse { 
-            0%, 100% { opacity: 1; transform: scale(1); } 
-            50% { opacity: 0.8; transform: scale(1.05); } 
-        }
-        .gradient-pe { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .gradient-go { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .gradient-sp { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .warehouse-icon {
-            font-size: 4rem;
-            opacity: 0.2;
-            position: absolute;
-            right: 20px;
-            bottom: 20px;
-        }
-        .tela { display: none; }
-        .tela.active { display: block; }
-        .badge-auto {
-            position: relative;
-            cursor: help;
-        }
-        .tooltip-auto {
+
+        .tela {
             display: none;
-            position: absolute;
-            bottom: 100%;
-            right: 0;
-            background: #1f2937;
-            border: 1px solid #4b5563;
-            padding: 12px;
-            border-radius: 8px;
-            width: 280px;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
         }
-        .badge-auto:hover .tooltip-auto {
-            display: block;
+
+        .tela.active {
+            display: flex;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #2b2b2b;
+            border-radius: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #388E3C;
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background: #404040;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #505050;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .card {
+            background: #333333;
+            border: 2px solid #404040;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            background: #404040;
+            border-color: #2196F3;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: #B0B0B0;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .day-card {
+            background: #333333;
+            border: 2px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .day-card:hover {
+            background: #404040;
+            border-color: #2196F3;
+            transform: scale(1.05);
+        }
+
+        .day-card.pendente {
+            border-color: #FFC107;
+            background: #3d3419;
+        }
+
+        .day-card.completo {
+            border-color: #4CAF50;
+            background: #1b2f1f;
+        }
+
+        .day-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .day-status {
+            font-size: 11px;
+            color: #B0B0B0;
+        }
+
+        .colaboradores-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .colaborador-item {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .colaborador-item:hover {
+            background: #3d3d3d;
+            border-color: #2196F3;
+        }
+
+        .colaborador-info {
+            flex: 1;
+        }
+
+        .colaborador-nome {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .colaborador-detalhes {
+            font-size: 12px;
+            color: #B0B0B0;
+        }
+
+        .marcacao-select {
+            background: #404040;
+            border: 1px solid #505050;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .marcacao-select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-pendente {
+            background: #FFC107;
+            color: #000;
+        }
+
+        .badge-completo {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: #333;
+            padding: 30px 50px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #404040;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-box {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            flex: 1;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-box input::placeholder {
+            color: #B0B0B0;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .stats-card {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #B0B0B0;
+            margin-top: 4px;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body>
+    <div class="container">
+        <!-- TELA 1: SELEÇÃO DE MÊS -->
+        <div id="tela-meses" class="tela active">
+            <div class="header">
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Selecione o Mês
+                </h1>
+                <div class="text-sm text-gray-400" id="info-warehouse"></div>
+            </div>
+            <div class="grid-cards" id="meses-grid"></div>
+        </div>
 
-<!-- ========================================== -->
-<!-- TELA 1: PORTAL PRINCIPAL -->
-<!-- ========================================== -->
-<div id="tela-portal" class="tela active container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header Portal -->
-        <div class="bg-gray-800 rounded-lg p-6 mb-6 shadow-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-white mb-2">
-                        <i class="fas fa-home mr-3 text-blue-400"></i>
-                        Portal SPX Fulfillment
-                    </h1>
-                    <p class="text-gray-400">Bem-vindo, Rafael Mateus | Nível: Administrador</p>
+        <!-- TELA 2: SELEÇÃO DE SUPERVISOR -->
+        <div id="tela-supervisores" class="tela">
+            <div class="header">
+                <button class="btn btn-back" onclick="voltarParaMeses()">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-users mr-2"></i>
+                    Selecione o Supervisor
+                </h1>
+                <div class="text-sm text-gray-400" id="info-mes"></div>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search text-gray-400"></i>
+                <input type="text" placeholder="Pesquisar supervisor..." id="busca-supervisor" onkeyup="filtrarSupervisores()">
+            </div>
+            <div class="grid-cards" id="supervisores-grid"></div>
+        </div>
+
+        <!-- TELA 3: CALENDÁRIO -->
+        <div id="tela-calendario" class="tela">
+            <div class="header">
+                <button class="btn btn-back" onclick="voltarParaSupervisores()">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-calendar-days mr-2"></i>
+                    Calendário
+                </h1>
+                <div class="text-sm text-gray-400" id="info-supervisor"></div>
+            </div>
+            <div class="stats-card">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total de Dias</div>
                 </div>
-                <button class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-all">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Sair
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-completos" style="color: #4CAF50;">0</div>
+                    <div class="stat-label">Completos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-pendentes" style="color: #FFC107;">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendario-grid"></div>
+        </div>
+
+        <!-- TELA 4: MARCAÇÃO DE PRESENÇA -->
+        <div id="tela-marcacao" class="tela">
+            <div class="header">
+                <button class="btn btn-back" onclick="voltarParaCalendario()">
+                    <i class="fas fa-arrow-left mr-2"></i>Calendário
+                </button>
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Marcação
+                </h1>
+                <div class="text-sm text-gray-400" id="info-dia"></div>
+            </div>
+            <div class="actions-bar">
+                <div class="search-box" style="flex: 1; margin-bottom: 0;">
+                    <i class="fas fa-search text-gray-400"></i>
+                    <input type="text" placeholder="Pesquisar colaborador..." id="busca-colaborador" onkeyup="filtrarColaboradores()">
+                </div>
+                <select id="filtro-status" onchange="aplicarFiltroStatus()" style="padding: 10px 16px; background: #333; border: 1px solid #404040; border-radius: 8px; color: #fff; font-size: 14px; cursor: pointer; min-width: 150px;">
+                    <option value="todos">Todos</option>
+                    <option value="ativos">Ativos</option>
+                    <option value="pendentes">Pendentes</option>
+                    <option value="marcados">Marcados</option>
+                </select>
+                <button class="btn" onclick="abrirModalSinergia()" style="background: #9C27B0; border-color: #9C27B0; color: #fff;">
+                    <i class="fas fa-handshake mr-2"></i>Sinergia
+                </button>
+                <button class="btn btn-warning" onclick="abrirModalHoraExtra()" style="background: #FF9800; border-color: #FF9800;">
+                    <i class="fas fa-clock mr-2"></i>Hora Extra
+                </button>
+                <button class="btn" style="background: #4CAF50; color: white;" onclick="marcarTodosPresentes()">
+                    <i class="fas fa-check-double mr-2"></i>Marcar Todos Presentes
+                </button>
+                <button class="btn btn-secondary" onclick="recarregarMarcacoes()">
+                    <i class="fas fa-sync-alt mr-2"></i>Recarregar
+                </button>
+                <button class="btn btn-primary" onclick="salvarMarcacoes()">
+                    <i class="fas fa-save mr-2"></i>Salvar
                 </button>
             </div>
-        </div>
-
-        <!-- Cards de Opções -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Card ABS - DESTAQUE -->
-            <div onclick="irPara('tela-warehouses')" class="card-hover bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 cursor-pointer border-2 border-blue-400 shadow-xl">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
-                        <i class="fas fa-user-check text-3xl text-white"></i>
-                    </div>
-                    <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full badge-pulse shadow-lg">
-                        ● ONLINE
-                    </span>
+            <div class="stats-card">
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-marcacao-total">0</div>
+                    <div class="stat-label">Total</div>
                 </div>
-                <h3 class="text-xl font-bold mb-2">Sistema ABS</h3>
-                <p class="text-blue-100 text-sm mb-4">Controle de Absenteísmo e Presença</p>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs text-blue-200">
-                        <i class="fas fa-warehouse mr-1"></i>
-                        Multi-Warehouse
-                    </span>
-                    <i class="fas fa-arrow-right text-white"></i>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-marcacao-marcados" style="color: #4CAF50;">0</div>
+                    <div class="stat-label">Marcados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="stat-marcacao-pendentes" style="color: #FFC107;">0</div>
+                    <div class="stat-label">Pendentes</div>
                 </div>
             </div>
+            <div class="colaboradores-list" id="colaboradores-list"></div>
         </div>
     </div>
-</div>
 
-<!-- ========================================== -->
-<!-- TELA 2: SELEÇÃO DE WAREHOUSE -->
-<!-- ========================================== -->
-<div id="tela-warehouses" class="tela container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <button onclick="irPara('tela-portal')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
-                        <i class="fas fa-arrow-left mr-2"></i>Voltar ao Portal
-                    </button>
-                    <h1 class="text-4xl font-bold mb-2">
-                        <i class="fas fa-warehouse mr-3 text-blue-400"></i>
-                        Sistema ABS
-                    </h1>
-                    <p class="text-gray-400 text-lg">Selecione o Warehouse (Centro de Distribuição)</p>
-                </div>
+    <!-- MODAL HORA EXTRA -->
+    <div id="modal-hora-extra" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #2b2b2b; border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 24px; font-weight: bold; color: #FF9800;">
+                    <i class="fas fa-clock mr-2"></i>Registrar Hora Extra
+                </h2>
+                <button onclick="fecharModalHoraExtra()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
             </div>
-        </div>
-
-        <!-- Estatísticas Gerais -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Colaboradores Ativos</p>
-                        <p class="text-3xl font-bold text-white">482</p>
-                        <p class="text-xs text-green-400 mt-1">
-                            <i class="fas fa-check-circle mr-1"></i>
-                            Data Desligamento vazia
-                        </p>
-                    </div>
-                    <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-users text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Supervisores Ativos</p>
-                        <p class="text-3xl font-bold text-white">24</p>
-                    </div>
-                    <div class="bg-purple-600 w-12 h-12 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-user-tie text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-gray-800 rounded-xl p-4 shadow-xl">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-400 text-sm">Pendências Total</p>
-                        <p class="text-3xl font-bold text-yellow-400">12</p>
-                    </div>
-                    <div class="bg-yellow-600 w-12 h-12 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cards de Warehouses -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- WAREHOUSE: PERNAMBUCO -->
-            <div onclick="selecionarWarehouse('PE')" class="card-hover gradient-pe rounded-xl p-6 cursor-pointer shadow-2xl border-2 border-purple-400 relative">
-                <i class="fas fa-warehouse warehouse-icon text-white"></i>
-                
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
-                            <i class="fas fa-building text-3xl text-white"></i>
-                        </div>
-                        <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
-                            ● ATIVO
-                        </span>
-                    </div>
-
-                    <h3 class="text-2xl font-bold mb-2 text-white">Pernambuco</h3>
-                    <p class="text-purple-100 text-lg font-bold mb-1">FBS PE - Jaboatão</p>
-
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                            <span class="text-purple-100">
-                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
-                            </span>
-                            <span class="font-bold text-white">156</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                            <span class="text-purple-100">
-                                <i class="fas fa-user-tie mr-2"></i>Supervisores
-                            </span>
-                            <span class="font-bold text-white">8</span>
-                        </div>
-                    </div>
-
-                    <button class="w-full bg-white text-purple-700 font-bold px-4 py-3 rounded-lg hover:bg-purple-50 transition-all shadow-lg">
-                        <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
-                    </button>
-                </div>
-            </div>
-
-            <!-- WAREHOUSE: GOIÁS -->
-            <div onclick="selecionarWarehouse('GO')" class="card-hover gradient-go rounded-xl p-6 cursor-pointer shadow-2xl border-2 border-pink-400 relative">
-                <i class="fas fa-warehouse warehouse-icon text-white"></i>
-                
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
-                            <i class="fas fa-building text-3xl text-white"></i>
-                        </div>
-                        <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
-                            ● ATIVO
-                        </span>
-                    </div>
-
-                    <h3 class="text-2xl font-bold mb-2 text-white">Goiás</h3>
-                    <p class="text-pink-100 text-lg font-bold mb-1">FBS GO - Aparecida</p>
-
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                            <span class="text-pink-100">
-                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
-                            </span>
-                            <span class="font-bold text-white">189</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                            <span class="text-pink-100">
-                                <i class="fas fa-user-tie mr-2"></i>Supervisores
-                            </span>
-                            <span class="font-bold text-white">9</span>
-                        </div>
-                    </div>
-
-                    <button class="w-full bg-white text-pink-700 font-bold px-4 py-3 rounded-lg hover:bg-pink-50 transition-all shadow-lg">
-                        <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
-                    </button>
-                </div>
-            </div>
-
-            <!-- WAREHOUSE: SÃO PAULO -->
-            <div onclick="selecionarWarehouse('SP')" class="card-hover gradient-sp rounded-xl p-6 cursor-pointer shadow-2xl border-2 border-cyan-400 relative">
-                <i class="fas fa-warehouse warehouse-icon text-white"></i>
-                
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
-                            <i class="fas fa-building text-3xl text-white"></i>
-                        </div>
-                        <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
-                            ● ATIVO
-                        </span>
-                    </div>
-
-                    <h3 class="text-2xl font-bold mb-2 text-white">São Paulo</h3>
-                    <p class="text-cyan-100 text-lg font-bold mb-1">FBS SP - Franco da Rocha</p>
-
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                            <span class="text-cyan-100">
-                                <i class="fas fa-users mr-2"></i>Colaboradores Ativos
-                            </span>
-                            <span class="font-bold text-white">137</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-                            <span class="text-cyan-100">
-                                <i class="fas fa-user-tie mr-2"></i>Supervisores
-                            </span>
-                            <span class="font-bold text-white">7</span>
-                        </div>
-                    </div>
-
-                    <button class="w-full bg-white text-cyan-700 font-bold px-4 py-3 rounded-lg hover:bg-cyan-50 transition-all shadow-lg">
-                        <i class="fas fa-arrow-right mr-2"></i>Acessar Warehouse
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- ========================================== -->
-<!-- TELA 3: SELEÇÃO DE MÊS -->
-<!-- ========================================== -->
-<div id="tela-meses" class="tela container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <button onclick="irPara('tela-warehouses')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
-                        <i class="fas fa-arrow-left mr-2"></i>Voltar aos Warehouses
-                    </button>
-                    <h1 class="text-3xl font-bold mb-2">
-                        <i class="fas fa-user-check mr-3 text-blue-400"></i>
-                        Sistema ABS - <span id="warehouse-nome">São Paulo</span>
-                    </h1>
-                    <p class="text-gray-400">Selecione o Mês - 2026</p>
-                    <p class="text-yellow-400 text-sm mt-2">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Apenas o mês atual pode ser editado.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grid de Meses -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Janeiro - BLOQUEADO -->
-            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
-                <h3 class="text-xl font-bold mb-2 text-gray-400">Janeiro</h3>
-                <p class="text-gray-400 text-sm mb-4">
-                    <i class="fas fa-lock mr-2"></i>Bloqueado
-                </p>
-                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
-                    Bloqueado
-                </button>
-            </div>
-
-            <!-- Fevereiro (mês atual - destaque) -->
-            <div onclick="irPara('tela-supervisores')" class="card-hover bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 cursor-pointer border-2 border-green-400 shadow-2xl">
-                <h3 class="text-xl font-bold mb-2">Fevereiro</h3>
-                <p class="text-green-200 text-sm mb-4">
-                    <i class="fas fa-calendar-check mr-2"></i>📅 MÊS ATUAL
-                </p>
-                <button class="w-full bg-white text-green-700 font-bold px-4 py-2 rounded-lg hover:bg-green-50 transition-all">
-                    Abrir
-                </button>
-            </div>
-
-            <!-- Março - BLOQUEADO -->
-            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
-                <h3 class="text-xl font-bold mb-2 text-gray-400">Março</h3>
-                <p class="text-gray-400 text-sm mb-4">
-                    <i class="fas fa-lock mr-2"></i>Bloqueado
-                </p>
-                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
-                    Bloqueado
-                </button>
-            </div>
-
-            <!-- Abril - BLOQUEADO -->
-            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
-                <h3 class="text-xl font-bold mb-2 text-gray-400">Abril</h3>
-                <p class="text-gray-400 text-sm mb-4">
-                    <i class="fas fa-lock mr-2"></i>Bloqueado
-                </p>
-                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
-                    Bloqueado
-                </button>
-            </div>
-
-            <!-- Maio - BLOQUEADO -->
-            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
-                <h3 class="text-xl font-bold mb-2 text-gray-400">Maio</h3>
-                <p class="text-gray-400 text-sm mb-4">
-                    <i class="fas fa-lock mr-2"></i>Bloqueado
-                </p>
-                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
-                    Bloqueado
-                </button>
-            </div>
-
-            <!-- Junho - BLOQUEADO -->
-            <div class="bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-6 border-2 border-gray-600 shadow-2xl opacity-60 cursor-not-allowed">
-                <h3 class="text-xl font-bold mb-2 text-gray-400">Junho</h3>
-                <p class="text-gray-400 text-sm mb-4">
-                    <i class="fas fa-lock mr-2"></i>Bloqueado
-                </p>
-                <button disabled class="w-full bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-lg cursor-not-allowed">
-                    Bloqueado
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================== -->
-<!-- TELA 4: SELEÇÃO DE SUPERVISOR -->
-<!-- ========================================== -->
-<div id="tela-supervisores" class="tela container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <button onclick="irPara('tela-meses')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
-                        <i class="fas fa-arrow-left mr-2"></i>Voltar aos Meses
-                    </button>
-                    <h1 class="text-3xl font-bold mb-2">
-                        <i class="fas fa-user-tie mr-3 text-blue-400"></i>
-                        Seleção de Supervisor - Fevereiro 2026
-                    </h1>
-                    <p class="text-gray-400">São Paulo (SP) - Franco da Rocha</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Busca -->
-        <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
-            <label class="text-gray-400 text-sm mb-2 block">
-                <i class="fas fa-search mr-2"></i>Buscar Supervisor
-            </label>
-            <input type="text" 
-                   placeholder="Nome do supervisor..." 
-                   class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
-        </div>
-
-        <!-- Lista de Supervisores -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div onclick="selecionarSupervisor('João Carlos Silva')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-blue-500">
-                <div class="flex items-center">
-                    <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
-                        JC
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold">João Carlos Silva</h3>
-                        <p class="text-gray-400 text-sm">24 colaboradores</p>
-                        <div class="flex gap-2 mt-2">
-                            <span class="text-xs bg-green-600 px-2 py-1 rounded">18 marcados</span>
-                            <span class="text-xs bg-yellow-600 px-2 py-1 rounded">6 pendentes</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
-                </div>
-            </div>
-
-            <div onclick="selecionarSupervisor('Maria Santos Lima')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-purple-500">
-                <div class="flex items-center">
-                    <div class="bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
-                        MS
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold">Maria Santos Lima</h3>
-                        <p class="text-gray-400 text-sm">19 colaboradores</p>
-                        <div class="flex gap-2 mt-2">
-                            <span class="text-xs bg-green-600 px-2 py-1 rounded">19 marcados</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
-                </div>
-            </div>
-
-            <div onclick="selecionarSupervisor('Pedro Costa Silva')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-orange-500">
-                <div class="flex items-center">
-                    <div class="bg-orange-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
-                        PC
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold">Pedro Costa Silva</h3>
-                        <p class="text-gray-400 text-sm">22 colaboradores</p>
-                        <div class="flex gap-2 mt-2">
-                            <span class="text-xs bg-green-600 px-2 py-1 rounded">15 marcados</span>
-                            <span class="text-xs bg-yellow-600 px-2 py-1 rounded">7 pendentes</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
-                </div>
-            </div>
-
-            <div onclick="selecionarSupervisor('Ana Paula Rocha')" class="card-hover bg-gray-800 rounded-xl p-6 cursor-pointer border border-gray-700 shadow-xl hover:border-pink-500">
-                <div class="flex items-center">
-                    <div class="bg-pink-600 w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl mr-4">
-                        AP
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold">Ana Paula Rocha</h3>
-                        <p class="text-gray-400 text-sm">18 colaboradores</p>
-                        <div class="flex gap-2 mt-2">
-                            <span class="text-xs bg-green-600 px-2 py-1 rounded">18 marcados</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================== -->
-<!-- TELA 5: CALENDÁRIO DO MÊS -->
-<!-- ========================================== -->
-<div id="tela-calendario" class="tela container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <button onclick="irPara('tela-supervisores')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
-                        <i class="fas fa-arrow-left mr-2"></i>Voltar aos Supervisores
-                    </button>
-                    <h1 class="text-3xl font-bold mb-2">
-                        <i class="fas fa-calendar-alt mr-3 text-blue-400"></i>
-                        Calendário - Fevereiro 2026
-                    </h1>
-                    <p class="text-gray-400">
-                        Supervisor: João Carlos Silva | 24 colaboradores
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Calendário -->
-        <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
-            <div class="grid grid-cols-7 gap-2">
-                <!-- Header dos dias da semana -->
-                <div class="text-center font-bold text-gray-400 p-2">Dom</div>
-                <div class="text-center font-bold text-gray-400 p-2">Seg</div>
-                <div class="text-center font-bold text-gray-400 p-2">Ter</div>
-                <div class="text-center font-bold text-gray-400 p-2">Qua</div>
-                <div class="text-center font-bold text-gray-400 p-2">Qui</div>
-                <div class="text-center font-bold text-gray-400 p-2">Sex</div>
-                <div class="text-center font-bold text-gray-400 p-2">Sáb</div>
-
-                <!-- Dias do mês - TODOS CLICÁVEIS -->
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">1</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">2</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">3</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">4</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">5</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-yellow-700 rounded-lg p-3 text-center cursor-pointer border border-yellow-500">
-                    <div class="text-lg font-bold">6</div>
-                    <div class="text-xs text-yellow-200">⚠️ Pendente</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">7</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-
-                <!-- Segunda semana -->
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">8</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">9</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">10</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-yellow-700 rounded-lg p-3 text-center cursor-pointer border border-yellow-500">
-                    <div class="text-lg font-bold">11</div>
-                    <div class="text-xs text-yellow-200">⚠️ Pendente</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">12</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">13</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">14</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-
-                <!-- Terceira semana -->
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-green-700 rounded-lg p-3 text-center cursor-pointer border border-green-500">
-                    <div class="text-lg font-bold">15</div>
-                    <div class="text-xs text-green-200">✅ Completo</div>
-                </div>
-                <!-- Dia atual (16) - Destacado -->
-                <div onclick="irPara('tela-marcacao')" class="bg-gradient-to-br from-green-600 to-green-800 rounded-lg p-3 text-center cursor-pointer border-2 border-green-400 card-hover">
-                    <div class="text-2xl font-bold">16</div>
-                    <div class="text-xs text-green-200">✅ HOJE</div>
-                    <div class="text-xs text-yellow-300 mt-1">6 pendentes</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">17</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">18</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">19</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">20</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">21</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-
-                <!-- Quarta semana -->
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">22</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">23</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">24</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">25</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">26</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">27</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-                <div onclick="irPara('tela-marcacao')" class="card-hover bg-gray-700 rounded-lg p-3 text-center cursor-pointer border border-gray-600">
-                    <div class="text-lg font-bold">28</div>
-                    <div class="text-xs text-gray-400">Futuro</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Legenda -->
-        <div class="mt-6 bg-gray-800 rounded-xl p-4 shadow-xl">
-            <h3 class="font-bold mb-3">Legenda:</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-green-600 rounded"></div>
-                    <span>Completo</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-yellow-600 rounded"></div>
-                    <span>Pendente</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-gray-700 rounded"></div>
-                    <span>Não iniciado</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-blue-600 rounded border-2 border-blue-400"></div>
-                    <span>Hoje</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================== -->
-<!-- TELA 6: MARCAÇÃO DE PRESENÇA -->
-<!-- ========================================== -->
-<div id="tela-marcacao" class="tela container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="bg-gray-800 rounded-xl p-6 mb-6 shadow-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <button onclick="irPara('tela-calendario')" class="text-blue-400 hover:text-blue-300 mb-3 transition-all">
-                        <i class="fas fa-arrow-left mr-2"></i>Voltar ao Calendário
-                    </button>
-                    <h1 class="text-3xl font-bold mb-2">
-                        <i class="fas fa-check-square mr-3 text-blue-400"></i>
-                        Marcação de Presença - Dia 16/02/2026
-                    </h1>
-                    <p class="text-gray-400">
-                        <i class="fas fa-warehouse mr-2"></i>São Paulo (SP) - Franco da Rocha
-                        <span class="mx-2">|</span>
-                        <i class="fas fa-user-tie mr-2"></i>Supervisor: João Carlos Silva
-                    </p>
-                </div>
-                <div class="text-right">
-                    <div class="bg-green-600/20 border border-green-600 rounded-lg px-4 py-2">
-                        <p class="text-green-400 font-bold text-xl">18/24</p>
-                        <p class="text-green-300 text-sm">Marcados</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alerta de Presença Automática -->
-        <div class="bg-blue-900/30 border border-blue-500/50 rounded-xl p-4 mb-6 flex items-start">
-            <div class="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                <i class="fas fa-robot text-white"></i>
-            </div>
-            <div class="flex-1">
-                <h3 class="font-bold text-blue-400 mb-1">🤖 Marcação Automática Ativa</h3>
-                <p class="text-gray-300 text-sm">
-                    18 colaboradores tiveram presença marcada automaticamente via sistema de ponto eletrônico (raw_scan).
-                </p>
-            </div>
-        </div>
-
-        <!-- Busca -->
-        <div class="bg-gray-800 rounded-xl p-4 mb-6 shadow-xl">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="md:col-span-2">
-                    <label class="text-gray-400 text-sm mb-2 block">
-                        <i class="fas fa-search mr-2"></i>Buscar Colaborador
-                    </label>
-                    <input type="text" 
-                           id="busca-colaborador"
-                           placeholder="Nome ou WFM User..." 
-                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="text-gray-400 text-sm mb-2 block">
-                        <i class="fas fa-filter mr-2"></i>Filtrar por Status
-                    </label>
-                    <select class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none">
-                        <option>Todos</option>
-                        <option>Marcados</option>
-                        <option>Pendentes</option>
-                        <option>Automáticos</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lista de Colaboradores -->
-        <div class="bg-gray-800 rounded-xl p-6 shadow-xl mb-6">
-            <h2 class="text-xl font-bold mb-4" id="info-dia">
-                <i class="fas fa-users mr-2 text-blue-400"></i>
-                Colaboradores (24 total)
-            </h2>
-
-            <div id="colaboradores-list" class="space-y-3">
-                
-                <!-- Colaborador 1: PRESENÇA AUTOMÁTICA -->
-                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 border-green-500">
-                    <div class="flex items-center flex-1">
-                        <div class="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
-                            <i class="fas fa-check text-white"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-bold">João Silva Santos</h3>
-                                <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full badge-auto">
-                                    🤖 AUTO
-                                    <div class="tooltip-auto">
-                                        <div class="font-bold text-blue-400 mb-2">
-                                            <i class="fas fa-robot mr-1"></i>
-                                            Presença Automática
-                                        </div>
-                                        <div class="text-xs space-y-1">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-400">WFM User:</span>
-                                                <span class="text-white">joao.silva</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-400">Primeira batida:</span>
-                                                <span class="text-green-400">07:45</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-400">Horário esperado:</span>
-                                                <span class="text-white">08:00</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-400">Tolerância:</span>
-                                                <span class="text-green-400">✅ Dentro (±1h)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </span>
-                            </div>
-                            <p class="text-gray-400 text-sm">
-                                WFM: joao.silva | Operador Inbound | Admissão: 15/01/2024
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <select class="bg-gray-600 text-white px-4 py-2 rounded-lg border border-green-500 focus:outline-none">
-                            <option value="P" selected>P - Presente</option>
-                            <option value="F">F - Falta Injustificada</option>
-                            <option value="FJ">FJ - Falta Justificada</option>
-                            <option value="FE">FE - Férias</option>
-                            <option value="FO">FO - Folga</option>
-                            <option value="DSR">DSR - Descanso Semanal Remunerado</option>
-                            <option value="AM">AM - Atestado Médico</option>
-                            <option value="AF">AF - Afastamento (1º à 15º dia)</option>
-                            <option value="AL">AL - Afastamento INSS (16º dia+)</option>
-                            <option value="BH">BH - Banco de Horas</option>
-                            <option value="TR">TR - Transferência Fixa</option>
-                            <option value="SU">SU - Suspensão</option>
-                            <option value="PR">PR - Promoção</option>
-                            <option value="S1">S1 - Sinergia Enviada</option>
-                            <option value="S2">S2 - Sinergia Recebida</option>
-                            <option value="DF">DF - Desligamento Forçado</option>
-                            <option value="DV">DV - Desligamento Voluntário</option>
-                            <option value="DP">DP - Desligamento Planejado</option>
-                            <option value="NC">NC - Não Contratado</option>
-                        </select>
-                        <button onclick="abrirModalHoraExtra('João Silva Santos', 'joao.silva')" 
-                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1"
-                                title="Registrar Hora Extra">
-                            <i class="fas fa-clock"></i>
-                            <span class="text-xs">HE</span>
-                        </button>
-                        <button onclick="abrirModalSinergia('João Silva Santos', 'joao.silva', 'Inbound')" 
-                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1"
-                                title="Registrar Sinergia">
-                            <i class="fas fa-exchange-alt"></i>
-                            <span class="text-xs">SIN</span>
-                        </button>
-                        <span class="text-green-400">
-                            <i class="fas fa-check-circle text-xl"></i>
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Colaborador 2: PENDENTE -->
-                <div class="bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 border-yellow-500">
-                    <div class="flex items-center flex-1">
-                        <div class="bg-yellow-600 w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
-                            <i class="fas fa-question text-white"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-bold">Ana Paula Oliveira</h3>
-                                <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">
-                                    ⚠️ SEM SCAN
-                                </span>
-                            </div>
-                            <p class="text-gray-400 text-sm">
-                                WFM: ana.oliveira | Operador Flow | Admissão: 05/09/2023
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <select class="bg-gray-600 text-white px-4 py-2 rounded-lg border border-yellow-500 focus:outline-none">
-                            <option value="" selected>Selecione...</option>
-                            <option value="P">P - Presente</option>
-                            <option value="F">F - Falta Injustificada</option>
-                            <option value="FJ">FJ - Falta Justificada</option>
-                            <option value="FE">FE - Férias</option>
-                            <option value="FO">FO - Folga</option>
-                            <option value="DSR">DSR - Descanso Semanal Remunerado</option>
-                        </select>
-                        <button onclick="abrirModalHoraExtra('Ana Paula Oliveira', 'ana.oliveira')" 
-                                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1">
-                            <i class="fas fa-clock"></i>
-                            <span class="text-xs">HE</span>
-                        </button>
-                        <button onclick="abrirModalSinergia('Ana Paula Oliveira', 'ana.oliveira', 'Flow')" 
-                                class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all flex items-center gap-1">
-                            <i class="fas fa-exchange-alt"></i>
-                            <span class="text-xs">SIN</span>
-                        </button>
-                        <span class="text-yellow-400">
-                            <i class="fas fa-exclamation-triangle text-xl"></i>
-                        </span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Estatísticas -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-gray-800 rounded-lg p-4 text-center">
-                <p id="stat-marcacao-total" class="text-3xl font-bold text-white">0</p>
-                <p class="text-gray-400 text-sm">Total</p>
-            </div>
-            <div class="bg-green-900/30 border border-green-600 rounded-lg p-4 text-center">
-                <p id="stat-marcacao-marcados" class="text-3xl font-bold text-green-400">0</p>
-                <p class="text-green-300 text-sm">✅ Marcados</p>
-            </div>
-            <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-4 text-center">
-                <p class="text-3xl font-bold text-purple-400">0</p>
-                <p class="text-purple-300 text-sm">🤖 Automáticos</p>
-            </div>
-            <div class="bg-yellow-900/30 border border-yellow-600 rounded-lg p-4 text-center">
-                <p id="stat-marcacao-pendentes" class="text-3xl font-bold text-yellow-400">0</p>
-                <p class="text-yellow-300 text-sm">⚠️ Pendentes</p>
-            </div>
-        </div>
-
-        <!-- Botões de Ação -->
-        <div class="flex gap-4">
-            <button onclick="salvarMarcacoes()" 
-                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-all shadow-lg">
-                <i class="fas fa-save mr-2"></i>
-                Salvar Todas as Marcações
-            </button>
-            
-            <button onclick="recarregarManual()" 
-                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-all"
-                    title="Buscar dados atualizados da planilha">
-                <i class="fas fa-sync-alt mr-2"></i>
-                Recarregar
-            </button>
-            
-            <button onclick="irPara('tela-calendario')" 
-                    class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg transition-all">
-                <i class="fas fa-times mr-2"></i>
-                Cancelar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Sinergia -->
-<div id="modalSinergia" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-gray-700">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold text-white">
-                <i class="fas fa-exchange-alt text-purple-500 mr-2"></i>
-                Registrar Sinergia
-            </h2>
-            <button onclick="fecharModalSinergia()" class="text-gray-400 hover:text-white">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-
-        <div class="space-y-4">
-            <div class="bg-gray-700 rounded-lg p-4">
-                <p class="text-gray-400 text-sm mb-1">Colaborador:</p>
-                <p class="text-white font-bold" id="sinNome">-</p>
-                <p class="text-gray-400 text-xs mt-1">
-                    WFM: <span id="sinWfmUser" class="text-white">-</span>
-                </p>
-                <p class="text-gray-400 text-xs mt-1">
-                    Setor Atual: <span id="sinSetorAtual" class="text-white">-</span>
-                </p>
-            </div>
-
-            <div>
-                <label class="text-gray-400 text-sm mb-2 block">
-                    <i class="fas fa-warehouse mr-1"></i>
-                    Warehouse
-                </label>
-                <input type="text" 
-                       id="sinWarehouse" 
-                       value="BRFSP1"
-                       readonly
-                       class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg border border-gray-600 cursor-not-allowed">
-            </div>
-
-            <div>
-                <label class="text-gray-400 text-sm mb-2 block">
-                    <i class="fas fa-arrow-right mr-1"></i>
-                    Setor de Destino
-                </label>
-                <select id="sinSetorDestino" 
-                        class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none">
-                    <option value="">Selecione o setor...</option>
-                    <option value="Inbound">Inbound</option>
-                    <option value="Outbound">Outbound</option>
-                    <option value="Flow">Flow</option>
-                    <option value="Qualidade">Qualidade</option>
-                    <option value="Administrativo">Administrativo</option>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Colaborador:</label>
+                <select id="hr-colaborador" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione um colaborador --</option>
                 </select>
             </div>
 
-            <div class="bg-blue-900/20 border border-blue-600 rounded-lg p-3">
-                <p class="text-blue-400 text-sm mb-1">
-                    <i class="fas fa-clock mr-1"></i>
-                    Horário de Registro:
-                </p>
-                <p class="text-xl font-bold text-white" id="sinHorario">-</p>
-                <p class="text-xs text-gray-400 mt-1">Automático</p>
-            </div>
-        </div>
-
-        <div class="flex gap-3 mt-6">
-            <button onclick="salvarSinergia()" 
-                    class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-all">
-                <i class="fas fa-save mr-2"></i>
-                Salvar em raw_sinergia
-            </button>
-            <button onclick="fecharModalSinergia()" 
-                    class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all">
-                <i class="fas fa-times mr-2"></i>
-                Cancelar
-            </button>
-        </div>
-
-        <div class="mt-4 bg-blue-900/20 border border-blue-600 rounded-lg p-3">
-            <p class="text-blue-400 text-xs">
-                <i class="fas fa-info-circle mr-1"></i>
-                Salvos: <strong>WH, Nome, Setor Atual, Setor Destino, Horário</strong>
-            </p>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Hora Extra -->
-<div id="modalHoraExtra" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-gray-700">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold text-white">
-                <i class="fas fa-clock text-orange-500 mr-2"></i>
-                Registrar Hora Extra
-            </h2>
-            <button onclick="fecharModalHoraExtra()" class="text-gray-400 hover:text-white">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-
-        <div class="space-y-4">
-            <div class="bg-gray-700 rounded-lg p-4">
-                <p class="text-gray-400 text-sm mb-1">Colaborador:</p>
-                <p class="text-white font-bold" id="heNome">-</p>
-                <p class="text-gray-400 text-xs mt-1">WFM: <span id="heWfmUser" class="text-white">-</span></p>
-            </div>
-
-            <div>
-                <label class="text-gray-400 text-sm mb-2 block">
-                    <i class="fas fa-warehouse mr-1"></i>
-                    Warehouse
-                </label>
-                <input type="text" 
-                       id="heWarehouse" 
-                       value="BRFSP1"
-                       readonly
-                       class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg border border-gray-600 cursor-not-allowed">
-            </div>
-
-            <div>
-                <label class="text-gray-400 text-sm mb-2 block">
-                    <i class="fas fa-calendar mr-1"></i>
-                    Data
-                </label>
-                <input type="date" 
-                       id="heData" 
-                       value="2026-02-16"
-                       class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none">
-            </div>
-
-            <div class="flex items-center gap-3 bg-gray-700 rounded-lg p-3">
-                <input type="checkbox" 
-                       id="heDiaInteiro"
-                       onchange="toggleDiaInteiro()"
-                       class="w-5 h-5 text-orange-600 bg-gray-600 border-gray-500 rounded focus:ring-orange-500">
-                <label for="heDiaInteiro" class="text-white cursor-pointer">
-                    <i class="fas fa-sun text-yellow-400 mr-2"></i>
-                    Dia Inteiro (8 horas)
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="hr-dia-inteiro" onchange="toggleHorarioHR()" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                    <span style="color: #fff; font-size: 16px;">Dia Inteiro</span>
                 </label>
             </div>
 
-            <div id="heHorariosContainer">
+            <div id="hr-horarios" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                 <div>
-                    <label class="text-gray-400 text-sm mb-2 block">
-                        <i class="fas fa-clock mr-1"></i>
-                        Hora de Início
-                    </label>
-                    <input type="time" 
-                           id="heHoraInicio" 
-                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none">
+                    <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Hora Início:</label>
+                    <input type="time" id="hr-inicio" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
                 </div>
-
-                <div class="mt-4">
-                    <label class="text-gray-400 text-sm mb-2 block">
-                        <i class="fas fa-clock mr-1"></i>
-                        Hora de Fim
-                    </label>
-                    <input type="time" 
-                           id="heHoraFim" 
-                           class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Hora Fim:</label>
+                    <input type="time" id="hr-fim" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
                 </div>
             </div>
 
-            <div class="bg-orange-900/20 border border-orange-600 rounded-lg p-3">
-                <p class="text-orange-400 text-sm mb-1">Total de Horas Extras:</p>
-                <p class="text-2xl font-bold text-white" id="heTotalHoras">0h 00min</p>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="fecharModalHoraExtra()" style="flex: 1; padding: 14px; background: #666; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button onclick="salvarHoraExtra()" style="flex: 1; padding: 14px; background: #FF9800; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
             </div>
-        </div>
-
-        <div class="flex gap-3 mt-6">
-            <button onclick="salvarHoraExtra()" 
-                    class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all">
-                <i class="fas fa-save mr-2"></i>
-                Salvar em raw_hr
-            </button>
-            <button onclick="fecharModalHoraExtra()" 
-                    class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all">
-                <i class="fas fa-times mr-2"></i>
-                Cancelar
-            </button>
-        </div>
-
-        <div class="mt-4 bg-blue-900/20 border border-blue-600 rounded-lg p-3">
-            <p class="text-blue-400 text-xs">
-                <i class="fas fa-info-circle mr-1"></i>
-                Salvos: <strong>WH, Nome, WFM User, Data e Hora</strong>
-            </p>
         </div>
     </div>
-</div>
 
-<script>
-    // Navegação entre telas
-    function irPara(telaId) {
-        document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
-        document.getElementById(telaId).classList.add('active');
-        window.scrollTo(0, 0);
-    }
-
-    let warehouseSelecionado = null;
-    let supervisorSelecionado = null;
-    let salvandoMarcacoes = false; // Flag para evitar reload durante salvamento
-
-    function selecionarWarehouse(codigo) {
-        warehouseSelecionado = codigo;
-        const nomes = { 'PE': 'Pernambuco', 'GO': 'Goiás', 'SP': 'São Paulo' };
-        document.getElementById('warehouse-nome').textContent = nomes[codigo];
-        irPara('tela-meses');
-    }
-
-    function selecionarSupervisor(nome) {
-        supervisorSelecionado = nome;
-        irPara('tela-calendario');
-    }
-
-    // Modal Sinergia
-    let sinColaboradorAtual = { nome: '', wfmUser: '', setorAtual: '' };
-
-    function abrirModalSinergia(nome, wfmUser, setorAtual) {
-        sinColaboradorAtual = { nome, wfmUser, setorAtual };
-        document.getElementById('sinNome').textContent = nome;
-        document.getElementById('sinWfmUser').textContent = wfmUser;
-        document.getElementById('sinSetorAtual').textContent = setorAtual;
-        
-        const agora = new Date();
-        const horarioFormatado = agora.toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        document.getElementById('sinHorario').textContent = horarioFormatado;
-        
-        document.getElementById('modalSinergia').style.display = 'flex';
-    }
-
-    function fecharModalSinergia() {
-        document.getElementById('modalSinergia').style.display = 'none';
-        document.getElementById('sinSetorDestino').value = '';
-    }
-
-    function salvarSinergia() {
-        const setorDestino = document.getElementById('sinSetorDestino').value;
-        const horario = document.getElementById('sinHorario').textContent;
-        
-        if (!setorDestino) {
-            alert('⚠️ Por favor, selecione o setor de destino.');
-            return;
-        }
-        
-        const dadosSinergia = {
-            wh: document.getElementById('sinWarehouse').value,
-            nome: sinColaboradorAtual.nome,
-            wfmUser: sinColaboradorAtual.wfmUser,
-            setorAtual: sinColaboradorAtual.setorAtual,
-            setorDestino: setorDestino,
-            horario: horario,
-            planilha: 'raw_sinergia',
-            spreadsheetId: '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w'
-        };
-        
-        console.log('📊 Dados para raw_sinergia:', dadosSinergia);
-        
-        alert(`✅ Sinergia registrada!
-
-WH: ${dadosSinergia.wh}
-Colaborador: ${dadosSinergia.nome}
-Setor Atual: ${dadosSinergia.setorAtual}
-Setor Destino: ${dadosSinergia.setorDestino}
-Horário: ${dadosSinergia.horario}
-
-Salvo em raw_sinergia.`);
-        
-        fecharModalSinergia();
-    }
-
-    // Modal Hora Extra
-    let heColaboradorAtual = { nome: '', wfmUser: '' };
-
-    function abrirModalHoraExtra(nome, wfmUser) {
-        heColaboradorAtual = { nome, wfmUser };
-        document.getElementById('heNome').textContent = nome;
-        document.getElementById('heWfmUser').textContent = wfmUser;
-        document.getElementById('modalHoraExtra').style.display = 'flex';
-        
-        document.getElementById('heHoraInicio').addEventListener('change', calcularTotalHoras);
-        document.getElementById('heHoraFim').addEventListener('change', calcularTotalHoras);
-    }
-
-    function fecharModalHoraExtra() {
-        document.getElementById('modalHoraExtra').style.display = 'none';
-        document.getElementById('heHoraInicio').value = '';
-        document.getElementById('heHoraFim').value = '';
-        document.getElementById('heDiaInteiro').checked = false;
-        document.getElementById('heHorariosContainer').style.display = 'block';
-        document.getElementById('heTotalHoras').textContent = '0h 00min';
-    }
-
-    function toggleDiaInteiro() {
-        const diaInteiro = document.getElementById('heDiaInteiro').checked;
-        const horariosContainer = document.getElementById('heHorariosContainer');
-        
-        if (diaInteiro) {
-            horariosContainer.style.display = 'none';
-            document.getElementById('heTotalHoras').textContent = '8h 00min';
-        } else {
-            horariosContainer.style.display = 'block';
-            document.getElementById('heTotalHoras').textContent = '0h 00min';
-        }
-    }
-
-    function calcularTotalHoras() {
-        const inicio = document.getElementById('heHoraInicio').value;
-        const fim = document.getElementById('heHoraFim').value;
-        
-        if (inicio && fim) {
-            const [hI, mI] = inicio.split(':').map(Number);
-            const [hF, mF] = fim.split(':').map(Number);
+    <!-- MODAL SINERGIA -->
+    <div id="modal-sinergia" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #2b2b2b; border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 24px; font-weight: bold; color: #9C27B0;">
+                    <i class="fas fa-handshake mr-2"></i>Registrar Sinergia
+                </h2>
+                <button onclick="fecharModalSinergia()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
             
-            let totalMinutos = (hF * 60 + mF) - (hI * 60 + mI);
-            
-            if (totalMinutos < 0) {
-                totalMinutos += 24 * 60;
-            }
-            
-            const horas = Math.floor(totalMinutos / 60);
-            const minutos = totalMinutos % 60;
-            
-            document.getElementById('heTotalHoras').textContent = `${horas}h ${minutos.toString().padStart(2, '0')}min`;
-        }
-    }
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Colaborador:</label>
+                <select id="sinergia-colaborador" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione um colaborador --</option>
+                </select>
+            </div>
 
-    function salvarHoraExtra() {
-        const data = document.getElementById('heData').value;
-        const diaInteiro = document.getElementById('heDiaInteiro').checked;
-        const horaInicio = diaInteiro ? 'DIA INTEIRO' : document.getElementById('heHoraInicio').value;
-        const horaFim = diaInteiro ? 'DIA INTEIRO' : document.getElementById('heHoraFim').value;
-        const wh = document.getElementById('heWarehouse').value;
-        
-        if (!diaInteiro && (!horaInicio || !horaFim)) {
-            alert('⚠️ Por favor, preencha os horários ou marque "Dia Inteiro".');
-            return;
-        }
-        
-        const dadosHoraExtra = {
-            wh: wh,
-            nome: heColaboradorAtual.nome,
-            wfmUser: heColaboradorAtual.wfmUser,
-            data: data,
-            horaInicio: horaInicio,
-            horaFim: horaFim,
-            totalHoras: document.getElementById('heTotalHoras').textContent,
-            diaInteiro: diaInteiro,
-            planilha: 'raw_hr',
-            spreadsheetId: '1pm0dtDn6x9k4Ct5u98pyD7FoAzl52GEzRazuFdPgU-w'
-        };
-        
-        console.log('📊 Dados para raw_hr:', dadosHoraExtra);
-        
-        alert(`✅ Hora Extra registrada!
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Tipo de Sinergia:</label>
+                <select id="sinergia-tipo" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione o tipo --</option>
+                    <option value="S1">S1 - Sinergia Enviada</option>
+                    <option value="S2">S2 - Sinergia Recebida</option>
+                </select>
+            </div>
 
-WH: ${dadosHoraExtra.wh}
-Colaborador: ${dadosHoraExtra.nome}
-Data: ${dadosHoraExtra.data}
-Horário: ${dadosHoraExtra.horaInicio} - ${dadosHoraExtra.horaFim}
-Total: ${dadosHoraExtra.totalHoras}
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Setor de Destino:</label>
+                <select id="sinergia-setor-destino" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+                    <option value="">-- Selecione o setor --</option>
+                    <option value="SHIPPING">SHIPPING</option>
+                    <option value="OUTBOUND">OUTBOUND</option>
+                    <option value="INBOUND">INBOUND</option>
+                    <option value="INVENTÁRIO">INVENTÁRIO</option>
+                    <option value="SECURITY">SECURITY</option>
+                    <option value="TREINAMENTOS">TREINAMENTOS</option>
+                    <option value="RETURNS">RETURNS</option>
+                    <option value="QUALIDADE">QUALIDADE</option>
+                    <option value="MWH">MWH</option>
+                    <option value="OPERATIONAL EXCELLENCE">OPERATIONAL EXCELLENCE</option>
+                    <option value="AVARIA">AVARIA</option>
+                    <option value="ALMOXARIFADO">ALMOXARIFADO</option>
+                    <option value="FLOW">FLOW</option>
+                </select>
+            </div>
 
-Salvo em raw_hr.`);
-        
-        fecharModalHoraExtra();
-    }
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Observações (opcional):</label>
+                <textarea id="sinergia-obs" rows="3" placeholder="Informações adicionais..." style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px; resize: vertical;"></textarea>
+            </div>
 
-    // Fechar modais ao clicar fora
-    document.getElementById('modalSinergia')?.addEventListener('click', function(e) {
-        if (e.target === this) fecharModalSinergia();
+            <div style="display: flex; gap: 12px;">
+                <button onclick="fecharModalSinergia()" style="flex: 1; padding: 14px; background: #666; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    Cancelar
+                </button>
+                <button onclick="salvarSinergia()" style="flex: 1; padding: 14px; background: #9C27B0; border: none; border-radius: 8px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading" id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div id="loading-text">Carregando...</div>
+        </div>
+    </div>
+
+    <script>
+// ========================================
+// CONFIGURAÇÃO GLOBAL (INICIALIZADA NO TOPO)
+// ========================================
+const WAREHOUSE = 'SP'; // Pode ser PE, SP (FRANCO), GO
+const API_BASE = ''; // Base vazia = mesmo domínio
+
+// Opções de marcação de presença (20 tipos - atualizado conforme especificação)
+const OPCOES_PRESENCA = {
+    '': { nome: '-- Selecione --', cor: '#666666' },
+    'P': { nome: 'P - Presente', cor: '#4CAF50' },
+    'F': { nome: 'F - Falta injustificada', cor: '#F44336' },
+    'FJ': { nome: 'FJ - Falta justificada', cor: '#FFC107' },
+    'FE': { nome: 'FE - Férias', cor: '#2196F3' },
+    'FO': { nome: 'FO - Folga', cor: '#8BC34A' },
+    'AM': { nome: 'AM - Atestado médico', cor: '#FF9800' },
+    'AF': { nome: 'AF - Afastamento (1º ao 15º dia)', cor: '#9C27B0' },
+    'AL': { nome: 'AL - Afastamento INSS/licença (16º+ dia)', cor: '#9C27B0' },
+    'DSR': { nome: 'DSR - Descanso Semanal Remunerado', cor: '#009688' },
+    'BH': { nome: 'BH - Banco de Horas', cor: '#00BCD4' },
+    'NC': { nome: 'NC - Não contratado', cor: '#9E9E9E' },
+    'PR': { nome: 'PR - Promoção (para Analista)', cor: '#673AB7' },
+    'TR': { nome: 'TR - Transferência fixa (outra operação)', cor: '#3F51B5' },
+    'S1': { nome: 'S1 - Sinergia Enviada', cor: '#FF6F00' },
+    'S2': { nome: 'S2 - Sinergia Recebida', cor: '#FF6F00' },
+    'SU': { nome: 'SU - Suspensão', cor: '#607D8B' },
+    'ON': { nome: 'ON - Onboarding', cor: '#00BCD4' }
+};
+
+// Siglas de desligamento (para filtro histórico apenas - NÃO disponíveis para marcação)
+const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
+
+// Siglas que requerem seleção de período (date picker)
+const SIGLAS_COM_PERIODO = ['AM', 'AF', 'AL'];
+
+// Variável global para controle do modal de período
+let periodoAtual = null;
+
+// Normalizar campo lider (supervisor) - FUNÇÃO ÚNICA
+function normalizeLider(valor) {
+    if (!valor) return 'NÃO ATRIBUÍDO';
+    return valor
+        .trim()
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+// Obter email do usuário do cookie
+// Sistema de autenticação aprimorado
+function getUserEmail() {
+    const match = document.cookie.match(/user_email=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+function setUserEmail(email) {
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 8); // 8 horas de sessão
+    document.cookie = `user_email=${encodeURIComponent(email)}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+}
+
+function clearUserEmail() {
+    document.cookie = 'user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    window.location.href = '/';
+}
+
+function isSessionValid() {
+    const email = getUserEmail();
+    return email && email.includes('@');
+}
+
+const MESES = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril',
+    'Maio', 'Junho', 'Julho', 'Agosto',
+    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+// ========================================
+// ESTADO GLOBAL (INICIALIZADO NO TOPO)
+// ========================================
+let estado = {
+    warehouse: WAREHOUSE,
+    mes: null,
+    ano: null,
+    supervisor: null,
+    dia: null,
+    colaboradores: [],
+    todosColaboradores: [],
+    todosSupervisores: [],
+    marcacoesModificadas: {},
+    filtroStatus: 'todos' // Filtro: todos, ativos, desligados, pendentes, marcados
+};
+
+// ========================================
+// FUNÇÕES DE NAVEGAÇÃO
+// ========================================
+function mostrarTela(nomeTela) {
+    console.log('[mostrarTela] Mudando para:', nomeTela);
+    
+    // Remove active de todas as telas
+    document.querySelectorAll('.tela').forEach(t => {
+        t.classList.remove('active');
+        console.log('[mostrarTela] Removido active de:', t.id);
     });
-
-    document.getElementById('modalHoraExtra')?.addEventListener('click', function(e) {
-        if (e.target === this) fecharModalHoraExtra();
-    });
-
-    // ==========================================
-    // CONFIGURAÇÃO GLOBAL
-    // ==========================================
-    const WAREHOUSE = 'SP';
-    const API_BASE = '';
-
-    const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
-    const SIGLAS_COM_PERIODO = ['AM', 'AF', 'AL'];
-
-    const OPCOES_PRESENCA = {
-        'P': {nome: 'P - Presente'},
-        'F': {nome: 'F - Falta'},
-        'FJ': {nome: 'FJ - Falta Justificada'},
-        'FE': {nome: 'FE - Férias'},
-        'FO': {nome: 'FO - Folga'},
-        'DSR': {nome: 'DSR - Descanso Semanal'},
-        'AM': {nome: 'AM - Atestado Médico'},
-        'AF': {nome: 'AF - Afastamento'},
-        'AL': {nome: 'AL - Atraso Longo'},
-        'BH': {nome: 'BH - Banco de Horas'},
-        'TR': {nome: 'TR - Treinamento'},
-        'SU': {nome: 'SU - Suspensão'},
-        'PR': {nome: 'PR - Pré-Contratação'},
-        'S1': {nome: 'S1 - Saída 1h'},
-        'S2': {nome: 'S2 - Saída 2h'},
-        'DV': {nome: 'DV - Desligamento Voluntário'},
-        'DP': {nome: 'DP - Desligamento Pedido'},
-        'DF': {nome: 'DF - Desligamento Força'},
-        'NC': {nome: 'NC - Não Compareceu'}
-    };
-
-    let periodoAtual = null;
-
-    function normalizeLider(valor) {
-        if (!valor) return 'NÃO ATRIBUÍDO';
-        return valor.trim().toUpperCase().normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '');
+    
+    // Adiciona active na tela solicitada
+    const telaId = `tela-${nomeTela}`;
+    const tela = document.getElementById(telaId);
+    
+    if (tela) {
+        tela.classList.add('active');
+        console.log('[mostrarTela] Adicionado active em:', telaId);
+        console.log('[mostrarTela] Classes da tela:', tela.className);
+    } else {
+        console.error('[mostrarTela] ERRO: Tela não encontrada:', telaId);
+        console.log('[mostrarTela] Telas disponíveis:', 
+            Array.from(document.querySelectorAll('.tela')).map(t => t.id));
     }
+}
 
-    function getUserEmail() {
-        const match = document.cookie.match(/user_email=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : null;
+function mostrarLoading(texto = 'Carregando...') {
+    const loadingText = document.getElementById('loading-text');
+    const loading = document.getElementById('loading');
+    if (loadingText) loadingText.textContent = texto;
+    if (loading) loading.classList.add('active');
+}
+
+function esconderLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) loading.classList.remove('active');
+}
+
+// ========================================
+// TELA 1: SELEÇÃO DE MÊS
+// ========================================
+function carregarMeses() {
+    console.log('[carregarMeses] INICIANDO');
+    const ano = new Date().getFullYear();
+    const mesAtual = new Date().getMonth(); // 0-11
+    
+    const grid = document.getElementById('meses-grid');
+    const infoWarehouse = document.getElementById('info-warehouse');
+    
+    console.log('[carregarMeses] grid:', grid ? 'OK' : 'ERRO');
+    console.log('[carregarMeses] infoWarehouse:', infoWarehouse ? 'OK' : 'ERRO');
+    
+    if (!grid || !infoWarehouse) {
+        console.error('Elementos não encontrados: meses-grid ou info-warehouse');
+        return;
     }
+    
+    grid.innerHTML = '';
+    infoWarehouse.textContent = `Warehouse: ${estado.warehouse}`;
+    
+    // Mostrar apenas o mês atual
+    const mes = MESES[mesAtual];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => selecionarMes(mes, ano);
+    card.innerHTML = `
+        <div class="card-icon">📅</div>
+        <div class="card-title">${mes}</div>
+        <div class="card-subtitle">${ano}</div>
+    `;
+    grid.appendChild(card);
+    
+    console.log('[carregarMeses] Card criado:', mes, ano);
+    mostrarTela('meses');
+    console.log('[carregarMeses] CONCLUÍDO');
+}
 
-    // ==========================================
-    // ESTADO OTIMIZADO COM ESTRUTURAS O(1)
-    // ==========================================
-    let estado = {
-        warehouse: WAREHOUSE,
-        mes: null,
-        ano: null,
-        supervisor: null,
-        dia: null,
-
-        colaboradores: [],
-        todosColaboradores: [],
-        todosSupervisores: [],
-
-        // 🔥 OTIMIZAÇÃO 2: Maps para lookup O(1)
-        mapTodosColaboradores: new Map(),
-        mapColaboradores: new Map(),
-
-        // 🔥 OTIMIZAÇÃO 2: Índices computados
-        indices: {
-            desligadosNoMes: new Set(),      // wfmUser com desligamento
-            porSupervisor: new Map(),        // supervisor -> [wfmUser]
-            estatisticas: {
-                total: 0,
-                marcados: 0,
-                pendentes: 0
-            }
-        },
-
-        marcacoesModificadas: {},
-        filtroStatus: 'todos'
-    };
-
-    let presencasAutomaticasCache = {};
-
-    // ==========================================
-    // OTIMIZAÇÃO 3: PROCESSAMENTO INICIAL (UMA PASSADA O(n))
-    // ==========================================
-    function processarDadosInicial(colaboradores) {
-        console.log('[Performance] Processando dados inicial...');
-        
-        // Limpar estruturas
-        estado.mapTodosColaboradores.clear();
-        estado.indices.desligadosNoMes.clear();
-        estado.indices.porSupervisor.clear();
-        
-        const supervisoresSet = new Set();
-        
-        // 🔥 UMA ÚNICA ITERAÇÃO para popular tudo
-        colaboradores.forEach(c => {
-            // Normalizar líder
-            c.liderNormalizado = normalizeLider(c.lider);
-            
-            // Pré-calcular desligamento
-            c.temDesligamento = false;
-            if (c.marcacoes) {
-                for (const dia in c.marcacoes) {
-                    if (SIGLAS_DESLIGAMENTO.includes(c.marcacoes[dia].sigla)) {
-                        c.temDesligamento = true;
-                        estado.indices.desligadosNoMes.add(c.wfmUser);
-                        break;
-                    }
-                }
-            }
-            
-            // Popular mapa principal
-            estado.mapTodosColaboradores.set(c.wfmUser, c);
-            
-            // Indexar por supervisor
-            if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
-                supervisoresSet.add(c.liderNormalizado);
-                
-                if (!estado.indices.porSupervisor.has(c.liderNormalizado)) {
-                    estado.indices.porSupervisor.set(c.liderNormalizado, []);
-                }
-                estado.indices.porSupervisor.get(c.liderNormalizado).push(c.wfmUser);
-            }
-        });
-        
-        estado.todosColaboradores = colaboradores;
-        estado.todosSupervisores = Array.from(supervisoresSet).sort();
-        
-        console.log('[Performance] Processamento concluído:', {
-            total: colaboradores.length,
-            supervisores: estado.todosSupervisores.length,
-            desligados: estado.indices.desligadosNoMes.size
-        });
-    }
-
-    // CARREGAR MÊS (COM PRÉ-CÁLCULO)
-    async function selecionarMes(mes, ano) {
-        estado.mes = mes;
-        estado.ano = ano;
-
-        // mostrarLoading('Carregando supervisores...'); // DESABILITADO
-
+async function selecionarMes(mes, ano) {
+    estado.mes = mes;
+    estado.ano = ano;
+    
+    mostrarLoading('Carregando supervisores...');
+    
+    try {
         const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${mes}/${ano}`, {
             headers: { 'x-user-email': getUserEmail() }
         });
-
         const data = await response.json();
         
-        // 🔥 USAR PROCESSAMENTO OTIMIZADO
-        processarDadosInicial(data.colaboradores || []);
-
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar dados');
+        }
+        
+        estado.todosColaboradores = data.colaboradores || [];
+        
+        // LOG PASSO 1: CONTAGEM BRUTA
+        console.log('[DEBUG PASSO 1] Total colaboradores da API:', estado.todosColaboradores.length);
+        
+        // Normalizar campo lider em TODOS os colaboradores
+        estado.todosColaboradores.forEach(c => {
+            c.liderNormalizado = normalizeLider(c.lider);
+        });
+        
+        // LOG PASSO 2: CONTAGEM POR LIDER (BRUTA)
+        const contagemPorLider = {};
+        estado.todosColaboradores.forEach(c => {
+            contagemPorLider[c.liderNormalizado] = (contagemPorLider[c.liderNormalizado] || 0) + 1;
+        });
+        console.log('[DEBUG PASSO 2] Contagem por lider:', contagemPorLider);
+        console.log('[DEBUG PASSO 2] VERONICA THOMAZ tem:', contagemPorLider['VERONICA THOMAZ'] || 0, 'colaboradores');
+        
+        // Extrair lista única de supervisores (normalizados)
+        const supervisoresSet = new Set();
+        estado.todosColaboradores.forEach(c => {
+            if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
+                supervisoresSet.add(c.liderNormalizado);
+            }
+        });
+        
+        estado.todosSupervisores = Array.from(supervisoresSet).sort();
+        
+        console.log('[DEBUG] Total supervisores encontrados:', estado.todosSupervisores.length);
+        
         esconderLoading();
         carregarSupervisores();
         mostrarTela('supervisores');
-    }
-
-    // ==========================================
-    // O(1) DESLIGAMENTO
-    // ==========================================
-    function temDesligamentoNoMes(colab) {
-        return colab.temDesligamento === true;
-    }
-
-    // ==========================================
-    // CARREGAR MARCAÇÕES OTIMIZADO
-    // ==========================================
-    // ==========================================
-    // OTIMIZAÇÃO 2: Filtro com cache O(k)
-    // ==========================================
-    function atualizarFiltroSupervisor() {
-        // Usar índice pré-computado O(1)
-        const wfmUsers = estado.indices.porSupervisor.get(estado.supervisor) || [];
-        estado.colaboradores = wfmUsers
-            .map(wfm => estado.mapTodosColaboradores.get(wfm))
-            .filter(Boolean);
         
-        // Atualizar mapa de colaboradores filtrados
-        estado.mapColaboradores.clear();
-        estado.colaboradores.forEach(c => {
-            estado.mapColaboradores.set(c.wfmUser, c);
-        });
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro: ${error.message}`);
+        console.error(error);
     }
+}
 
-    function carregarMarcacoes() {
+function voltarParaMeses() {
+    estado.mes = null;
+    estado.ano = null;
+    estado.supervisor = null;
+    estado.dia = null;
+    mostrarTela('meses');
+}
 
-        const list = document.getElementById('colaboradores-list');
-        const infoDia = document.getElementById('info-dia');
-
-        if (list) list.innerHTML = '';
-        if (infoDia) infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
-
-        // 🔥 OTIMIZAÇÃO 2: Usar filtro com cache
-        atualizarFiltroSupervisor();
-
-        // 🔥 OTIMIZAÇÃO 6: Render inicial otimizado
-        renderizarListaInicial();
+// ========================================
+// TELA 2: SELEÇÃO DE SUPERVISOR
+// ========================================
+function carregarSupervisores() {
+    const grid = document.getElementById('supervisores-grid');
+    const infoMes = document.getElementById('info-mes');
+    
+    if (!grid || !infoMes) {
+        console.error('Elementos não encontrados: supervisores-grid ou info-mes');
+        return;
     }
-
-    /**
-     * Buscar colaboradores de um warehouse para o mês selecionado
-     */
-    async function carregarColaboradores(warehouse, mes, ano, dia) {
-        try {
-            console.log(`[ABS] 🔄 carregarColaboradores() CHAMADO: ${warehouse} - ${mes}/${ano} - Dia ${dia}`);
-            console.trace('[ABS] Stack trace para debug:');
-            
-            // 🔥 VERIFICAR CACHE ANTES DE FAZER FETCH
-            const precisaCarregar = 
-                estado.todosColaboradores.length === 0 || 
-                estado.warehouse !== warehouse ||
-                estado.mes !== mes ||
-                estado.ano !== ano;
-            
-            const mudouDia = estado.dia !== dia;
-            
-            if (precisaCarregar) {
-                console.log('[ABS] Cache vazio ou dados diferentes, carregando...');
-                estado.warehouse = warehouse;
-                estado.dia = dia;
-                await selecionarMes(mes, ano);
-                // Buscar presença automática apenas na primeira carga
-                await carregarPresencaAutomatica(warehouse, dia);
-            } else {
-                console.log('[ABS] ✅ USANDO CACHE - Sem fetch/reload');
-                estado.dia = dia;
-                
-                // Se mudou o dia, recarregar presença automática apenas
-                if (mudouDia) {
-                    console.log('[ABS] Dia mudou, recarregando presença automática...');
-                    await carregarPresencaAutomatica(warehouse, dia);
-                }
-            }
-            
-            // Carregar/Re-renderizar marcações para o dia (usa cache)
-            carregarMarcacoes();
-            
-            return estado.todosColaboradores;
-            
-        } catch (error) {
-            console.error('[ABS] Erro ao carregar colaboradores:', error);
-            return [];
+    
+    grid.innerHTML = '';
+    infoMes.textContent = `${estado.mes} ${estado.ano}`;
+    
+    if (estado.todosSupervisores.length === 0) {
+        grid.innerHTML = '<div class="text-center text-gray-400 p-8">Nenhum supervisor encontrado</div>';
+        return;
+    }
+    
+    estado.todosSupervisores.forEach(supervisor => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => selecionarSupervisor(supervisor);
+        
+        const qtd = estado.todosColaboradores.filter(c => c.liderNormalizado === supervisor).length;
+        
+        // LOG: Contagem específica
+        if (supervisor === 'VERONICA THOMAZ') {
+            console.log('[DEBUG] VERONICA THOMAZ no card:', qtd, 'colaboradores');
         }
-    }
+        
+        card.innerHTML = `
+            <div class="card-icon">👤</div>
+            <div class="card-title">${supervisor}</div>
+            <div class="card-subtitle">${qtd} colaborador${qtd !== 1 ? 'es' : ''}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
 
-    /**
-     * Buscar presença automática do raw_scan
-     */
-    async function carregarPresencaAutomatica(warehouse, dia) {
-        try {
-            // Formatar data como DD/MM/YYYY
-            const data = `${String(dia).padStart(2, '0')}/02/2026`;
+function filtrarSupervisores() {
+    const buscaInput = document.getElementById('busca-supervisor');
+    if (!buscaInput) return;
+    
+    const busca = buscaInput.value.toLowerCase();
+    const cards = document.querySelectorAll('#supervisores-grid .card');
+    
+    cards.forEach(card => {
+        const titulo = card.querySelector('.card-title');
+        if (titulo) {
+            const nome = titulo.textContent.toLowerCase();
+            card.style.display = nome.includes(busca) ? 'block' : 'none';
+        }
+    });
+}
+
+function selecionarSupervisor(supervisor) {
+    estado.supervisor = supervisor;
+    carregarCalendario();
+    mostrarTela('calendario');
+}
+
+function voltarParaSupervisores() {
+    estado.supervisor = null;
+    estado.dia = null;
+    mostrarTela('supervisores');
+}
+
+// ========================================
+// TELA 3: CALENDÁRIO
+// ========================================
+function carregarCalendario() {
+    const grid = document.getElementById('calendario-grid');
+    const infoSupervisor = document.getElementById('info-supervisor');
+    
+    // Elemento grid é obrigatório, info-supervisor é opcional
+    if (!grid) {
+        console.error('Elemento obrigatório não encontrado: calendario-grid');
+        return;
+    }
+    
+    grid.innerHTML = '';
+    
+    // Atualiza info-supervisor apenas se existir
+    if (infoSupervisor) {
+        infoSupervisor.textContent = estado.supervisor;
+    } else {
+        console.warn('Elemento opcional não encontrado: info-supervisor');
+    }
+    
+    const colaboradoresSupervisor = estado.todosColaboradores.filter(
+        c => c.liderNormalizado === estado.supervisor
+    );
+    
+    // LOG PASSO 3: Contagem após filtro de supervisor
+    console.log('[DEBUG PASSO 3 - Calendário] Supervisor selecionado:', estado.supervisor);
+    console.log('[DEBUG PASSO 3 - Calendário] Colaboradores filtrados:', colaboradoresSupervisor.length);
+    if (estado.supervisor === 'VERONICA THOMAZ') {
+        console.log('[DEBUG PASSO 3] VERONICA THOMAZ após filtro:', colaboradoresSupervisor.length);
+        console.log('[DEBUG PASSO 3] Lista de colaboradores:', colaboradoresSupervisor.map(c => c.nome));
+    }
+    
+    const mesIndex = MESES.indexOf(estado.mes);
+    const diasNoMes = new Date(estado.ano, mesIndex + 1, 0).getDate();
+    
+    let completos = 0;
+    let pendentes = 0;
+    
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        let marcados = 0;
+        colaboradoresSupervisor.forEach(colab => {
+            if (colab.marcacoes && colab.marcacoes[dia] && colab.marcacoes[dia].sigla) {
+                marcados++;
+            }
+        });
+        
+        const total = colaboradoresSupervisor.length;
+        const isCompleto = marcados === total;
+        const isPendente = marcados > 0 && marcados < total;
+        
+        if (isCompleto) completos++;
+        if (isPendente) pendentes++;
+        
+        const card = document.createElement('div');
+        card.className = `day-card ${isCompleto ? 'completo' : (isPendente ? 'pendente' : '')}`;
+        card.style.cursor = 'pointer';
+        
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = dia;
+        
+        const dayStatus = document.createElement('div');
+        dayStatus.className = 'day-status';
+        dayStatus.textContent = `${marcados}/${total}`;
+        
+        card.appendChild(dayNumber);
+        card.appendChild(dayStatus);
+        
+        card.addEventListener('click', function() {
+            console.log('\n========== CLIQUE NO DIA ==========');
+            console.log('[CLICK] Dia clicado:', dia);
+            console.log('[CLICK] Estado ANTES:', JSON.stringify(estado));
             
-            console.log(`[ABS] Carregando presença automática: ${warehouse} - ${data}`);
+            estado.dia = dia;
+            console.log('[CLICK] Estado.dia definido como:', estado.dia);
+            console.log('[CLICK] Estado DEPOIS:', JSON.stringify(estado));
             
-            const response = await fetch(`/api/abs/presenca-automatica/${warehouse}/${data}`);
-            const result = await response.json();
-            
-            if (!result.success) {
-                console.error('[ABS] Erro ao carregar presença automática:', result.error);
+            console.log('[CLICK] >>> Chamando carregarMarcacoes()...');
+            try {
+                carregarMarcacoes();
+                console.log('[CLICK] <<< carregarMarcacoes() SUCESSO');
+            } catch (e) {
+                console.error('[CLICK] ERRO em carregarMarcacoes():', e);
+                alert('Erro ao carregar marcações: ' + e.message);
                 return;
             }
             
-            // Armazenar em cache
-            presencasAutomaticasCache = {};
-            result.presencas.forEach(p => {
-                presencasAutomaticasCache[p.wfmUser] = p;
-            });
+            console.log('[CLICK] >>> Chamando mostrarTela(marcacao)...');
+            try {
+                mostrarTela('marcacao');
+                console.log('[CLICK] <<< mostrarTela(marcacao) SUCESSO');
+            } catch (e) {
+                console.error('[CLICK] ERRO em mostrarTela():', e);
+                alert('Erro ao mostrar tela: ' + e.message);
+                return;
+            }
             
-            console.log(`[ABS] ${result.presencas.length} presenças automáticas carregadas`);
-            
-        } catch (error) {
-            console.error('[ABS] Erro ao carregar presença automática:', error);
-        }
-    }
-
-    // ==========================================
-    // OTIMIZAÇÃO 6: RENDER INICIAL COM DOCUMENTFRAGMENT
-    // ==========================================
-    function renderizarListaInicial() {
-        const list = document.getElementById('colaboradores-list');
-        const busca = document.getElementById('busca-colaborador')?.value.toLowerCase() || '';
-
-        if (!list) return;
-
-        list.innerHTML = '';
+            console.log('[CLICK] ✅ CLIQUE PROCESSADO COM SUCESSO');
+            console.log('===================================\n');
+        });
         
-        if (estado.colaboradores.length === 0) {
-            list.innerHTML = `
-                <div class="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-6 text-center">
-                    <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
-                    <p class="text-gray-300">Nenhum colaborador encontrado para este warehouse/mês.</p>
-                    <p class="text-gray-400 text-sm mt-2">Verifique se há dados na planilha ABS.</p>
-                </div>
-            `;
+        grid.appendChild(card);
+    }
+    
+    const statTotal = document.getElementById('stat-total');
+    const statCompletos = document.getElementById('stat-completos');
+    const statPendentes = document.getElementById('stat-pendentes');
+    
+    if (statTotal) statTotal.textContent = diasNoMes;
+    if (statCompletos) statCompletos.textContent = completos;
+    if (statPendentes) statPendentes.textContent = pendentes;
+}
+
+function selecionarDia(dia) {
+    console.log('[selecionarDia] Chamado com dia:', dia);
+    console.log('[selecionarDia] Tipo do dia:', typeof dia);
+    estado.dia = parseInt(dia);
+    console.log('[selecionarDia] Estado.dia:', estado.dia);
+    console.log('[selecionarDia] Estado completo:', JSON.stringify(estado));
+    
+    try {
+        carregarMarcacoes();
+        console.log('[selecionarDia] carregarMarcacoes() concluído');
+        mostrarTela('marcacao');
+        console.log('[selecionarDia] mostrarTela(marcacao) concluído');
+    } catch (erro) {
+        console.error('[selecionarDia] ERRO:', erro);
+        alert('Erro ao selecionar dia: ' + erro.message);
+    }
+}
+
+function voltarParaCalendario() {
+    estado.dia = null;
+    estado.marcacoesModificadas = {};
+    carregarCalendario();
+    mostrarTela('calendario');
+}
+
+// ========================================
+// TELA 4: MARCAÇÃO DE PRESENÇA
+// ========================================
+function carregarMarcacoes() {
+    console.log('[carregarMarcacoes] Iniciando...');
+    console.log('[carregarMarcacoes] Estado:', JSON.stringify(estado));
+    
+    const list = document.getElementById('colaboradores-list');
+    const infoDia = document.getElementById('info-dia');
+    
+    console.log('[carregarMarcacoes] Elementos encontrados:', {
+        list: !!list,
+        infoDia: !!infoDia
+    });
+    
+    if (!list) {
+        console.error('[carregarMarcacoes] ERRO CRÍTICO: colaboradores-list não encontrado!');
+        return;
+    }
+    
+    if (!infoDia) {
+        console.warn('[carregarMarcacoes] AVISO: info-dia não encontrado, continuando...');
+    }
+    
+    list.innerHTML = '';
+    console.log('[carregarMarcacoes] Lista limpa');
+    
+    if (infoDia) {
+        infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
+        console.log('[carregarMarcacoes] Info dia atualizado');
+    }
+    
+    estado.colaboradores = estado.todosColaboradores.filter(
+        c => c.liderNormalizado === estado.supervisor
+    );
+    console.log('[carregarMarcacoes] Colaboradores filtrados:', estado.colaboradores.length);
+    
+    // LOG PASSO 3: Contagem na marcação
+    if (estado.supervisor === 'VERONICA THOMAZ') {
+        console.log('[DEBUG PASSO 3 - Marcações] VERONICA THOMAZ após filtro:', estado.colaboradores.length);
+        console.log('[DEBUG PASSO 3 - Marcações] Lista:', estado.colaboradores.map(c => c.nome));
+    }
+    
+    renderizarColaboradores();
+    console.log('[carregarMarcacoes] renderizarColaboradores() concluído');
+    
+    atualizarEstatisticas();
+    console.log('[carregarMarcacoes] atualizarEstatisticas() concluído');
+    console.log('[carregarMarcacoes] FINALIZADO COM SUCESSO');
+}
+
+function renderizarColaboradores() {
+    const list = document.getElementById('colaboradores-list');
+    const buscaInput = document.getElementById('busca-colaborador');
+    
+    if (!list) return;
+    
+    const busca = buscaInput ? buscaInput.value.toLowerCase() : '';
+    list.innerHTML = '';
+    
+    let marcados = 0;
+    let totalFiltrado = 0;
+    
+    estado.colaboradores.forEach((colab) => {
+        // Filtro de busca por nome/WFM
+        if (busca && !colab.nome.toLowerCase().includes(busca) && !colab.wfmUser.toLowerCase().includes(busca)) {
             return;
         }
-
-        // 🔥 OTIMIZAÇÃO 6: Construir em memória com DocumentFragment
-        const fragment = document.createDocumentFragment();
-
-        estado.colaboradores.forEach(colab => {
-
-            // 🔥 OTIMIZAÇÃO 1: Usar Set para verificação O(1)
-            if (estado.indices.desligadosNoMes.has(colab.wfmUser)) return;
-
-            if (busca &&
-                !colab.nome.toLowerCase().includes(busca) &&
-                !colab.wfmUser.toLowerCase().includes(busca)) return;
-
-            let marcacaoAtual =
-                estado.marcacoesModificadas[colab.wfmUser]
-                ?? colab.marcacoes?.[estado.dia]?.sigla
-                ?? '';
-
-            const temPresencaAutomatica = presencasAutomaticasCache[colab.wfmUser];
-            const jaFoiMarcado = !!marcacaoAtual;
-
-            const borderColor = jaFoiMarcado ? 'border-green-500' : 'border-yellow-500';
-            const iconBg = jaFoiMarcado ? 'bg-green-600' : 'bg-yellow-600';
-            const icon = jaFoiMarcado ? 'fa-check' : 'fa-clock';
-
-            let badgeHtml = '';
-            if (temPresencaAutomatica) {
-                badgeHtml = `<span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full">🤖 AUTO</span>`;
-            } else if (!jaFoiMarcado) {
-                badgeHtml = `<span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">⚠️ PENDENTE</span>`;
-            } else if (estado.marcacoesModificadas[colab.wfmUser]) {
-                badgeHtml = `<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">✏️ EDITADO</span>`;
-            }
-
-            const siglaAtual = marcacaoAtual || 'P';
-
-            const item = document.createElement('div');
-            item.className = `bg-gray-700 rounded-lg p-4 flex items-center justify-between hover:bg-gray-650 border-l-4 ${borderColor}`;
-            item.dataset.wfm = colab.wfmUser;
-
-            let selectOptions = '';
-            for (const [sigla, info] of Object.entries(OPCOES_PRESENCA)) {
-                selectOptions += `<option value="${sigla}" ${siglaAtual === sigla ? 'selected' : ''}>${info.nome}</option>`;
-            }
-
-            item.innerHTML = `
-                <div class="flex items-center flex-1">
-                    <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">
-                        <i class="fas ${icon} text-white"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <h3 class="font-bold">${colab.nome}</h3>
-                            ${badgeHtml}
-                        </div>
-                        <p class="text-gray-400 text-sm">
-                            WFM: ${colab.wfmUser} | Supervisor: ${colab.supervisor || colab.lider || 'N/A'}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <select class="bg-gray-600 text-white px-3 py-2 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none text-sm"
-                        data-wfm="${colab.wfmUser}"
-                        onchange="marcarPresenca(this)">
-                        ${selectOptions}
-                    </select>
-                    <button onclick="abrirModalHoraExtra('${colab.nome}', '${colab.wfmUser}')" 
-                            class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-clock mr-1"></i> HE
-                    </button>
-                    <button onclick="abrirModalSinergia('${colab.nome}', '${colab.wfmUser}', 'Expedição')" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-all">
-                        <i class="fas fa-exchange-alt mr-1"></i> SIN
-                    </button>
-                </div>
-            `;
-
-            fragment.appendChild(item);
-        });
-
-        // 🔥 OTIMIZAÇÃO 6: Inserção em lote (1 reflow)
-        list.appendChild(fragment);
         
-        // 🔥 OTIMIZAÇÃO 5: Estatísticas desacopladas
-        recalcularEstatisticas();
-    }
-
-    // ==========================================
-    // ATUALIZAÇÃO INDIVIDUAL
-    // ==========================================
-    // ==========================================
-    // OTIMIZAÇÃO 4: ATUALIZAÇÃO INDIVIDUAL DE DOM O(1)
-    // ==========================================
-    function atualizarColaboradorDOM(wfmUser, sigla) {
-        const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
-        if (!item) return;
+        // Verificar se o colaborador tem desligamento em qualquer dia do mês
+        if (temDesligamentoNoMes(colab)) {
+            return; // Não mostrar desligados
+        }
         
-        // Atualizar apenas o badge (o select já foi atualizado pelo onchange)
-        const badge = item.querySelector('span[class*="bg-"]');
-        if (badge) {
-            // Verificar se já é automático (não mudar)
-            if (badge.textContent.includes('🤖 AUTO')) {
-                return;
-            }
-            
-            if (!sigla || sigla === '') {
-                badge.textContent = '⚠️ PENDENTE';
-                badge.className = 'bg-yellow-600 text-white text-xs px-2 py-1 rounded-full';
+        // Pega a marcação atual do colaborador para este dia
+        let marcacaoAtual = '';
+        let isPeriodo = false;
+        
+        if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
+            const modificacao = estado.marcacoesModificadas[colab.wfmUser];
+            if (typeof modificacao === 'object' && modificacao.tipo === 'periodo') {
+                if (estado.dia >= modificacao.inicio && estado.dia <= modificacao.fim) {
+                    marcacaoAtual = modificacao.sigla;
+                    isPeriodo = true;
+                }
             } else {
-                badge.textContent = '✏️ EDITADO';
-                badge.className = 'bg-blue-600 text-white text-xs px-2 py-1 rounded-full';
+                marcacaoAtual = modificacao;
             }
+        } else if (colab.marcacoes && colab.marcacoes[estado.dia]) {
+            marcacaoAtual = colab.marcacoes[estado.dia].sigla;
+        }
+        
+        // Aplicar filtro de status
+        const isPendente = !marcacaoAtual;
+        const isMarcado = !!marcacaoAtual;
+        
+        // Lógica de filtro por status
+        if (estado.filtroStatus === 'pendentes' && !isPendente) return;
+        if (estado.filtroStatus === 'marcados' && !isMarcado) return;
+        
+        totalFiltrado++;
+        if (marcacaoAtual) marcados++;
+        
+        const item = document.createElement('div');
+        item.className = 'colaborador-item';
+        
+        let selectOptions = '';
+        for (const [sigla, info] of Object.entries(OPCOES_PRESENCA)) {
+            const selected = marcacaoAtual === sigla ? 'selected' : '';
+            selectOptions += `<option value="${sigla}" ${selected}>${info.nome}</option>`;
+        }
+        
+        // Badge dinâmico
+        let badgeHTML = '';
+        if (isPendente) {
+            badgeHTML = '<span class="badge badge-pendente">PENDENTE</span>';
+        } else if (isPeriodo) {
+            badgeHTML = '<span class="badge" style="background: #FF9800;">PERÍODO</span>';
+        } else {
+            badgeHTML = '<span class="badge badge-completo">MARCADO</span>';
+        }
+        
+        item.innerHTML = `
+            <div class="colaborador-info">
+                <div class="colaborador-nome">
+                    ${colab.nome}
+                    ${badgeHTML}
+                </div>
+                <div class="colaborador-detalhes">
+                    WFM: ${colab.wfmUser} | ${colab.cargo || 'N/A'} | Admissão: ${colab.dataAdmissao || 'N/A'}
+                </div>
+            </div>
+            <select class="marcacao-select" data-wfm="${colab.wfmUser}" onchange="marcarPresenca(this)">
+                ${selectOptions}
+            </select>
+        `;
+        
+        list.appendChild(item);
+    });
+    
+    // Atualizar estatísticas com base nos colaboradores filtrados
+    const statMarcacaoTotal = document.getElementById('stat-marcacao-total');
+    const statMarcacaoMarcados = document.getElementById('stat-marcacao-marcados');
+    const statMarcacaoPendentes = document.getElementById('stat-marcacao-pendentes');
+    
+    if (statMarcacaoTotal) statMarcacaoTotal.textContent = totalFiltrado;
+    if (statMarcacaoMarcados) statMarcacaoMarcados.textContent = marcados;
+    if (statMarcacaoPendentes) statMarcacaoPendentes.textContent = totalFiltrado - marcados;
+}
+
+function marcarPresenca(select) {
+    const wfmUser = select.dataset.wfm;
+    const sigla = select.value;
+    
+    console.log('[marcarPresenca] WFM:', wfmUser, 'Sigla:', sigla, 'Dia:', estado.dia);
+    
+    // Verificar se precisa de seleção de período (AM, AF, AL)
+    if (SIGLAS_COM_PERIODO.includes(sigla)) {
+        periodoAtual = { wfmUser, sigla, select };
+        abrirModalEscolhaPeriodo(sigla); // Novo modal intermediário
+        return;
+    }
+    
+    // Marcação simples para o dia atual
+    estado.marcacoesModificadas[wfmUser] = sigla;
+    renderizarColaboradores();
+}
+
+function abrirModalPeriodo(sigla) {
+    const modal = document.getElementById('modal-periodo');
+    const tipoPeriodo = document.getElementById('tipo-periodo');
+    const dataInicio = document.getElementById('data-inicio');
+    const dataFim = document.getElementById('data-fim');
+    
+    // Configurar o modal
+    tipoPeriodo.textContent = OPCOES_PRESENCA[sigla].nome;
+    
+    // Configurar datas padrão
+    const mesIndex = MESES.indexOf(estado.mes);
+    const anoAtual = estado.ano;
+    const dataAtual = new Date(anoAtual, mesIndex, estado.dia);
+    
+    dataInicio.value = formatarDataInput(dataAtual);
+    dataFim.value = formatarDataInput(dataAtual);
+    
+    // Definir limites do mês
+    const primeiroDia = new Date(anoAtual, mesIndex, 1);
+    const ultimoDia = new Date(anoAtual, mesIndex + 1, 0);
+    
+    dataInicio.min = formatarDataInput(primeiroDia);
+    dataInicio.max = formatarDataInput(ultimoDia);
+    dataFim.min = formatarDataInput(primeiroDia);
+    dataFim.max = formatarDataInput(ultimoDia);
+    
+    modal.style.display = 'block';
+}
+
+function formatarDataInput(data) {
+    return data.toISOString().split('T')[0];
+}
+
+function confirmarPeriodo() {
+    const dataInicio = document.getElementById('data-inicio').value;
+    const dataFim = document.getElementById('data-fim').value;
+    
+    if (!dataInicio || !dataFim) {
+        alert('Por favor, selecione as datas de início e fim.');
+        return;
+    }
+    
+    if (new Date(dataInicio) > new Date(dataFim)) {
+        alert('A data de início deve ser anterior ou igual à data de fim.');
+        return;
+    }
+    
+    // Converter datas para dias do mês
+    const inicio = new Date(dataInicio).getDate();
+    const fim = new Date(dataFim).getDate();
+    
+    // Salvar o período
+    estado.marcacoesModificadas[periodoAtual.wfmUser] = {
+        sigla: periodoAtual.sigla,
+        inicio: inicio,
+        fim: fim,
+        tipo: 'periodo'
+    };
+    
+    fecharModalPeriodo();
+    renderizarColaboradores();
+}
+
+function cancelarPeriodo() {
+    if (periodoAtual && periodoAtual.select) {
+        periodoAtual.select.value = '';
+    }
+    fecharModalPeriodo();
+}
+
+function fecharModalPeriodo() {
+    document.getElementById('modal-periodo').style.display = 'none';
+    periodoAtual = null;
+}
+
+// ========================================
+// MODAL INTERMEDIÁRIO - ESCOLHA DE PERÍODO
+// ========================================
+
+function abrirModalEscolhaPeriodo(sigla) {
+    const modal = document.getElementById('modal-escolha-periodo');
+    const tipoMarcacao = document.getElementById('escolha-tipo-marcacao');
+    
+    // Configurar o título com o nome da sigla
+    tipoMarcacao.textContent = OPCOES_PRESENCA[sigla].nome;
+    
+    console.log('[Modal Escolha] Abrindo para sigla:', sigla);
+    modal.style.display = 'block';
+}
+
+function escolherApenasHoje() {
+    console.log('[Modal Escolha] Usuário escolheu: Apenas Hoje');
+    
+    if (!periodoAtual) {
+        console.error('[Modal Escolha] periodoAtual não definido');
+        return;
+    }
+    
+    // Marcação direta no dia atual
+    estado.marcacoesModificadas[periodoAtual.wfmUser] = periodoAtual.sigla;
+    
+    fecharModalEscolhaPeriodo();
+    renderizarColaboradores();
+    
+    console.log('[Modal Escolha] Marcação aplicada para o dia', estado.dia);
+}
+
+function escolherVariosDias() {
+    console.log('[Modal Escolha] Usuário escolheu: Vários Dias');
+    
+    fecharModalEscolhaPeriodo();
+    
+    // Abre o modal de calendário existente
+    if (periodoAtual) {
+        abrirModalPeriodo(periodoAtual.sigla);
+    }
+}
+
+function cancelarEscolhaPeriodo() {
+    console.log('[Modal Escolha] Usuário cancelou');
+    
+    // Resetar o dropdown para "-- Selecione --"
+    if (periodoAtual && periodoAtual.select) {
+        periodoAtual.select.value = '';
+    }
+    
+    fecharModalEscolhaPeriodo();
+}
+
+function fecharModalEscolhaPeriodo() {
+    document.getElementById('modal-escolha-periodo').style.display = 'none';
+    // NÃO limpar periodoAtual aqui, pois pode ser usado no modal de período
+}
+
+function filtrarColaboradores() {
+    renderizarColaboradores();
+}
+
+function aplicarFiltroStatus() {
+    const select = document.getElementById('filtro-status');
+    if (select) {
+        estado.filtroStatus = select.value;
+        console.log('[aplicarFiltroStatus] Filtro alterado para:', estado.filtroStatus);
+        renderizarColaboradores();
+    }
+}
+
+function atualizarEstatisticas() {
+    renderizarColaboradores();
+}
+
+function temDesligamentoNoMes(colab) {
+    if (!colab.marcacoes) return false;
+    
+    for (let dia = 1; dia <= 31; dia++) {
+        if (colab.marcacoes[dia] && SIGLAS_DESLIGAMENTO.includes(colab.marcacoes[dia].sigla)) {
+            return true;
         }
     }
+    return false;
+}
 
-    function marcarPresenca(select) {
-        console.log('[ABS] 📝 Marcando presença - INÍCIO');
+function marcarTodosPresentes() {
+    let contador = 0;
+    
+    estado.colaboradores.forEach(colab => {
+        // Verificar se já tem marcação
+        let jaMarcado = false;
         
-        const wfmUser = select.dataset.wfm;
-        const sigla = select.value;
-
-        console.log(`[ABS] Colaborador: ${wfmUser}, Sigla: ${sigla}`);
+        if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
+            jaMarcado = true;
+        } else if (colab.marcacoes && colab.marcacoes[estado.dia]) {
+            jaMarcado = true;
+        }
         
-        estado.marcacoesModificadas[wfmUser] = sigla;
-
-        // 🔥 OTIMIZAÇÃO 4: Atualizar APENAS 1 elemento (não rebuild)
-        atualizarColaboradorDOM(wfmUser, sigla);
-        
-        // 🔥 OTIMIZAÇÃO 5: Estatísticas sem tocar DOM da lista
-        recalcularEstatisticas();
-        
-        console.log('[ABS] ✅ Marcação concluída - SEM RELOAD');
+        // Marcar como presente apenas se não tiver marcação
+        if (!jaMarcado && !temDesligamentoNoMes(colab)) {
+            estado.marcacoesModificadas[colab.wfmUser] = 'P';
+            contador++;
+        }
+    });
+    
+    if (contador > 0) {
+        alert(`✅ ${contador} colaborador(es) marcado(s) como presente!`);
+        renderizarColaboradores();
+    } else {
+        alert('ℹ️ Todos os colaboradores já possuem marcação para este dia.');
     }
+}
 
-    // ==========================================
-    // OTIMIZAÇÃO 5: ESTATÍSTICAS DESACOPLADAS (SEM TOCAR DOM DA LISTA)
-    // ==========================================
-    function recalcularEstatisticas() {
-        let total = 0;
-        let marcados = 0;
-
-        estado.colaboradores.forEach(c => {
-            // 🔥 OTIMIZAÇÃO 1: Usar Set O(1)
-            if (estado.indices.desligadosNoMes.has(c.wfmUser)) return;
-
-            total++;
-            const sigla =
-                estado.marcacoesModificadas[c.wfmUser]
-                ?? c.marcacoes?.[estado.dia]?.sigla;
-
-            if (sigla) marcados++;
+async function recarregarMarcacoes() {
+    mostrarLoading('Recarregando dados...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
+            headers: { 'x-user-email': getUserEmail() }
         });
-
-        // 🔥 Atualizar APENAS os 3 números (zero rebuild de lista)
-        const statTotal = document.getElementById('stat-marcacao-total');
-        const statMarcados = document.getElementById('stat-marcacao-marcados');
-        const statPendentes = document.getElementById('stat-marcacao-pendentes');
+        const data = await response.json();
         
-        if (statTotal) statTotal.textContent = total;
-        if (statMarcados) statMarcados.textContent = marcados;
-        if (statPendentes) statPendentes.textContent = total - marcados;
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao recarregar dados');
+        }
         
-        // Cache para reuso
-        estado.indices.estatisticas = { total, marcados, pendentes: total - marcados };
+        // Atualizar dados globais
+        estado.todosColaboradores = data.colaboradores || [];
+        
+        // Normalizar campo lider em TODOS os colaboradores
+        estado.todosColaboradores.forEach(c => {
+            c.liderNormalizado = normalizeLider(c.lider);
+        });
+        
+        // Limpar modificações locais
+        estado.marcacoesModificadas = {};
+        
+        // Re-filtrar colaboradores do supervisor atual
+        estado.colaboradores = estado.todosColaboradores.filter(
+            c => c.liderNormalizado === estado.supervisor
+        );
+        
+        // Re-renderizar lista
+        renderizarColaboradores();
+        atualizarEstatisticas();
+        
+        esconderLoading();
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao recarregar: ${error.message}`);
+        console.error(error);
     }
+}
 
-    // ==========================================
-    // OTIMIZAÇÃO 7: RECARGA INCREMENTAL (MERGE SEM RECRIAR)
-    // ==========================================
-    async function recarregarMarcacoes() {
-
-        // mostrarLoading('Recarregando dados...'); // DESABILITADO
-
-        try {
-            const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
-                headers: { 'x-user-email': getUserEmail() }
+async function salvarMarcacoes() {
+    console.log('[SAVE] Iniciando salvamento otimizado...');
+    
+    if (Object.keys(estado.marcacoesModificadas).length === 0) {
+        alert('Nenhuma marcação foi alterada.');
+        return;
+    }
+    
+    mostrarLoading('Salvando marcações...');
+    
+    try {
+        const todasMarcacoes = [];
+        
+        // Processar todas as marcações modificadas
+        for (const [wfmUser, valor] of Object.entries(estado.marcacoesModificadas)) {
+            if (wfmUser.includes('_dia_')) continue; // Ignorar propagações antigas
+            
+            const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+            if (!colab) continue;
+            
+            if (typeof valor === 'string') {
+                // Marcação simples
+                todasMarcacoes.push({
+                    wfmUser,
+                    nome: colab.nome,
+                    dia: estado.dia,
+                    sigla: valor
+                });
+            } else if (valor.tipo === 'periodo') {
+                // Marcação de período - expandir para todos os dias
+                for (let d = valor.inicio; d <= valor.fim; d++) {
+                    todasMarcacoes.push({
+                        wfmUser,
+                        nome: colab.nome,
+                        dia: d,
+                        sigla: valor.sigla
+                    });
+                }
+            }
+        }
+        
+        if (todasMarcacoes.length === 0) {
+            esconderLoading();
+            alert('Nenhuma marcação válida para salvar.');
+            return;
+        }
+        
+        console.log('[SAVE] Total de marcações a salvar:', todasMarcacoes.length);
+        
+        // Agrupar por dia para enviar em batches
+        const marcacoesPorDia = {};
+        todasMarcacoes.forEach(m => {
+            if (!marcacoesPorDia[m.dia]) {
+                marcacoesPorDia[m.dia] = [];
+            }
+            marcacoesPorDia[m.dia].push(m);
+        });
+        
+        let totalSalvos = 0;
+        
+        // Enviar batch por dia
+        for (const [dia, marcacoes] of Object.entries(marcacoesPorDia)) {
+            const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-email': getUserEmail()
+                },
+                body: JSON.stringify({
+                    warehouse: estado.warehouse,
+                    mes: estado.mes,
+                    ano: estado.ano,
+                    dia: parseInt(dia),
+                    marcacoes: marcacoes
+                })
             });
-
+            
             const data = await response.json();
             
             if (!data.success) {
-                throw new Error(data.error || 'Erro ao recarregar');
+                esconderLoading();
+                alert(`❌ Erro ao salvar dia ${dia}: ${data.error}`);
+                return;
             }
-
-            const novos = data.colaboradores || [];
-
-            // 🔥 OTIMIZAÇÃO 7: Atualização incremental (preservar referências)
-            novos.forEach(novoColab => {
-                const existente = estado.mapTodosColaboradores.get(novoColab.wfmUser);
-                if (existente) {
-                    // Atualizar apenas marcações (mantém objeto)
-                    existente.marcacoes = novoColab.marcacoes;
-                    
-                    // Re-calcular flag de desligamento
-                    existente.temDesligamento = false;
-                    if (existente.marcacoes) {
-                        for (const dia in existente.marcacoes) {
-                            if (SIGLAS_DESLIGAMENTO.includes(existente.marcacoes[dia].sigla)) {
-                                existente.temDesligamento = true;
-                                estado.indices.desligadosNoMes.add(existente.wfmUser);
-                                break;
-                            }
-                        }
-                    }
-                    if (!existente.temDesligamento) {
-                        estado.indices.desligadosNoMes.delete(existente.wfmUser);
-                    }
-                } else {
-                    // Novo colaborador
-                    novoColab.liderNormalizado = normalizeLider(novoColab.lider);
-                    estado.todosColaboradores.push(novoColab);
-                    estado.mapTodosColaboradores.set(novoColab.wfmUser, novoColab);
-                }
-            });
-
-            // Limpar modificações locais
-            estado.marcacoesModificadas = {};
-
-            // Re-filtrar sem recriar
-            atualizarFiltroSupervisor();
-
-            // Render otimizado
-            renderizarListaInicial();
-
-            esconderLoading();
             
-        } catch (error) {
-            esconderLoading();
-            alert(`Erro ao recarregar: ${error.message}`);
-            console.error(error);
+            totalSalvos += data.salvos || marcacoes.length;
         }
+        
+        console.log('[SAVE] SAVE_EXECUTADO=true');
+        
+        esconderLoading();
+        
+        const periodos = Object.values(estado.marcacoesModificadas).filter(v => v.tipo === 'periodo').length;
+        
+        let mensagem = `✅ Sucesso!\n\n${totalSalvos} marcação(ões) salva(s).`;
+        if (periodos > 0) {
+            mensagem += `\n${periodos} período(s) aplicado(s).`;
+        }
+        
+        alert(mensagem);
+        
+        // Limpar modificações e recarregar
+        estado.marcacoesModificadas = {};
+        await recarregarMarcacoes();
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar: ${error.message}`);
+        console.error('[SAVE] Erro:', error);
     }
+}
 
-    // ==========================================
-    // SALVAMENTO SEM RECARGA AUTOMÁTICA
-    // ==========================================
-    /**
-     * Salva marcações modificadas SEM recarregar a página
-     * - Envia apenas as modificações para o servidor
-     * - Atualiza o cache local após sucesso
-     * - Muda badges de "EDITADO" para "SALVO"
-     * - NÃO faz fetch/reload dos dados
-     */
-    async function salvarMarcacoes() {
-        console.log('[ABS] 💾 SALVANDO MARCAÇÕES - INÍCIO');
-        
-        salvandoMarcacoes = true; // Ativar flag
-        
-        const modificacoes = Object.keys(estado.marcacoesModificadas);
-        
-        if (modificacoes.length === 0) {
-            alert('ℹ️ Nenhuma marcação foi modificada.');
-            return;
-        }
+// ========================================
+// HORA EXTRA
+// ========================================
+function abrirModalHoraExtra() {
+    const modal = document.getElementById('modal-hora-extra');
+    const select = document.getElementById('hr-colaborador');
+    
+    // Limpar select
+    select.innerHTML = '<option value="">-- Selecione um colaborador --</option>';
+    
+    // Preencher com colaboradores do supervisor atual
+    estado.colaboradores.forEach(colab => {
+        const option = document.createElement('option');
+        option.value = colab.wfmUser;
+        option.textContent = `${colab.nome} (${colab.wfmUser})`;
+        select.appendChild(option);
+    });
+    
+    // Limpar campos
+    document.getElementById('hr-dia-inteiro').checked = false;
+    document.getElementById('hr-inicio').value = '';
+    document.getElementById('hr-fim').value = '';
+    document.getElementById('hr-horarios').style.display = 'grid';
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+}
 
-        console.log(`[ABS] ${modificacoes.length} marcações a salvar:`, modificacoes);
+function fecharModalHoraExtra() {
+    const modal = document.getElementById('modal-hora-extra');
+    modal.style.display = 'none';
+}
 
-        const confirmacao = confirm(
-            `💾 SALVAR MARCAÇÕES\n\n` +
-            `${modificacoes.length} marcação(ões) será(ão) salva(s).\n\n` +
-            `Deseja continuar?`
-        );
-        
-        if (!confirmacao) return;
+function toggleHorarioHR() {
+    const diaInteiro = document.getElementById('hr-dia-inteiro').checked;
+    const horariosDiv = document.getElementById('hr-horarios');
+    
+    if (diaInteiro) {
+        horariosDiv.style.display = 'none';
+        document.getElementById('hr-inicio').value = '';
+        document.getElementById('hr-fim').value = '';
+    } else {
+        horariosDiv.style.display = 'grid';
+    }
+}
 
-        mostrarLoading(`Salvando ${modificacoes.length} marcação(ões)...`);
-
-        try {
-            // Preparar payload para API
-            const payload = {
+async function salvarHoraExtra() {
+    const wfmUser = document.getElementById('hr-colaborador').value;
+    const diaInteiro = document.getElementById('hr-dia-inteiro').checked;
+    const hrInicio = document.getElementById('hr-inicio').value;
+    const hrFim = document.getElementById('hr-fim').value;
+    
+    // Validações
+    if (!wfmUser) {
+        alert('Selecione um colaborador');
+        return;
+    }
+    
+    if (!diaInteiro && (!hrInicio || !hrFim)) {
+        alert('Preencha o horário de início e fim ou marque "Dia Inteiro"');
+        return;
+    }
+    
+    if (!diaInteiro && hrInicio >= hrFim) {
+        alert('Hora de início deve ser menor que hora de fim');
+        return;
+    }
+    
+    const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+    if (!colab) {
+        alert('Colaborador não encontrado');
+        return;
+    }
+    
+    mostrarLoading('Salvando hora extra...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/abs/hora-extra`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-user-email': getUserEmail()
+            },
+            body: JSON.stringify({
                 warehouse: estado.warehouse,
                 mes: estado.mes,
                 ano: estado.ano,
                 dia: estado.dia,
-                supervisor: estado.supervisor,
-                marcacoes: modificacoes.map(wfmUser => {
-                    const colab = estado.mapColaboradores.get(wfmUser);
-                    return {
-                        wfmUser: wfmUser,
-                        nome: colab?.nome || 'N/A',
-                        sigla: estado.marcacoesModificadas[wfmUser],
-                        lider: colab?.lider || colab?.supervisor
-                    };
-                })
-            };
-
-            // Enviar para servidor
-            const response = await fetch(`${API_BASE}/api/abs/salvar-marcacoes`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-user-email': getUserEmail()
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            esconderLoading();
-
-            if (!result.success) {
-                throw new Error(result.error || 'Erro ao salvar');
-            }
-
-            // 🔥 ATUALIZAR CACHE LOCAL (SEM RECARREGAR PÁGINA)
-            modificacoes.forEach(wfmUser => {
-                const colab = estado.mapColaboradores.get(wfmUser);
-                if (colab) {
-                    if (!colab.marcacoes) colab.marcacoes = {};
-                    colab.marcacoes[estado.dia] = {
-                        sigla: estado.marcacoesModificadas[wfmUser],
-                        data: new Date().toISOString()
-                    };
-                }
-            });
-
-            // Limpar modificações e atualizar badges visuais
-            estado.marcacoesModificadas = {};
-            
-            modificacoes.forEach(wfmUser => {
-                const item = document.querySelector(`[data-wfm="${wfmUser}"]`);
-                if (item) {
-                    const badge = item.querySelector('span[class*="bg-blue-600"]');
-                    if (badge) {
-                        badge.textContent = '✅ SALVO';
-                        badge.className = 'bg-green-600 text-white text-xs px-2 py-1 rounded-full';
-                    }
-                }
-            });
-
-            console.log('[ABS] ✅ SALVAMENTO CONCLUÍDO - SEM RELOAD/FETCH');
-            
-            alert(`✅ ${result.marcacoesSalvas || modificacoes.length} marcação(ões) salva(s) com sucesso!`);
-            
-            // 🔥 Desativar flag DEPOIS do alert (alert é bloqueante)
-            setTimeout(() => {
-                salvandoMarcacoes = false;
-                console.log('[ABS] 🔓 Flag salvandoMarcacoes desativada');
-            }, 100);
-
-        } catch (error) {
-            salvandoMarcacoes = false; // Desativar flag também em erro
-            esconderLoading();
-            alert(`❌ Erro: ${error.message}`);
-            console.error('[ABS] Erro ao salvar:', error);
-        }
-    }
-
-    // Função para recarga manual opcional
-    async function recarregarManual() {
-        if (Object.keys(estado.marcacoesModificadas).length > 0) {
-            const confirmacao = confirm(
-                '⚠️ Há marcações não salvas.\n\nRecarregar irá perdê-las.\n\nContinuar?'
-            );
-            if (!confirmacao) return;
+                wfmUser: wfmUser,
+                nome: colab.nome,
+                diaInteiro: diaInteiro,
+                horaInicio: diaInteiro ? 'DIA_INTEIRO' : hrInicio,
+                horaFim: diaInteiro ? 'DIA_INTEIRO' : hrFim,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar hora extra');
         }
         
-        await recarregarMarcacoes();
-        alert('✅ Dados atualizados!');
+        esconderLoading();
+        fecharModalHoraExtra();
+        alert(`✅ Hora extra registrada com sucesso!\n\nColaborador: ${colab.nome}\nDia: ${estado.dia}/${estado.mes}/${estado.ano}\nHorário: ${diaInteiro ? 'DIA INTEIRO' : `${hrInicio} às ${hrFim}`}`);
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar hora extra: ${error.message}`);
+        console.error(error);
     }
+}
 
-    // ==========================================
-    // FUNÇÕES AUXILIARES DE UI
-    // ==========================================
-    function mostrarLoading(mensagem = 'Carregando...') {
-        console.log(`[Loading] ${mensagem}`);
-        // Implementação visual pode ser adicionada aqui
+// ========================================
+// SINERGIA
+// ========================================
+function abrirModalSinergia() {
+    const modal = document.getElementById('modal-sinergia');
+    const select = document.getElementById('sinergia-colaborador');
+    
+    // Limpar select
+    select.innerHTML = '<option value="">-- Selecione um colaborador --</option>';
+    
+    // Preencher com colaboradores do supervisor atual
+    estado.colaboradores.forEach(colab => {
+        const option = document.createElement('option');
+        option.value = colab.wfmUser;
+        option.textContent = `${colab.nome} (${colab.wfmUser})`;
+        option.dataset.setorOrigem = colab.setor || 'N/A';
+        select.appendChild(option);
+    });
+    
+    // Limpar campos
+    document.getElementById('sinergia-tipo').value = '';
+    document.getElementById('sinergia-setor-destino').value = '';
+    document.getElementById('sinergia-obs').value = '';
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+}
+
+function fecharModalSinergia() {
+    const modal = document.getElementById('modal-sinergia');
+    modal.style.display = 'none';
+}
+
+async function salvarSinergia() {
+    const wfmUser = document.getElementById('sinergia-colaborador').value;
+    const tipo = document.getElementById('sinergia-tipo').value;
+    const setorDestino = document.getElementById('sinergia-setor-destino').value.trim();
+    const observacoes = document.getElementById('sinergia-obs').value.trim();
+    
+    // Validações
+    if (!wfmUser) {
+        alert('Selecione um colaborador');
+        return;
     }
     
-    function esconderLoading() {
-        console.log('[Loading] Ocultado');
-        // Implementação visual pode ser adicionada aqui
+    if (!tipo) {
+        alert('Selecione o tipo de sinergia (S1 ou S2)');
+        return;
     }
     
-    function mostrarTela(telaId) {
-        // Adaptar para o sistema de telas existente
-        const telaMap = {
-            'supervisores': 'tela-supervisores',
-            'calendario': 'tela-calendario',
-            'marcacao': 'tela-marcacao'
-        };
-        
-        const telaCompleta = telaMap[telaId] || telaId;
-        if (window.irPara) {
-            window.irPara(telaCompleta);
-        }
+    if (!setorDestino) {
+        alert('Informe o setor de destino');
+        return;
     }
-
-    function carregarSupervisores() {
-        // Implementar lógica de supervisores se necessário
-        console.log('[ABS] Supervisores carregados');
+    
+    const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+    if (!colab) {
+        alert('Colaborador não encontrado');
+        return;
     }
-
-    /**
-     * Propagar desligamento para dias seguintes
-     */
-    async function propagarDesligamento(wfmUser, nome, sigla, diaInicio) {
-        try {
-            console.log(`[ABS] Propagando desligamento: ${nome} - ${sigla} - A partir do dia ${diaInicio}`);
-            
-            const response = await fetch('/api/abs/propagar-desligamento', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    diaInicio,
-                    mes: 'Fevereiro',
-                    ano: 2026,
-                    colaborador: nome,
-                    wfmUser,
-                    sigla,
-                    supervisor: supervisorSelecionado || 'Sistema',
-                    warehouse: warehouseSelecionado
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                alert('❌ Erro ao propagar desligamento: ' + data.error);
-                return;
-            }
-            
-            alert(`✅ Propagação concluída!\n\n${nome} foi marcado como ${sigla} em ${data.diasPropagados.length} dias`);
-            
-            console.log('[ABS] Desligamento propagado com sucesso:', data);
-            
-        } catch (error) {
-            console.error('[ABS] Erro ao propagar desligamento:', error);
-            alert('❌ Erro ao propagar desligamento. Verifique o console.');
+    
+    mostrarLoading('Salvando sinergia...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/abs/sinergia`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-user-email': getUserEmail()
+            },
+            body: JSON.stringify({
+                warehouse: estado.warehouse,
+                mes: estado.mes,
+                ano: estado.ano,
+                dia: estado.dia,
+                wfmUser: wfmUser,
+                nome: colab.nome,
+                setorOrigem: colab.setor || 'N/A',
+                setorDestino: setorDestino,
+                tipo: tipo,
+                observacoes: observacoes,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao salvar sinergia');
         }
+        
+        esconderLoading();
+        fecharModalSinergia();
+        alert(`✅ Sinergia registrada com sucesso!\n\nColaborador: ${colab.nome}\nTipo: ${tipo}\nDia: ${estado.dia}/${estado.mes}/${estado.ano}\nSetor Origem: ${colab.setor || 'N/A'}\nSetor Destino: ${setorDestino}`);
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar sinergia: ${error.message}`);
+        console.error(error);
     }
+}
 
+// ========================================
+// INICIALIZAÇÃO
+// ========================================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Sistema ABS carregado');
+    console.log('Warehouse:', WAREHOUSE);
+    console.log('Estado inicial:', estado);
+    carregarMeses();
+});
+    </script>
 
+<!-- Modal de Escolha: Um Dia ou Vários Dias -->
+<div id="modal-escolha-periodo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2b2b2b; padding: 35px; border-radius: 12px; min-width: 450px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+        <h3 style="color: #fff; margin-bottom: 10px; text-align: center; font-size: 20px;">
+            <i class="fas fa-calendar-check" style="color: #FF9800; margin-right: 8px;"></i>
+            Período do Atestado
+        </h3>
+        
+        <div style="margin-bottom: 25px; text-align: center;">
+            <div id="escolha-tipo-marcacao" style="color: #B0B0B0; font-size: 15px; font-weight: 500;"></div>
+        </div>
+        
+        <p style="color: #E0E0E0; text-align: center; margin-bottom: 30px; font-size: 15px; line-height: 1.5;">
+            Este atestado é apenas para <strong style="color: #4CAF50;">hoje</strong> ou para <strong style="color: #2196F3;">vários dias</strong>?
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button onclick="escolherApenasHoje()" style="padding: 14px 24px; background: #4CAF50; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
+                <i class="fas fa-check-circle"></i>
+                Apenas Hoje (Dia ${estado.dia})
+            </button>
+            
+            <button onclick="escolherVariosDias()" style="padding: 14px 24px; background: #2196F3; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
+                <i class="fas fa-calendar-alt"></i>
+                Vários Dias (Período)
+            </button>
+            
+            <button onclick="cancelarEscolhaPeriodo()" style="padding: 12px 24px; background: #666; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 14px; margin-top: 8px; transition: all 0.3s;">
+                <i class="fas fa-times" style="margin-right: 6px;"></i>
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
 
-    /**
-     * Hook OTIMIZADO: Só carrega se necessário (ELIMINA RECARGA AUTOMÁTICA)
-     */
-    const irParaOriginal = window.irPara;
-    window.irPara = function(telaId) {
-        // 🔥 VERIFICAR SE JÁ ESTAMOS NA TELA DE MARCAÇÃO
-        const telaAtual = document.querySelector('.tela.active');
-        const jaEstamosNaTela = telaAtual && telaAtual.id === telaId;
+<!-- Modal de Seleção de Período (Date Picker) -->
+<div id="modal-periodo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 30px; border-radius: 12px; min-width: 400px;">
+        <h3 style="color: #fff; margin-bottom: 20px; text-align: center;">📅 Selecionar Período</h3>
         
-        console.log(`[ABS] irPara(${telaId}) - Tela atual: ${telaAtual?.id}, Já na tela: ${jaEstamosNaTela}`);
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Tipo de Marcação:</label>
+            <div id="tipo-periodo" style="color: #fff; font-weight: bold; font-size: 16px;"></div>
+        </div>
         
-        // Se já estamos na tela de marcação, NÃO recarregar
-        if (jaEstamosNaTela && telaId === 'tela-marcacao') {
-            console.log('[ABS] ✅ JÁ NA TELA DE MARCAÇÃO - Ignorando reload completo');
-            return;
-        }
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Data de Início:</label>
+            <input type="date" id="data-inicio" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+        </div>
         
-        irParaOriginal(telaId);
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Data de Fim:</label>
+            <input type="date" id="data-fim" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+        </div>
         
-        // 🔥 NÃO RECARREGAR SE ESTÁ SALVANDO
-        if (salvandoMarcacoes) {
-            console.log('[ABS] ⚠️ Salvando marcações - ignorando reload');
-            return;
-        }
-        
-        if (telaId === 'tela-marcacao' && warehouseSelecionado) {
-            const dia = 16;
-            // 🔥 SEMPRE CHAMA carregarColaboradores, mas ELE decide se faz fetch ou usa cache
-            carregarColaboradores(warehouseSelecionado, 'Fevereiro', 2026, dia);
-        }
-    };
-</script>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="cancelarPeriodo()" style="padding: 12px 24px; background: #666; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Cancelar</button>
+            <button onclick="confirmarPeriodo()" style="padding: 12px 24px; background: #4CAF50; border: none; border-radius: 8px; color: #fff; cursor: pointer;">✓ Confirmar</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
-// Build 1772053333
