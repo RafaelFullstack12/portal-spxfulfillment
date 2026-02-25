@@ -1373,10 +1373,10 @@ app.get('/abs', async (c) => {
   }
   
   try {
-    // Ler arquivo HTML corrigido com JS inline
+    // Ler arquivo HTML atualizado
     const fs = await import('fs/promises')
     const path = await import('path')
-    const htmlPath = path.join(process.cwd(), 'public', 'abs-fixed.html')
+    const htmlPath = path.join(process.cwd(), 'public', 'abs.html')
     const html = await fs.readFile(htmlPath, 'utf-8')
     return c.html(html)
   } catch (error) {
@@ -1390,7 +1390,7 @@ app.get('/abs/old', async (c) => {
   try {
     const fs = await import('fs/promises')
     const path = await import('path')
-    const htmlPath = path.join(process.cwd(), 'public', 'abs.html')
+    const htmlPath = path.join(process.cwd(), 'public', 'abs-fixed.html')
     const html = await fs.readFile(htmlPath, 'utf-8')
     return c.html(html)
   } catch (error) {
