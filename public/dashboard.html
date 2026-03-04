@@ -171,6 +171,8 @@
             position: relative;
             overflow: hidden;
             transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
         }
 
         .kpi-card:hover {
@@ -208,6 +210,37 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .mini-history {
+            margin-top: auto;
+            border-top: 1px solid #404040;
+            padding-top: 12px;
+        }
+
+        .mini-history-title {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .mini-history-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 0.8rem;
+        }
+
+        .mini-history-date {
+            color: #B0B0B0;
+        }
+
+        .mini-history-value {
+            font-weight: 600;
+            color: #FFF;
         }
 
         .comparison-badge {
@@ -311,9 +344,9 @@
         <div class="success-banner">
             <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
             <div style="flex: 1;">
-                <strong>✅ Dashboard Integrado com Google OAuth!</strong>
+                <strong>✅ Dashboard Atualizado com Melhorias!</strong>
                 <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 4px;">
-                    Autenticação via backend (mesmo método do ABS). Clique em "Atualizar Dados" para carregar as informações.
+                    Nova fórmula de ABS • Filtro FRANÇÃO • Comparação real com dia anterior
                 </div>
             </div>
         </div>
@@ -485,18 +518,7 @@
         <!-- TAB 2: Produtividade -->
         <div id="tab-producao" class="tab-content">
             <div class="kpi-grid">
-                <div class="kpi-card">
-                    <i class="fas fa-box kpi-icon" style="color: #4CAF50;"></i>
-                    <div class="kpi-label">Processado Total (Outbound)</div>
-                    <div class="kpi-value" style="color: #4CAF50;" id="kpi-proc-out">--</div>
-                    <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
-                        <span class="comparison-badge badge-neutral" id="comp-proc-out">
-                            <i class="fas fa-minus"></i> --
-                        </span>
-                    </div>
-                </div>
-
+                <!-- 1. Drop Total (Outbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-exclamation-triangle kpi-icon" style="color: #F44336;"></i>
                     <div class="kpi-label">Drop Total (Outbound)</div>
@@ -507,20 +529,24 @@
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
+                    <div class="mini-history" id="hist-drop-out"></div>
                 </div>
 
+                <!-- 2. Processado Total (Outbound) -->
                 <div class="kpi-card">
-                    <i class="fas fa-truck-loading kpi-icon" style="color: #2196F3;"></i>
-                    <div class="kpi-label">Processado Total (Inbound)</div>
-                    <div class="kpi-value" style="color: #2196F3;" id="kpi-proc-in">--</div>
+                    <i class="fas fa-box kpi-icon" style="color: #4CAF50;"></i>
+                    <div class="kpi-label">Processado Total (Outbound)</div>
+                    <div class="kpi-value" style="color: #4CAF50;" id="kpi-proc-out">--</div>
                     <div class="kpi-comparison">
                         <span style="color: #B0B0B0;">vs dia anterior:</span>
-                        <span class="comparison-badge badge-neutral" id="comp-proc-in">
+                        <span class="comparison-badge badge-neutral" id="comp-proc-out">
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
+                    <div class="mini-history" id="hist-proc-out"></div>
                 </div>
 
+                <!-- 3. Recebido Total (Inbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-dolly kpi-icon" style="color: #9C27B0;"></i>
                     <div class="kpi-label">Recebido Total (Inbound)</div>
@@ -531,6 +557,21 @@
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
+                    <div class="mini-history" id="hist-rec-in"></div>
+                </div>
+
+                <!-- 4. Processado Total (Inbound) -->
+                <div class="kpi-card">
+                    <i class="fas fa-truck-loading kpi-icon" style="color: #2196F3;"></i>
+                    <div class="kpi-label">Processado Total (Inbound)</div>
+                    <div class="kpi-value" style="color: #2196F3;" id="kpi-proc-in">--</div>
+                    <div class="kpi-comparison">
+                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span class="comparison-badge badge-neutral" id="comp-proc-in">
+                            <i class="fas fa-minus"></i> --
+                        </span>
+                    </div>
+                    <div class="mini-history" id="hist-proc-in"></div>
                 </div>
             </div>
 
@@ -583,16 +624,6 @@
         <div id="tab-consolidado" class="tab-content">
             <div class="chart-container">
                 <h3 class="section-title">
-                    <i class="fas fa-chart-bar" style="color: #9C27B0;"></i>
-                    Produtividade por Colaborador (Items/HC)
-                </h3>
-                <div style="height: 400px;">
-                    <canvas id="chartConsolidado"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h3 class="section-title">
                     <i class="fas fa-table" style="color: #FFC107;"></i>
                     Resumo Consolidado por Warehouse
                 </h3>
@@ -605,13 +636,22 @@
                             <th>% ABS</th>
                             <th>PROC. OUT</th>
                             <th>PROC. IN</th>
-                            <th>ITEMS/HC</th>
                         </tr>
                     </thead>
                     <tbody id="table-consolidado">
-                        <tr><td colspan="7" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregue os dados</td></tr>
+                        <tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregue os dados</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="section-title">
+                    <i class="fas fa-chart-bar" style="color: #9C27B0;"></i>
+                    Visão Geral por Warehouse
+                </h3>
+                <div style="height: 400px;">
+                    <canvas id="chartConsolidado"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -663,6 +703,22 @@ function formatNumber(num) {
 function formatPercent(value) {
     if (!value && value !== 0) return '--';
     return `${value.toFixed(2)}%`;
+}
+
+function normalizarTexto(texto) {
+    if (!texto) return '';
+    return texto.toString().trim().toUpperCase();
+}
+
+function calcularComparacao(atual, anterior) {
+    if (!anterior || anterior === 0) return { tipo: 'neutral', valor: 0, icone: 'fa-minus' };
+    const diff = ((atual - anterior) / anterior) * 100;
+    if (Math.abs(diff) < 0.1) return { tipo: 'neutral', valor: 0, icone: 'fa-minus' };
+    return {
+        tipo: diff > 0 ? 'up' : 'down',
+        valor: Math.abs(diff),
+        icone: diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down'
+    };
 }
 
 function atualizarBadge(elementId, comparacao) {
@@ -739,16 +795,94 @@ function popularFiltros() {
     const hcSemHeader = dadosHC.slice(1);
     const prodSemHeader = dadosProducao.slice(1);
     
+    // Filtro Warehouse - excluir BRS e OTHERS, adicionar FRANÇÃO
     const whSelect = document.getElementById('filter-warehouse');
-    const warehouses = [...new Set([...hcSemHeader.map(r => r[1]), ...prodSemHeader.map(r => r[1])].filter(Boolean))].sort();
-    whSelect.innerHTML = '<option value="all">Todos</option>' + warehouses.map(wh => `<option value="${wh}">${wh}</option>`).join('');
+    const warehouses = [...new Set([...hcSemHeader.map(r => r[1]), ...prodSemHeader.map(r => r[1])].filter(Boolean))]
+        .filter(wh => wh !== 'BRS' && wh !== 'OTHERS')
+        .sort();
     
+    // Verificar se BRFSP1 e BRFSP2 existem para criar opção FRANÇÃO
+    const temBRFSP1 = warehouses.includes('BRFSP1');
+    const temBRFSP2 = warehouses.includes('BRFSP2');
+    
+    let optionsHTML = '<option value="all">Todos os Warehouses</option>';
+    
+    if (temBRFSP1 && temBRFSP2) {
+        optionsHTML += '<option value="FRANCAO">FRANÇÃO (BRFSP1 + BRFSP2)</option>';
+    }
+    
+    optionsHTML += warehouses.map(wh => `<option value="${wh}">${wh}</option>`).join('');
+    whSelect.innerHTML = optionsHTML;
+    
+    // Filtro Setor - normalizar com trim e upper
     const setorSelect = document.getElementById('filter-sector');
-    const setores = [...new Set(hcSemHeader.map(r => r[5]).filter(Boolean))].sort();
-    setorSelect.innerHTML = '<option value="all">Todos</option>' + setores.map(s => `<option value="${s}">${s}</option>`).join('');
+    const setores = [...new Set(hcSemHeader.map(r => normalizarTexto(r[5])).filter(Boolean))].sort();
+    setorSelect.innerHTML = '<option value="all">Todos os Setores</option>' + setores.map(s => `<option value="${s}">${s}</option>`).join('');
     
+    // Data padrão
     const datas = [...new Set(hcSemHeader.map(r => r[0]).filter(Boolean))].sort();
     document.getElementById('filter-date').value = datas.length > 0 ? datas[datas.length - 1] : new Date().toISOString().split('T')[0];
+}
+
+function aplicarFiltroWarehouse(whValor, whLinha) {
+    if (whValor === 'all') return true;
+    if (whValor === 'FRANCAO') {
+        return whLinha === 'BRFSP1' || whLinha === 'BRFSP2';
+    }
+    return whLinha === whValor;
+}
+
+function getDataAnteriorStr(dataStr) {
+    if (!dataStr) return null;
+    const d = new Date(dataStr);
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+}
+
+function filtrarHCPor(data, whSelecionado, setorSelecionado) {
+    return dadosHC.slice(1).filter(row => {
+        if (!row || row.length === 0) return false;
+        if (data && row[0] !== data) return false;
+        const wh = row[1];
+        const setorNorm = normalizarTexto(row[5]);
+        if (!aplicarFiltroWarehouse(whSelecionado, wh)) return false;
+        if (setorSelecionado !== 'all' && setorNorm !== setorSelecionado) return false;
+        if (wh === 'BRS' || wh === 'OTHERS') return false;
+        return true;
+    });
+}
+
+function filtrarProdPor(data, whSelecionado) {
+    return dadosProducao.slice(1).filter(row => {
+        if (!row || row.length === 0) return false;
+        if (data && row[0] !== data) return false;
+        const wh = row[1];
+        if (!aplicarFiltroWarehouse(whSelecionado, wh)) return false;
+        if (wh === 'BRS' || wh === 'OTHERS') return false;
+        return true;
+    });
+}
+
+function calcularKPIsHC(hcRows) {
+    const hc = hcRows.reduce((s, r) => s + parseNumero(r[6]), 0);
+    const presenca = hcRows.reduce((s, r) => s + parseNumero(r[7]), 0);
+    const faltas = hcRows.reduce((s, r) => s + parseNumero(r[8]), 0);
+    // NOVA FÓRMULA: faltas / (presença + faltas)
+    const denominadorAbs = presenca + faltas;
+    const abs = denominadorAbs > 0 ? (faltas / denominadorAbs) * 100 : 0;
+    const turnTotal = hcRows.reduce((s, r) =>
+        s + parseNumero(r[27]) + parseNumero(r[28]) + parseNumero(r[29]), 0
+    );
+    const turn = hc > 0 ? (turnTotal / hc) * 100 : 0;
+    return { hc, presenca, faltas, abs, turn };
+}
+
+function calcularKPIsProd(prodRows) {
+    const procOut = prodRows.reduce((s, r) => s + parseNumero(r[2]), 0);
+    const dropOut = prodRows.reduce((s, r) => s + parseNumero(r[3]), 0);
+    const procIn = prodRows.reduce((s, r) => s + parseNumero(r[4]), 0);
+    const recIn = prodRows.reduce((s, r) => s + parseNumero(r[5]), 0);
+    return { procOut, dropOut, procIn, recIn };
 }
 
 function renderizarDashboard() {
@@ -756,71 +890,111 @@ function renderizarDashboard() {
     const filtroWH = document.getElementById('filter-warehouse').value;
     const filtroSetor = document.getElementById('filter-sector').value;
     
-    const hcFiltrado = dadosHC.slice(1).filter(row => {
-        if (!row || row.length === 0) return false;
-        if (filtroData && row[0] !== filtroData) return false;
-        if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
-        if (filtroSetor !== 'all' && row[5] !== filtroSetor) return false;
-        return true;
-    });
+    console.log('[Dashboard] Filtros:', { data: filtroData, warehouse: filtroWH, setor: filtroSetor });
     
-    const producaoFiltrado = dadosProducao.slice(1).filter(row => {
-        if (!row || row.length === 0) return false;
-        if (filtroData && row[0] !== filtroData) return false;
-        if (filtroWH !== 'all' && row[1] !== filtroWH) return false;
-        return true;
-    });
+    const hcFiltrado = filtrarHCPor(filtroData, filtroWH, filtroSetor);
+    const producaoFiltrado = filtrarProdPor(filtroData, filtroWH);
     
-    // KPIs HC
-    const hc = hcFiltrado.reduce((s, r) => s + parseNumero(r[6]), 0);
-    const presenca = hcFiltrado.reduce((s, r) => s + parseNumero(r[7]), 0);
-    const faltas = hcFiltrado.reduce((s, r) => s + parseNumero(r[8]), 0);
-    const abs = hc > 0 ? (faltas / hc) * 100 : 0;
-    const turn = hc > 0 ? ((parseNumero(hcFiltrado.reduce((s, r) => s + parseNumero(r[27]) + parseNumero(r[28]) + parseNumero(r[29]), 0))) / hc) * 100 : 0;
+    // KPIs HC (dia selecionado)
+    const { hc, presenca, faltas, abs, turn } = calcularKPIsHC(hcFiltrado);
     
     document.getElementById('kpi-headcount').textContent = formatNumber(hc);
     document.getElementById('kpi-presenca').textContent = formatNumber(presenca);
     document.getElementById('kpi-absenteismo').textContent = formatPercent(abs);
     document.getElementById('kpi-turnover').textContent = formatPercent(turn);
     
-    atualizarBadge('comp-headcount', { tipo: 'up', valor: 2.5, icone: 'fa-arrow-up' });
-    atualizarBadge('comp-presenca', { tipo: 'up', valor: 3.1, icone: 'fa-arrow-up' });
-    atualizarBadge('comp-absenteismo', { tipo: 'down', valor: 1.2, icone: 'fa-arrow-down' });
-    atualizarBadge('comp-turnover', { tipo: 'neutral', valor: 0, icone: 'fa-minus' });
-    
-    // KPIs Produção
-    const procOut = producaoFiltrado.reduce((s, r) => s + parseNumero(r[2]), 0);
-    const dropOut = producaoFiltrado.reduce((s, r) => s + parseNumero(r[3]), 0);
-    const procIn = producaoFiltrado.reduce((s, r) => s + parseNumero(r[4]), 0);
-    const recIn = producaoFiltrado.reduce((s, r) => s + parseNumero(r[5]), 0);
+    // KPIs Produção (dia selecionado)
+    const { procOut, dropOut, procIn, recIn } = calcularKPIsProd(producaoFiltrado);
     
     document.getElementById('kpi-proc-out').textContent = formatNumber(procOut);
     document.getElementById('kpi-drop-out').textContent = formatNumber(dropOut);
     document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
     document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
     
-    atualizarBadge('comp-proc-out', { tipo: 'up', valor: 5.2, icone: 'fa-arrow-up' });
-    atualizarBadge('comp-drop-out', { tipo: 'down', valor: 2.1, icone: 'fa-arrow-down' });
-    atualizarBadge('comp-proc-in', { tipo: 'up', valor: 4.3, icone: 'fa-arrow-up' });
-    atualizarBadge('comp-rec-in', { tipo: 'up', valor: 3.8, icone: 'fa-arrow-up' });
+    // Comparação com dia anterior (real)
+    const dataAnterior = getDataAnteriorStr(filtroData);
+    if (dataAnterior) {
+        const hcAnterior = filtrarHCPor(dataAnterior, filtroWH, filtroSetor);
+        const prodAnterior = filtrarProdPor(dataAnterior, filtroWH);
+        
+        const kpiHCAnterior = calcularKPIsHC(hcAnterior);
+        const kpiProdAnterior = calcularKPIsProd(prodAnterior);
+        
+        atualizarBadge('comp-headcount', calcularComparacao(hc, kpiHCAnterior.hc));
+        atualizarBadge('comp-presenca', calcularComparacao(presenca, kpiHCAnterior.presenca));
+        atualizarBadge('comp-absenteismo', calcularComparacao(abs, kpiHCAnterior.abs));
+        atualizarBadge('comp-turnover', calcularComparacao(turn, kpiHCAnterior.turn));
+        
+        atualizarBadge('comp-proc-out', calcularComparacao(procOut, kpiProdAnterior.procOut));
+        atualizarBadge('comp-drop-out', calcularComparacao(dropOut, kpiProdAnterior.dropOut));
+        atualizarBadge('comp-proc-in', calcularComparacao(procIn, kpiProdAnterior.procIn));
+        atualizarBadge('comp-rec-in', calcularComparacao(recIn, kpiProdAnterior.recIn));
+    } else {
+        ['comp-headcount','comp-presenca','comp-absenteismo','comp-turnover','comp-proc-out','comp-drop-out','comp-proc-in','comp-rec-in']
+            .forEach(id => atualizarBadge(id, { tipo: 'neutral', valor: 0, icone: 'fa-minus' }));
+    }
+    
+    // Renderizar histórico dos últimos 4 dias
+    renderizarHistorico(filtroData, filtroWH);
     
     renderizarTabelas(hcFiltrado, producaoFiltrado);
-    renderizarGraficos(hcFiltrado, producaoFiltrado);
+    renderizarGraficos(filtroWH, filtroSetor);
+}
+
+function renderizarHistorico(dataBase, filtroWH) {
+    const dias = [];
+    let date = new Date(dataBase);
+    
+    // Pegar últimos 4 dias
+    for (let i = 0; i < 4; i++) {
+        date.setDate(date.getDate() - 1);
+        dias.push(date.toISOString().split('T')[0]);
+    }
+    
+    const metricas = {
+        'drop-out': { coluna: 3, dados: dadosProducao },
+        'proc-out': { coluna: 2, dados: dadosProducao },
+        'rec-in': { coluna: 5, dados: dadosProducao },
+        'proc-in': { coluna: 4, dados: dadosProducao }
+    };
+    
+    Object.keys(metricas).forEach(metrica => {
+        const config = metricas[metrica];
+        let html = '<div class="mini-history-title">Últimos 4 dias</div>';
+        
+        dias.forEach(dia => {
+            const rows = filtrarProdPor(dia, filtroWH);
+            const valor = rows.reduce((s, r) => s + parseNumero(r[config.coluna]), 0);
+            const diaFormatado = new Date(dia).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            
+            html += `
+                <div class="mini-history-row">
+                    <span class="mini-history-date">${diaFormatado}</span>
+                    <span class="mini-history-value">${formatNumber(valor)}</span>
+                </div>
+            `;
+        });
+        
+        const elemento = document.getElementById(`hist-${metrica}`);
+        if (elemento) elemento.innerHTML = html;
+    });
 }
 
 function renderizarTabelas(hcData, prodData) {
-    // Tabela Setores
+    // Tabela Setores (com normalização)
     const setores = {};
     hcData.forEach(r => {
-        const s = r[5] || 'N/A';
+        const s = normalizarTexto(r[5]) || 'N/A';
         if (!setores[s]) setores[s] = { hc: 0, presenca: 0, faltas: 0 };
         setores[s].hc += parseNumero(r[6]);
         setores[s].presenca += parseNumero(r[7]);
         setores[s].faltas += parseNumero(r[8]);
     });
+    
     document.getElementById('table-setores').innerHTML = Object.keys(setores).sort().map(s => {
         const d = setores[s];
-        const a = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        const denominadorAbs = d.presenca + d.faltas;
+        const a = denominadorAbs > 0 ? (d.faltas / denominadorAbs) * 100 : 0;
         return `<tr><td><strong>${s}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td></tr>`;
     }).join('');
     
@@ -828,39 +1002,45 @@ function renderizarTabelas(hcData, prodData) {
     const whs = {};
     hcData.forEach(r => {
         const w = r[1] || 'N/A';
+        if (w === 'BRS' || w === 'OTHERS') return;
         if (!whs[w]) whs[w] = { hc: 0, presenca: 0, faltas: 0, turn: 0 };
         whs[w].hc += parseNumero(r[6]);
         whs[w].presenca += parseNumero(r[7]);
         whs[w].faltas += parseNumero(r[8]);
         whs[w].turn += parseNumero(r[27]) + parseNumero(r[28]) + parseNumero(r[29]);
     });
+    
     document.getElementById('table-warehouses').innerHTML = Object.keys(whs).sort().map(w => {
         const d = whs[w];
-        const a = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
+        const denominadorAbs = d.presenca + d.faltas;
+        const a = denominadorAbs > 0 ? (d.faltas / denominadorAbs) * 100 : 0;
         const t = d.hc > 0 ? (d.turn / d.hc) * 100 : 0;
         return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td><td style="color:#FF9800">${formatPercent(t)}</td></tr>`;
     }).join('');
     
-    // Tabela Produção
+    // Tabela Produção por WH
     const whsProd = {};
     prodData.forEach(r => {
         const w = r[1] || 'N/A';
+        if (w === 'BRS' || w === 'OTHERS') return;
         if (!whsProd[w]) whsProd[w] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
         whsProd[w].procOut += parseNumero(r[2]);
         whsProd[w].dropOut += parseNumero(r[3]);
         whsProd[w].procIn += parseNumero(r[4]);
         whsProd[w].recIn += parseNumero(r[5]);
     });
+    
     document.getElementById('table-producao').innerHTML = Object.keys(whsProd).sort().map(w => {
         const d = whsProd[w];
         const dp = d.procOut > 0 ? (d.dropOut / d.procOut) * 100 : 0;
         return `<tr><td><strong>${w}</strong></td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#F44336">${formatNumber(d.dropOut)}</td><td>${formatPercent(dp)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td><td style="color:#9C27B0">${formatNumber(d.recIn)}</td></tr>`;
     }).join('');
     
-    // Tabela Consolidada
+    // Tabela Consolidada (sem Items/HC)
     const cons = {};
     hcData.forEach(r => {
         const w = r[1] || 'N/A';
+        if (w === 'BRS' || w === 'OTHERS') return;
         if (!cons[w]) cons[w] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
         cons[w].hc += parseNumero(r[6]);
         cons[w].presenca += parseNumero(r[7]);
@@ -868,19 +1048,21 @@ function renderizarTabelas(hcData, prodData) {
     });
     prodData.forEach(r => {
         const w = r[1] || 'N/A';
+        if (w === 'BRS' || w === 'OTHERS') return;
         if (!cons[w]) cons[w] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
         cons[w].procOut += parseNumero(r[2]);
         cons[w].procIn += parseNumero(r[4]);
     });
+    
     document.getElementById('table-consolidado').innerHTML = Object.keys(cons).sort().map(w => {
         const d = cons[w];
-        const a = d.hc > 0 ? (d.faltas / d.hc) * 100 : 0;
-        const ih = d.hc > 0 ? (d.procOut + d.procIn) / d.hc : 0;
-        return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td>${formatPercent(a)}</td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td><td style="font-weight:600;color:#9C27B0">${ih.toFixed(2)}</td></tr>`;
+        const denominadorAbs = d.presenca + d.faltas;
+        const a = denominadorAbs > 0 ? (d.faltas / denominadorAbs) * 100 : 0;
+        return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td>${formatPercent(a)}</td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td></tr>`;
     }).join('');
 }
 
-function renderizarGraficos(hcData, prodData) {
+function renderizarGraficos(filtroWH, filtroSetor) {
     const opt = {
         responsive: true,
         maintainAspectRatio: false,
@@ -891,32 +1073,52 @@ function renderizarGraficos(hcData, prodData) {
         }
     };
     
-    // Gráfico HC
+    // Gráfico HC - linha única, últimos 30 dias
     const dadosPorData = {};
-    hcData.forEach(r => {
-        const d = r[0];
-        if (!dadosPorData[d]) dadosPorData[d] = { hc: 0, presenca: 0 };
-        dadosPorData[d].hc += parseNumero(r[6]);
-        dadosPorData[d].presenca += parseNumero(r[7]);
+    dadosHC.slice(1).forEach(r => {
+        if (!r || r.length === 0) return;
+        const data = r[0];
+        const wh = r[1];
+        const setorNorm = normalizarTexto(r[5]);
+        if (wh === 'BRS' || wh === 'OTHERS') return;
+        if (!aplicarFiltroWarehouse(filtroWH, wh)) return;
+        if (filtroSetor !== 'all' && setorNorm !== filtroSetor) return;
+        if (!data) return;
+        if (!dadosPorData[data]) dadosPorData[data] = { hc: 0 };
+        dadosPorData[data].hc += parseNumero(r[6]);
     });
-    const datas = Object.keys(dadosPorData).sort().slice(-30);
+    
+    const datasOrdenadas = Object.keys(dadosPorData).sort();
+    const ultimasDatas = datasOrdenadas.slice(-30);
+    
     if (chartHC) chartHC.destroy();
     chartHC = new Chart(document.getElementById('chartHC'), {
         type: 'line',
         data: {
-            labels: datas.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+            labels: ultimasDatas.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
             datasets: [
-                { label: 'HC', data: datas.map(d => dadosPorData[d].hc), borderColor: '#2196F3', backgroundColor: 'rgba(33,150,243,0.1)', tension: 0.4, fill: true },
-                { label: 'Presença', data: datas.map(d => dadosPorData[d].presenca), borderColor: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', tension: 0.4, fill: true }
+                {
+                    label: 'HC Total',
+                    data: ultimasDatas.map(d => dadosPorData[d].hc),
+                    borderColor: '#2196F3',
+                    backgroundColor: 'rgba(33,150,243,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }
             ]
         },
         options: opt
     });
     
-    // Gráfico Outbound
+    // Gráfico Outbound por WH
     const whOut = {};
-    prodData.forEach(r => {
+    dadosProducao.slice(1).forEach(r => {
         const w = r[1];
+        if (!w || w === 'BRS' || w === 'OTHERS') return;
+        if (!aplicarFiltroWarehouse(filtroWH, w)) return;
         if (!whOut[w]) whOut[w] = { proc: 0, drop: 0 };
         whOut[w].proc += parseNumero(r[2]);
         whOut[w].drop += parseNumero(r[3]);
@@ -935,10 +1137,12 @@ function renderizarGraficos(hcData, prodData) {
         options: opt
     });
     
-    // Gráfico Inbound
+    // Gráfico Inbound por WH
     const whIn = {};
-    prodData.forEach(r => {
+    dadosProducao.slice(1).forEach(r => {
         const w = r[1];
+        if (!w || w === 'BRS' || w === 'OTHERS') return;
+        if (!aplicarFiltroWarehouse(filtroWH, w)) return;
         if (!whIn[w]) whIn[w] = { proc: 0, rec: 0 };
         whIn[w].proc += parseNumero(r[4]);
         whIn[w].rec += parseNumero(r[5]);
@@ -957,27 +1161,71 @@ function renderizarGraficos(hcData, prodData) {
         options: opt
     });
     
-    // Gráfico Consolidado
+    // Gráfico Consolidado - barras com HC, Presença, %ABS, Proc Out, Proc In
+    const filtroData = document.getElementById('filter-date').value;
+    const hcFiltrado = filtrarHCPor(filtroData, filtroWH, filtroSetor);
+    const prodFiltrado = filtrarProdPor(filtroData, filtroWH);
+    
     const cons = {};
-    hcData.forEach(r => {
-        const w = r[1];
-        if (!cons[w]) cons[w] = { hc: 0, items: 0 };
+    hcFiltrado.forEach(r => {
+        const w = r[1] || 'N/A';
+        if (!cons[w]) cons[w] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
         cons[w].hc += parseNumero(r[6]);
+        cons[w].presenca += parseNumero(r[7]);
+        cons[w].faltas += parseNumero(r[8]);
     });
-    prodData.forEach(r => {
-        const w = r[1];
-        if (!cons[w]) cons[w] = { hc: 0, items: 0 };
-        cons[w].items += parseNumero(r[2]) + parseNumero(r[4]);
+    prodFiltrado.forEach(r => {
+        const w = r[1] || 'N/A';
+        if (!cons[w]) cons[w] = { hc: 0, presenca: 0, faltas: 0, procOut: 0, procIn: 0 };
+        cons[w].procOut += parseNumero(r[2]);
+        cons[w].procIn += parseNumero(r[4]);
     });
-    const whsCons = Object.keys(cons).sort();
+    
+    const whResumo = Object.keys(cons).sort();
+    const dadosHCResumo = whResumo.map(w => cons[w].hc);
+    const dadosPresResumo = whResumo.map(w => cons[w].presenca);
+    const dadosAbsResumo = whResumo.map(w => {
+        const d = cons[w];
+        const denom = d.presenca + d.faltas;
+        return denom > 0 ? (d.faltas / denom) * 100 : 0;
+    });
+    const dadosProcOutResumo = whResumo.map(w => cons[w].procOut);
+    const dadosProcInResumo = whResumo.map(w => cons[w].procIn);
+    
     if (chartConsolidado) chartConsolidado.destroy();
     chartConsolidado = new Chart(document.getElementById('chartConsolidado'), {
         type: 'bar',
         data: {
-            labels: whsCons,
-            datasets: [{ label: 'Items/HC', data: whsCons.map(w => cons[w].hc > 0 ? cons[w].items / cons[w].hc : 0), backgroundColor: '#9C27B0' }]
+            labels: whResumo,
+            datasets: [
+                { label: 'HC', data: dadosHCResumo, backgroundColor: '#2196F3' },
+                { label: 'Presença', data: dadosPresResumo, backgroundColor: '#4CAF50' },
+                { label: '% Abs', data: dadosAbsResumo, backgroundColor: '#F44336', yAxisID: 'y1' },
+                { label: 'Proc. Out', data: dadosProcOutResumo, backgroundColor: '#FF9800' },
+                { label: 'Proc. In', data: dadosProcInResumo, backgroundColor: '#9C27B0' }
+            ]
         },
-        options: opt
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#B0B0B0' } } },
+            scales: {
+                y: {
+                    position: 'left',
+                    ticks: { color: '#B0B0B0' },
+                    grid: { color: '#404040' }
+                },
+                y1: {
+                    position: 'right',
+                    ticks: { color: '#F44336', callback: v => `${v}%` },
+                    grid: { drawOnChartArea: false }
+                },
+                x: {
+                    ticks: { color: '#B0B0B0' },
+                    grid: { color: '#404040' }
+                }
+            }
+        }
     });
 }
 
