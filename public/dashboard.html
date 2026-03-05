@@ -340,14 +340,11 @@
             </a>
         </div>
 
-        <!-- Success Banner -->
+        <!-- Success Banner (simplificado) -->
         <div class="success-banner">
             <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
             <div style="flex: 1;">
-                <strong>✅ Dashboard Atualizado com Melhorias!</strong>
-                <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 4px;">
-                    Nova fórmula de ABS • Filtro FRANÇÃO • Comparação real com dia anterior
-                </div>
+                <strong>Dashboard Integrado</strong>
             </div>
         </div>
 
@@ -394,16 +391,16 @@
             </div>
         </div>
 
-        <!-- Tabs -->
+        <!-- Tabs (nomes atualizados) -->
         <div class="tab-container">
             <button class="tab active" onclick="trocarAba('hc')">
                 <i class="fas fa-users mr-2"></i>Headcount & Absenteísmo
             </button>
-            <button class="tab" onclick="trocarAba('producao')">
-                <i class="fas fa-boxes mr-2"></i>Produtividade
+            <button class="tab" onclick="trocarAba('processo')">
+                <i class="fas fa-boxes mr-2"></i>Processo
             </button>
-            <button class="tab" onclick="trocarAba('consolidado')">
-                <i class="fas fa-chart-pie mr-2"></i>Visão Consolidada
+            <button class="tab" onclick="trocarAba('produtividade')">
+                <i class="fas fa-chart-pie mr-2"></i>Produtividade
             </button>
         </div>
 
@@ -515,8 +512,8 @@
             </div>
         </div>
 
-        <!-- TAB 2: Produtividade -->
-        <div id="tab-producao" class="tab-content">
+        <!-- TAB 2: Processo (antiga Produtividade) -->
+        <div id="tab-processo" class="tab-content">
             <div class="kpi-grid">
                 <!-- 1. Drop Total (Outbound) -->
                 <div class="kpi-card">
@@ -579,7 +576,7 @@
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-chart-line" style="color: #4CAF50;"></i>
-                        Outbound - Processado vs Drop
+                        Outbound - Últimos 7 Dias (Processado vs Drop)
                     </h3>
                     <div style="height: 300px;">
                         <canvas id="chartOutbound"></canvas>
@@ -589,7 +586,7 @@
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-chart-line" style="color: #2196F3;"></i>
-                        Inbound - Processado vs Recebido
+                        Inbound - Últimos 7 Dias (Processado vs Recebido)
                     </h3>
                     <div style="height: 300px;">
                         <canvas id="chartInbound"></canvas>
@@ -620,8 +617,8 @@
             </div>
         </div>
 
-        <!-- TAB 3: Visão Consolidada -->
-        <div id="tab-consolidado" class="tab-content">
+        <!-- TAB 3: Produtividade (antiga Visão Consolidada) -->
+        <div id="tab-produtividade" class="tab-content">
             <div class="chart-container">
                 <h3 class="section-title">
                     <i class="fas fa-table" style="color: #FFC107;"></i>
@@ -735,11 +732,19 @@ function atualizarBadge(elementId, comparacao) {
 function trocarAba(aba) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    const abaMap = {
+        'hc': 'Headcount',
+        'processo': 'Processo',
+        'produtividade': 'Produtividade'
+    };
+    
     document.querySelectorAll('.tab').forEach(t => {
-        if (t.textContent.includes(aba === 'hc' ? 'Headcount' : aba === 'producao' ? 'Produtividade' : 'Consolidada')) {
+        if (t.textContent.includes(abaMap[aba])) {
             t.classList.add('active');
         }
     });
+    
     document.getElementById(`tab-${aba}`).classList.add('active');
     console.log(`[Dashboard] Aba: ${aba}`);
 }
@@ -801,7 +806,6 @@ function popularFiltros() {
         .filter(wh => wh !== 'BRS' && wh !== 'OTHERS')
         .sort();
     
-    // Verificar se BRFSP1 e BRFSP2 existem para criar opção FRANÇÃO
     const temBRFSP1 = warehouses.includes('BRFSP1');
     const temBRFSP2 = warehouses.includes('BRFSP2');
     
@@ -814,7 +818,7 @@ function popularFiltros() {
     optionsHTML += warehouses.map(wh => `<option value="${wh}">${wh}</option>`).join('');
     whSelect.innerHTML = optionsHTML;
     
-    // Filtro Setor - normalizar com trim e upper
+    // Filtro Setor
     const setorSelect = document.getElementById('filter-sector');
     const setores = [...new Set(hcSemHeader.map(r => normalizarTexto(r[5])).filter(Boolean))].sort();
     setorSelect.innerHTML = '<option value="all">Todos os Setores</option>' + setores.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -837,6 +841,16 @@ function getDataAnteriorStr(dataStr) {
     const d = new Date(dataStr);
     d.setDate(d.getDate() - 1);
     return d.toISOString().split('T')[0];
+}
+
+function getUltimos7Dias(dataBase) {
+    const dias = [];
+    let date = new Date(dataBase);
+    for (let i = 0; i < 7; i++) {
+        dias.unshift(date.toISOString().split('T')[0]);
+        date.setDate(date.getDate() - 1);
+    }
+    return dias;
 }
 
 function filtrarHCPor(data, whSelecionado, setorSelecionado) {
@@ -867,7 +881,6 @@ function calcularKPIsHC(hcRows) {
     const hc = hcRows.reduce((s, r) => s + parseNumero(r[6]), 0);
     const presenca = hcRows.reduce((s, r) => s + parseNumero(r[7]), 0);
     const faltas = hcRows.reduce((s, r) => s + parseNumero(r[8]), 0);
-    // NOVA FÓRMULA: faltas / (presença + faltas)
     const denominadorAbs = presenca + faltas;
     const abs = denominadorAbs > 0 ? (faltas / denominadorAbs) * 100 : 0;
     const turnTotal = hcRows.reduce((s, r) =>
@@ -895,7 +908,7 @@ function renderizarDashboard() {
     const hcFiltrado = filtrarHCPor(filtroData, filtroWH, filtroSetor);
     const producaoFiltrado = filtrarProdPor(filtroData, filtroWH);
     
-    // KPIs HC (dia selecionado)
+    // KPIs HC
     const { hc, presenca, faltas, abs, turn } = calcularKPIsHC(hcFiltrado);
     
     document.getElementById('kpi-headcount').textContent = formatNumber(hc);
@@ -903,7 +916,7 @@ function renderizarDashboard() {
     document.getElementById('kpi-absenteismo').textContent = formatPercent(abs);
     document.getElementById('kpi-turnover').textContent = formatPercent(turn);
     
-    // KPIs Produção (dia selecionado)
+    // KPIs Produção
     const { procOut, dropOut, procIn, recIn } = calcularKPIsProd(producaoFiltrado);
     
     document.getElementById('kpi-proc-out').textContent = formatNumber(procOut);
@@ -911,7 +924,7 @@ function renderizarDashboard() {
     document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
     document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
     
-    // Comparação com dia anterior (real)
+    // Comparação com dia anterior
     const dataAnterior = getDataAnteriorStr(filtroData);
     if (dataAnterior) {
         const hcAnterior = filtrarHCPor(dataAnterior, filtroWH, filtroSetor);
@@ -934,18 +947,15 @@ function renderizarDashboard() {
             .forEach(id => atualizarBadge(id, { tipo: 'neutral', valor: 0, icone: 'fa-minus' }));
     }
     
-    // Renderizar histórico dos últimos 4 dias
     renderizarHistorico(filtroData, filtroWH);
-    
     renderizarTabelas(hcFiltrado, producaoFiltrado);
-    renderizarGraficos(filtroWH, filtroSetor);
+    renderizarGraficos(filtroWH, filtroSetor, filtroData);
 }
 
 function renderizarHistorico(dataBase, filtroWH) {
     const dias = [];
     let date = new Date(dataBase);
     
-    // Pegar últimos 4 dias
     for (let i = 0; i < 4; i++) {
         date.setDate(date.getDate() - 1);
         dias.push(date.toISOString().split('T')[0]);
@@ -981,7 +991,7 @@ function renderizarHistorico(dataBase, filtroWH) {
 }
 
 function renderizarTabelas(hcData, prodData) {
-    // Tabela Setores (com normalização)
+    // Tabela Setores
     const setores = {};
     hcData.forEach(r => {
         const s = normalizarTexto(r[5]) || 'N/A';
@@ -1018,7 +1028,7 @@ function renderizarTabelas(hcData, prodData) {
         return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td><td style="color:#FF9800">${formatPercent(t)}</td></tr>`;
     }).join('');
     
-    // Tabela Produção por WH
+    // Tabela Produção
     const whsProd = {};
     prodData.forEach(r => {
         const w = r[1] || 'N/A';
@@ -1036,7 +1046,7 @@ function renderizarTabelas(hcData, prodData) {
         return `<tr><td><strong>${w}</strong></td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#F44336">${formatNumber(d.dropOut)}</td><td>${formatPercent(dp)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td><td style="color:#9C27B0">${formatNumber(d.recIn)}</td></tr>`;
     }).join('');
     
-    // Tabela Consolidada (sem Items/HC)
+    // Tabela Consolidada
     const cons = {};
     hcData.forEach(r => {
         const w = r[1] || 'N/A';
@@ -1062,7 +1072,7 @@ function renderizarTabelas(hcData, prodData) {
     }).join('');
 }
 
-function renderizarGraficos(filtroWH, filtroSetor) {
+function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
     const opt = {
         responsive: true,
         maintainAspectRatio: false,
@@ -1073,7 +1083,7 @@ function renderizarGraficos(filtroWH, filtroSetor) {
         }
     };
     
-    // Gráfico HC - linha única, últimos 30 dias
+    // Gráfico HC - últimos 30 dias
     const dadosPorData = {};
     dadosHC.slice(1).forEach(r => {
         if (!r || r.length === 0) return;
@@ -1113,56 +1123,88 @@ function renderizarGraficos(filtroWH, filtroSetor) {
         options: opt
     });
     
-    // Gráfico Outbound por WH
-    const whOut = {};
-    dadosProducao.slice(1).forEach(r => {
-        const w = r[1];
-        if (!w || w === 'BRS' || w === 'OTHERS') return;
-        if (!aplicarFiltroWarehouse(filtroWH, w)) return;
-        if (!whOut[w]) whOut[w] = { proc: 0, drop: 0 };
-        whOut[w].proc += parseNumero(r[2]);
-        whOut[w].drop += parseNumero(r[3]);
+    // Gráfico Outbound - Últimos 7 dias (linha)
+    const ultimos7Dias = getUltimos7Dias(filtroData);
+    const dadosOutbound = { proc: [], drop: [] };
+    
+    ultimos7Dias.forEach(dia => {
+        const rows = filtrarProdPor(dia, filtroWH);
+        const proc = rows.reduce((s, r) => s + parseNumero(r[2]), 0);
+        const drop = rows.reduce((s, r) => s + parseNumero(r[3]), 0);
+        dadosOutbound.proc.push(proc);
+        dadosOutbound.drop.push(drop);
     });
-    const whsOut = Object.keys(whOut).sort();
+    
     if (chartOutbound) chartOutbound.destroy();
     chartOutbound = new Chart(document.getElementById('chartOutbound'), {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: whsOut,
+            labels: ultimos7Dias.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
             datasets: [
-                { label: 'Processado', data: whsOut.map(w => whOut[w].proc), backgroundColor: '#4CAF50' },
-                { label: 'Drop', data: whsOut.map(w => whOut[w].drop), backgroundColor: '#F44336' }
+                {
+                    label: 'Processado',
+                    data: dadosOutbound.proc,
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76,175,80,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Drop',
+                    data: dadosOutbound.drop,
+                    borderColor: '#F44336',
+                    backgroundColor: 'rgba(244,67,54,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }
             ]
         },
         options: opt
     });
     
-    // Gráfico Inbound por WH
-    const whIn = {};
-    dadosProducao.slice(1).forEach(r => {
-        const w = r[1];
-        if (!w || w === 'BRS' || w === 'OTHERS') return;
-        if (!aplicarFiltroWarehouse(filtroWH, w)) return;
-        if (!whIn[w]) whIn[w] = { proc: 0, rec: 0 };
-        whIn[w].proc += parseNumero(r[4]);
-        whIn[w].rec += parseNumero(r[5]);
+    // Gráfico Inbound - Últimos 7 dias (linha)
+    const dadosInbound = { proc: [], rec: [] };
+    
+    ultimos7Dias.forEach(dia => {
+        const rows = filtrarProdPor(dia, filtroWH);
+        const proc = rows.reduce((s, r) => s + parseNumero(r[4]), 0);
+        const rec = rows.reduce((s, r) => s + parseNumero(r[5]), 0);
+        dadosInbound.proc.push(proc);
+        dadosInbound.rec.push(rec);
     });
-    const whsIn = Object.keys(whIn).sort();
+    
     if (chartInbound) chartInbound.destroy();
     chartInbound = new Chart(document.getElementById('chartInbound'), {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: whsIn,
+            labels: ultimos7Dias.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
             datasets: [
-                { label: 'Processado', data: whsIn.map(w => whIn[w].proc), backgroundColor: '#2196F3' },
-                { label: 'Recebido', data: whsIn.map(w => whIn[w].rec), backgroundColor: '#9C27B0' }
+                {
+                    label: 'Processado',
+                    data: dadosInbound.proc,
+                    borderColor: '#2196F3',
+                    backgroundColor: 'rgba(33,150,243,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Recebido',
+                    data: dadosInbound.rec,
+                    borderColor: '#9C27B0',
+                    backgroundColor: 'rgba(156,39,176,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }
             ]
         },
         options: opt
     });
     
-    // Gráfico Consolidado - barras com HC, Presença, %ABS, Proc Out, Proc In
-    const filtroData = document.getElementById('filter-date').value;
+    // Gráfico Consolidado
     const hcFiltrado = filtrarHCPor(filtroData, filtroWH, filtroSetor);
     const prodFiltrado = filtrarProdPor(filtroData, filtroWH);
     
