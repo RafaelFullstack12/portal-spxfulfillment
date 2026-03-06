@@ -340,7 +340,7 @@
             </a>
         </div>
 
-        <!-- Success Banner (simplificado) -->
+        <!-- Success Banner -->
         <div class="success-banner">
             <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
             <div style="flex: 1;">
@@ -391,13 +391,13 @@
             </div>
         </div>
 
-        <!-- Tabs (nomes atualizados) -->
+        <!-- Tabs -->
         <div class="tab-container">
             <button class="tab active" onclick="trocarAba('hc')">
                 <i class="fas fa-users mr-2"></i>Headcount & Absenteísmo
             </button>
-            <button class="tab" onclick="trocarAba('processo')">
-                <i class="fas fa-boxes mr-2"></i>Processo
+            <button class="tab" onclick="trocarAba('processados')">
+                <i class="fas fa-boxes mr-2"></i>Processados
             </button>
             <button class="tab" onclick="trocarAba('produtividade')">
                 <i class="fas fa-chart-pie mr-2"></i>Produtividade
@@ -512,10 +512,9 @@
             </div>
         </div>
 
-        <!-- TAB 2: Processo (antiga Produtividade) -->
-        <div id="tab-processo" class="tab-content">
+        <!-- TAB 2: PROCESSADOS -->
+        <div id="tab-processados" class="tab-content">
             <div class="kpi-grid">
-                <!-- 1. Drop Total (Outbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-exclamation-triangle kpi-icon" style="color: #F44336;"></i>
                     <div class="kpi-label">Drop Total (Outbound)</div>
@@ -529,7 +528,6 @@
                     <div class="mini-history" id="hist-drop-out"></div>
                 </div>
 
-                <!-- 2. Processado Total (Outbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-box kpi-icon" style="color: #4CAF50;"></i>
                     <div class="kpi-label">Processado Total (Outbound)</div>
@@ -543,7 +541,6 @@
                     <div class="mini-history" id="hist-proc-out"></div>
                 </div>
 
-                <!-- 3. Recebido Total (Inbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-dolly kpi-icon" style="color: #9C27B0;"></i>
                     <div class="kpi-label">Recebido Total (Inbound)</div>
@@ -557,7 +554,6 @@
                     <div class="mini-history" id="hist-rec-in"></div>
                 </div>
 
-                <!-- 4. Processado Total (Inbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-truck-loading kpi-icon" style="color: #2196F3;"></i>
                     <div class="kpi-label">Processado Total (Inbound)</div>
@@ -617,7 +613,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: Produtividade (antiga Visão Consolidada) -->
+        <!-- TAB 3: Produtividade -->
         <div id="tab-produtividade" class="tab-content">
             <div class="chart-container">
                 <h3 class="section-title">
@@ -666,7 +662,6 @@
 // DASHBOARD INTEGRADO - HC & PRODUTIVIDADE
 // ================================
 
-// Variáveis globais
 const API_BASE = window.location.origin;
 let chartHC = null;
 let chartOutbound = null;
@@ -674,6 +669,7 @@ let chartInbound = null;
 let chartConsolidado = null;
 let dadosHC = [];
 let dadosProducao = [];
+let dadosProducaoProcessados = []; // Dados com correção BRFSP1/BRFSP2
 
 // ================================
 // UTILITÁRIOS
@@ -726,6 +722,67 @@ function atualizarBadge(elementId, comparacao) {
 }
 
 // ================================
+// FORMATAÇÃO DE DATA CORRIGIDA
+// ================================
+
+function formatarDataCorreta(dataStr) {
+    // Evita problema de timezone convertendo manualmente YYYY-MM-DD → DD/MM
+    if (!dataStr) return '';
+    const partes = dataStr.split('-');
+    if (partes.length !== 3) return dataStr;
+    const dia = partes[2];
+    const mes = partes[1];
+    return `${dia}/${mes}`;
+}
+
+// ================================
+// CORREÇÃO BRFSP1/BRFSP2
+// ================================
+
+function processarDadosProducao(dadosRaw) {
+    console.log('[Dashboard] Processando correção BRFSP1/BRFSP2...');
+    
+    const dadosLimpos = dadosRaw.slice(1); // Remove header
+    const dadosProcessados = [];
+    
+    // Agrupar por data para facilitar a correção
+    const dadosPorData = {};
+    
+    dadosLimpos.forEach(row => {
+        const data = row[0];
+        if (!data) return;
+        if (!dadosPorData[data]) dadosPorData[data] = [];
+        dadosPorData[data].push([...row]); // Cria cópia para não mutar original
+    });
+
+    // Processar cada data
+    Object.keys(dadosPorData).forEach(data => {
+        const registrosDoDia = dadosPorData[data];
+        
+        // Encontrar registros BRFSP1 e BRFSP2
+        const registroBRFSP1 = registrosDoDia.find(r => r[1] === 'BRFSP1');
+        const registroBRFSP2 = registrosDoDia.find(r => r[1] === 'BRFSP2');
+        
+        // Se ambos existem, corrigir BRFSP1
+        if (registroBRFSP1 && registroBRFSP2) {
+            // BRFSP1 corrigido = BRFSP1 original - BRFSP2
+            registroBRFSP1[2] = Math.max(0, parseNumero(registroBRFSP1[2]) - parseNumero(registroBRFSP2[2])); // Proc Out
+            registroBRFSP1[3] = Math.max(0, parseNumero(registroBRFSP1[3]) - parseNumero(registroBRFSP2[3])); // Drop Out
+            registroBRFSP1[4] = Math.max(0, parseNumero(registroBRFSP1[4]) - parseNumero(registroBRFSP2[4])); // Proc In
+            registroBRFSP1[5] = Math.max(0, parseNumero(registroBRFSP1[5]) - parseNumero(registroBRFSP2[5])); // Rec In
+        }
+        
+        // Adicionar todos os registros do dia (BRFSP1 já corrigido)
+        registrosDoDia.forEach(row => {
+            dadosProcessados.push(row);
+        });
+    });
+    
+    console.log(`[Dashboard] Correção BRFSP1/BRFSP2 concluída. ${dadosProcessados.length} registros processados.`);
+    return dadosProcessados;
+}
+
+// ================================
 // CONTROLE DE ABAS
 // ================================
 
@@ -735,7 +792,7 @@ function trocarAba(aba) {
     
     const abaMap = {
         'hc': 'Headcount',
-        'processo': 'Processo',
+        'processados': 'PROCESSADOS',
         'produtividade': 'Produtividade'
     };
     
@@ -781,7 +838,10 @@ async function carregarDados() {
         dadosHC = dataHC.data || [];
         dadosProducao = dataProducao.data || [];
         
-        console.log(`[Dashboard] HC: ${dadosHC.length}, Prod: ${dadosProducao.length}`);
+        // PROCESSAR CORREÇÃO BRFSP1/BRFSP2 AQUI
+        dadosProducaoProcessados = processarDadosProducao(dadosProducao);
+        
+        console.log(`[Dashboard] HC: ${dadosHC.length}, Prod: ${dadosProducao.length} → ${dadosProducaoProcessados.length} processados`);
         
         popularFiltros();
         renderizarDashboard();
@@ -798,11 +858,15 @@ async function carregarDados() {
 
 function popularFiltros() {
     const hcSemHeader = dadosHC.slice(1);
-    const prodSemHeader = dadosProducao.slice(1);
     
-    // Filtro Warehouse - excluir BRS e OTHERS, adicionar FRANÇÃO
+    // Filtro Warehouse - usar dados processados, excluir BRS e OTHERS
     const whSelect = document.getElementById('filter-warehouse');
-    const warehouses = [...new Set([...hcSemHeader.map(r => r[1]), ...prodSemHeader.map(r => r[1])].filter(Boolean))]
+    const whsUnicos = new Set();
+    
+    hcSemHeader.forEach(r => r[1] && whsUnicos.add(r[1]));
+    dadosProducaoProcessados.forEach(r => r[1] && whsUnicos.add(r[1]));
+    
+    const warehouses = [...whsUnicos]
         .filter(wh => wh !== 'BRS' && wh !== 'OTHERS')
         .sort();
     
@@ -838,14 +902,14 @@ function aplicarFiltroWarehouse(whValor, whLinha) {
 
 function getDataAnteriorStr(dataStr) {
     if (!dataStr) return null;
-    const d = new Date(dataStr);
+    const d = new Date(dataStr + 'T12:00:00'); // Força meio-dia para evitar problemas de timezone
     d.setDate(d.getDate() - 1);
     return d.toISOString().split('T')[0];
 }
 
 function getUltimos7Dias(dataBase) {
     const dias = [];
-    let date = new Date(dataBase);
+    let date = new Date(dataBase + 'T12:00:00'); // Força meio-dia
     for (let i = 0; i < 7; i++) {
         dias.unshift(date.toISOString().split('T')[0]);
         date.setDate(date.getDate() - 1);
@@ -867,7 +931,8 @@ function filtrarHCPor(data, whSelecionado, setorSelecionado) {
 }
 
 function filtrarProdPor(data, whSelecionado) {
-    return dadosProducao.slice(1).filter(row => {
+    // USAR DADOS PROCESSADOS (COM BRFSP1 CORRIGIDO)
+    return dadosProducaoProcessados.filter(row => {
         if (!row || row.length === 0) return false;
         if (data && row[0] !== data) return false;
         const wh = row[1];
@@ -954,7 +1019,7 @@ function renderizarDashboard() {
 
 function renderizarHistorico(dataBase, filtroWH) {
     const dias = [];
-    let date = new Date(dataBase);
+    let date = new Date(dataBase + 'T12:00:00');
     
     for (let i = 0; i < 4; i++) {
         date.setDate(date.getDate() - 1);
@@ -962,24 +1027,23 @@ function renderizarHistorico(dataBase, filtroWH) {
     }
     
     const metricas = {
-        'drop-out': { coluna: 3, dados: dadosProducao },
-        'proc-out': { coluna: 2, dados: dadosProducao },
-        'rec-in': { coluna: 5, dados: dadosProducao },
-        'proc-in': { coluna: 4, dados: dadosProducao }
+        'drop-out': 3,
+        'proc-out': 2,
+        'rec-in': 5,
+        'proc-in': 4
     };
     
     Object.keys(metricas).forEach(metrica => {
-        const config = metricas[metrica];
+        const coluna = metricas[metrica];
         let html = '<div class="mini-history-title">Últimos 4 dias</div>';
         
         dias.forEach(dia => {
             const rows = filtrarProdPor(dia, filtroWH);
-            const valor = rows.reduce((s, r) => s + parseNumero(r[config.coluna]), 0);
-            const diaFormatado = new Date(dia).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const valor = rows.reduce((s, r) => s + parseNumero(r[coluna]), 0);
             
             html += `
                 <div class="mini-history-row">
-                    <span class="mini-history-date">${diaFormatado}</span>
+                    <span class="mini-history-date">${formatarDataCorreta(dia)}</span>
                     <span class="mini-history-value">${formatNumber(valor)}</span>
                 </div>
             `;
@@ -1105,7 +1169,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
     chartHC = new Chart(document.getElementById('chartHC'), {
         type: 'line',
         data: {
-            labels: ultimasDatas.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+            labels: ultimasDatas.map(d => formatarDataCorreta(d)),
             datasets: [
                 {
                     label: 'HC Total',
@@ -1139,7 +1203,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
     chartOutbound = new Chart(document.getElementById('chartOutbound'), {
         type: 'line',
         data: {
-            labels: ultimos7Dias.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+            labels: ultimos7Dias.map(d => formatarDataCorreta(d)),
             datasets: [
                 {
                     label: 'Processado',
@@ -1179,7 +1243,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
     chartInbound = new Chart(document.getElementById('chartInbound'), {
         type: 'line',
         data: {
-            labels: ultimos7Dias.map(d => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+            labels: ultimos7Dias.map(d => formatarDataCorreta(d)),
             datasets: [
                 {
                     label: 'Processado',
