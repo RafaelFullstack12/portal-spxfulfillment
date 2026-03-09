@@ -441,9 +441,6 @@
                 <button class="btn" style="background: #4CAF50; color: white;" onclick="marcarTodosPresentes()">
                     <i class="fas fa-check-double mr-2"></i>Marcar Todos Presentes
                 </button>
-                <button class="btn btn-secondary" onclick="recarregarMarcacoes()">
-                    <i class="fas fa-sync-alt mr-2"></i>Recarregar
-                </button>
                 <button class="btn btn-primary" onclick="salvarMarcacoes()">
                     <i class="fas fa-save mr-2"></i>Salvar
                 </button>
@@ -582,14 +579,75 @@
         </div>
     </div>
 
+    <!-- Modal de Escolha: Um Dia ou Vários Dias -->
+    <div id="modal-escolha-periodo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2b2b2b; padding: 35px; border-radius: 12px; min-width: 450px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+            <h3 style="color: #fff; margin-bottom: 10px; text-align: center; font-size: 20px;">
+                <i class="fas fa-calendar-check" style="color: #FF9800; margin-right: 8px;"></i>
+                Período do Atestado
+            </h3>
+            
+            <div style="margin-bottom: 25px; text-align: center;">
+                <div id="escolha-tipo-marcacao" style="color: #B0B0B0; font-size: 15px; font-weight: 500;"></div>
+            </div>
+            
+            <p style="color: #E0E0E0; text-align: center; margin-bottom: 30px; font-size: 15px; line-height: 1.5;">
+                Este atestado é apenas para <strong style="color: #4CAF50;">hoje</strong> ou para <strong style="color: #2196F3;">vários dias</strong>?
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="escolherApenasHoje()" style="padding: 14px 24px; background: #4CAF50; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Apenas Hoje (Dia <span id="dia-atual-texto"></span>)</span>
+                </button>
+                
+                <button onclick="escolherVariosDias()" style="padding: 14px 24px; background: #2196F3; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
+                    <i class="fas fa-calendar-alt"></i>
+                    Vários Dias (Período)
+                </button>
+                
+                <button onclick="cancelarEscolhaPeriodo()" style="padding: 12px 24px; background: #666; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 14px; margin-top: 8px; transition: all 0.3s;">
+                    <i class="fas fa-times" style="margin-right: 6px;"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Seleção de Período (Date Picker) -->
+    <div id="modal-periodo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 30px; border-radius: 12px; min-width: 400px;">
+            <h3 style="color: #fff; margin-bottom: 20px; text-align: center;">📅 Selecionar Período</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Tipo de Marcação:</label>
+                <div id="tipo-periodo" style="color: #fff; font-weight: bold; font-size: 16px;"></div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Data de Início:</label>
+                <input type="date" id="data-inicio" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Data de Fim:</label>
+                <input type="date" id="data-fim" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="cancelarPeriodo()" style="padding: 12px 24px; background: #666; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Cancelar</button>
+                <button onclick="confirmarPeriodo()" style="padding: 12px 24px; background: #4CAF50; border: none; border-radius: 8px; color: #fff; cursor: pointer;">✓ Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
 // ========================================
-// CONFIGURAÇÃO GLOBAL (INICIALIZADA NO TOPO)
+// CONFIGURAÇÃO GLOBAL
 // ========================================
-const WAREHOUSE = 'SP'; // Pode ser PE, SP (FRANCO), GO
-const API_BASE = ''; // Base vazia = mesmo domínio
+const WAREHOUSE = 'SP';
+const API_BASE = '';
 
-// Opções de marcação de presença (20 tipos - atualizado conforme especificação)
 const OPCOES_PRESENCA = {
     '': { nome: '-- Selecione --', cor: '#666666' },
     'P': { nome: 'P - Presente', cor: '#4CAF50' },
@@ -611,46 +669,18 @@ const OPCOES_PRESENCA = {
     'ON': { nome: 'ON - Onboarding', cor: '#00BCD4' }
 };
 
-// Siglas de desligamento (para filtro histórico apenas - NÃO disponíveis para marcação)
 const SIGLAS_DESLIGAMENTO = ['DV', 'DP', 'DF'];
-
-// Siglas que requerem seleção de período (date picker)
 const SIGLAS_COM_PERIODO = ['AM', 'AF', 'AL'];
-
-// Variável global para controle do modal de período
 let periodoAtual = null;
 
-// Normalizar campo lider (supervisor) - FUNÇÃO ÚNICA
 function normalizeLider(valor) {
     if (!valor) return 'NÃO ATRIBUÍDO';
-    return valor
-        .trim()
-        .toUpperCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+    return valor.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// Obter email do usuário do cookie
-// Sistema de autenticação aprimorado
 function getUserEmail() {
     const match = document.cookie.match(/user_email=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;
-}
-
-function setUserEmail(email) {
-    const expires = new Date();
-    expires.setHours(expires.getHours() + 8); // 8 horas de sessão
-    document.cookie = `user_email=${encodeURIComponent(email)}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
-}
-
-function clearUserEmail() {
-    document.cookie = 'user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    window.location.href = '/';
-}
-
-function isSessionValid() {
-    const email = getUserEmail();
-    return email && email.includes('@');
 }
 
 const MESES = [
@@ -660,7 +690,7 @@ const MESES = [
 ];
 
 // ========================================
-// ESTADO GLOBAL (INICIALIZADO NO TOPO)
+// ESTADO GLOBAL + SISTEMA DE CACHE
 // ========================================
 let estado = {
     warehouse: WAREHOUSE,
@@ -672,7 +702,8 @@ let estado = {
     todosColaboradores: [],
     todosSupervisores: [],
     marcacoesModificadas: {},
-    filtroStatus: 'todos' // Filtro: todos, ativos, desligados, pendentes, marcados
+    marcacoesCache: {}, // NOVO: Cache visual por dia
+    filtroStatus: 'todos'
 };
 
 // ========================================
@@ -680,25 +711,11 @@ let estado = {
 // ========================================
 function mostrarTela(nomeTela) {
     console.log('[mostrarTela] Mudando para:', nomeTela);
-    
-    // Remove active de todas as telas
-    document.querySelectorAll('.tela').forEach(t => {
-        t.classList.remove('active');
-        console.log('[mostrarTela] Removido active de:', t.id);
-    });
-    
-    // Adiciona active na tela solicitada
-    const telaId = `tela-${nomeTela}`;
-    const tela = document.getElementById(telaId);
-    
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('active'));
+    const tela = document.getElementById(`tela-${nomeTela}`);
     if (tela) {
         tela.classList.add('active');
-        console.log('[mostrarTela] Adicionado active em:', telaId);
-        console.log('[mostrarTela] Classes da tela:', tela.className);
-    } else {
-        console.error('[mostrarTela] ERRO: Tela não encontrada:', telaId);
-        console.log('[mostrarTela] Telas disponíveis:', 
-            Array.from(document.querySelectorAll('.tela')).map(t => t.id));
+        console.log('[mostrarTela] Tela ativa:', nomeTela);
     }
 }
 
@@ -720,23 +737,19 @@ function esconderLoading() {
 function carregarMeses() {
     console.log('[carregarMeses] INICIANDO');
     const ano = new Date().getFullYear();
-    const mesAtual = new Date().getMonth(); // 0-11
+    const mesAtual = new Date().getMonth();
     
     const grid = document.getElementById('meses-grid');
     const infoWarehouse = document.getElementById('info-warehouse');
     
-    console.log('[carregarMeses] grid:', grid ? 'OK' : 'ERRO');
-    console.log('[carregarMeses] infoWarehouse:', infoWarehouse ? 'OK' : 'ERRO');
-    
     if (!grid || !infoWarehouse) {
-        console.error('Elementos não encontrados: meses-grid ou info-warehouse');
+        console.error('Elementos não encontrados');
         return;
     }
     
     grid.innerHTML = '';
     infoWarehouse.textContent = `Warehouse: ${estado.warehouse}`;
     
-    // Mostrar apenas o mês atual
     const mes = MESES[mesAtual];
     const card = document.createElement('div');
     card.className = 'card';
@@ -748,9 +761,7 @@ function carregarMeses() {
     `;
     grid.appendChild(card);
     
-    console.log('[carregarMeses] Card criado:', mes, ano);
     mostrarTela('meses');
-    console.log('[carregarMeses] CONCLUÍDO');
 }
 
 async function selecionarMes(mes, ano) {
@@ -771,23 +782,10 @@ async function selecionarMes(mes, ano) {
         
         estado.todosColaboradores = data.colaboradores || [];
         
-        // LOG PASSO 1: CONTAGEM BRUTA
-        console.log('[DEBUG PASSO 1] Total colaboradores da API:', estado.todosColaboradores.length);
-        
-        // Normalizar campo lider em TODOS os colaboradores
         estado.todosColaboradores.forEach(c => {
             c.liderNormalizado = normalizeLider(c.lider);
         });
         
-        // LOG PASSO 2: CONTAGEM POR LIDER (BRUTA)
-        const contagemPorLider = {};
-        estado.todosColaboradores.forEach(c => {
-            contagemPorLider[c.liderNormalizado] = (contagemPorLider[c.liderNormalizado] || 0) + 1;
-        });
-        console.log('[DEBUG PASSO 2] Contagem por lider:', contagemPorLider);
-        console.log('[DEBUG PASSO 2] VERONICA THOMAZ tem:', contagemPorLider['VERONICA THOMAZ'] || 0, 'colaboradores');
-        
-        // Extrair lista única de supervisores (normalizados)
         const supervisoresSet = new Set();
         estado.todosColaboradores.forEach(c => {
             if (c.liderNormalizado && c.liderNormalizado !== 'NÃO ATRIBUÍDO') {
@@ -796,8 +794,6 @@ async function selecionarMes(mes, ano) {
         });
         
         estado.todosSupervisores = Array.from(supervisoresSet).sort();
-        
-        console.log('[DEBUG] Total supervisores encontrados:', estado.todosSupervisores.length);
         
         esconderLoading();
         carregarSupervisores();
@@ -825,10 +821,7 @@ function carregarSupervisores() {
     const grid = document.getElementById('supervisores-grid');
     const infoMes = document.getElementById('info-mes');
     
-    if (!grid || !infoMes) {
-        console.error('Elementos não encontrados: supervisores-grid ou info-mes');
-        return;
-    }
+    if (!grid || !infoMes) return;
     
     grid.innerHTML = '';
     infoMes.textContent = `${estado.mes} ${estado.ano}`;
@@ -844,11 +837,6 @@ function carregarSupervisores() {
         card.onclick = () => selecionarSupervisor(supervisor);
         
         const qtd = estado.todosColaboradores.filter(c => c.liderNormalizado === supervisor).length;
-        
-        // LOG: Contagem específica
-        if (supervisor === 'VERONICA THOMAZ') {
-            console.log('[DEBUG] VERONICA THOMAZ no card:', qtd, 'colaboradores');
-        }
         
         card.innerHTML = `
             <div class="card-icon">👤</div>
@@ -888,63 +876,72 @@ function voltarParaSupervisores() {
 }
 
 // ========================================
-// TELA 3: CALENDÁRIO
+// TELA 3: CALENDÁRIO (COM CORREÇÕES)
 // ========================================
 function carregarCalendario() {
     const grid = document.getElementById('calendario-grid');
     const infoSupervisor = document.getElementById('info-supervisor');
     
-    // Elemento grid é obrigatório, info-supervisor é opcional
-    if (!grid) {
-        console.error('Elemento obrigatório não encontrado: calendario-grid');
-        return;
-    }
+    if (!grid) return;
     
     grid.innerHTML = '';
-    
-    // Atualiza info-supervisor apenas se existir
     if (infoSupervisor) {
         infoSupervisor.textContent = estado.supervisor;
-    } else {
-        console.warn('Elemento opcional não encontrado: info-supervisor');
     }
     
     const colaboradoresSupervisor = estado.todosColaboradores.filter(
         c => c.liderNormalizado === estado.supervisor
     );
     
-    // LOG PASSO 3: Contagem após filtro de supervisor
-    console.log('[DEBUG PASSO 3 - Calendário] Supervisor selecionado:', estado.supervisor);
-    console.log('[DEBUG PASSO 3 - Calendário] Colaboradores filtrados:', colaboradoresSupervisor.length);
-    if (estado.supervisor === 'VERONICA THOMAZ') {
-        console.log('[DEBUG PASSO 3] VERONICA THOMAZ após filtro:', colaboradoresSupervisor.length);
-        console.log('[DEBUG PASSO 3] Lista de colaboradores:', colaboradoresSupervisor.map(c => c.nome));
-    }
-    
     const mesIndex = MESES.indexOf(estado.mes);
     const diasNoMes = new Date(estado.ano, mesIndex + 1, 0).getDate();
+    
+    // CORREÇÃO 2: Obter data atual para bloqueio
+    const hoje = new Date();
+    const diaAtual = hoje.getDate();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    const ehMesAtual = (mesIndex === mesAtual && estado.ano === anoAtual);
     
     let completos = 0;
     let pendentes = 0;
     
     for (let dia = 1; dia <= diasNoMes; dia++) {
         let marcados = 0;
+        
+        // CORREÇÃO 1: Contar marcações do cache também
         colaboradoresSupervisor.forEach(colab => {
-            if (colab.marcacoes && colab.marcacoes[dia] && colab.marcacoes[dia].sigla) {
+            const chaveCache = `${colab.wfmUser}_${dia}`;
+            
+            if (estado.marcacoesCache[chaveCache]) {
+                marcados++;
+            } else if (colab.marcacoes && colab.marcacoes[dia] && colab.marcacoes[dia].sigla) {
                 marcados++;
             }
         });
         
         const total = colaboradoresSupervisor.length;
-        const isCompleto = marcados === total;
-        const isPendente = marcados > 0 && marcados < total;
+        const isCompleto = marcados === total && total > 0;
+        
+        // CORREÇÃO 3: Pendente quando tem colaboradores MAS não está completo
+        const isPendente = total > 0 && !isCompleto;
         
         if (isCompleto) completos++;
         if (isPendente) pendentes++;
         
         const card = document.createElement('div');
         card.className = `day-card ${isCompleto ? 'completo' : (isPendente ? 'pendente' : '')}`;
-        card.style.cursor = 'pointer';
+        
+        // CORREÇÃO 2: Bloquear dias futuros
+        const ehDiaFuturo = ehMesAtual && dia > diaAtual;
+        
+        if (ehDiaFuturo) {
+            card.style.cursor = 'not-allowed';
+            card.style.opacity = '0.4';
+            card.title = 'Dia futuro - não disponível para marcação';
+        } else {
+            card.style.cursor = 'pointer';
+        }
         
         const dayNumber = document.createElement('div');
         dayNumber.className = 'day-number';
@@ -952,43 +949,20 @@ function carregarCalendario() {
         
         const dayStatus = document.createElement('div');
         dayStatus.className = 'day-status';
-        dayStatus.textContent = `${marcados}/${total}`;
+        dayStatus.textContent = ehDiaFuturo ? 'Bloqueado' : `${marcados}/${total}`;
         
         card.appendChild(dayNumber);
         card.appendChild(dayStatus);
         
-        card.addEventListener('click', function() {
-            console.log('\n========== CLIQUE NO DIA ==========');
-            console.log('[CLICK] Dia clicado:', dia);
-            console.log('[CLICK] Estado ANTES:', JSON.stringify(estado));
-            
-            estado.dia = dia;
-            console.log('[CLICK] Estado.dia definido como:', estado.dia);
-            console.log('[CLICK] Estado DEPOIS:', JSON.stringify(estado));
-            
-            console.log('[CLICK] >>> Chamando carregarMarcacoes()...');
-            try {
+        // Só permite clique em dias não futuros
+        if (!ehDiaFuturo) {
+            card.addEventListener('click', function() {
+                console.log('[CLICK] Dia selecionado:', dia);
+                estado.dia = dia;
                 carregarMarcacoes();
-                console.log('[CLICK] <<< carregarMarcacoes() SUCESSO');
-            } catch (e) {
-                console.error('[CLICK] ERRO em carregarMarcacoes():', e);
-                alert('Erro ao carregar marcações: ' + e.message);
-                return;
-            }
-            
-            console.log('[CLICK] >>> Chamando mostrarTela(marcacao)...');
-            try {
                 mostrarTela('marcacao');
-                console.log('[CLICK] <<< mostrarTela(marcacao) SUCESSO');
-            } catch (e) {
-                console.error('[CLICK] ERRO em mostrarTela():', e);
-                alert('Erro ao mostrar tela: ' + e.message);
-                return;
-            }
-            
-            console.log('[CLICK] ✅ CLIQUE PROCESSADO COM SUCESSO');
-            console.log('===================================\n');
-        });
+            });
+        }
         
         grid.appendChild(card);
     }
@@ -1002,24 +976,6 @@ function carregarCalendario() {
     if (statPendentes) statPendentes.textContent = pendentes;
 }
 
-function selecionarDia(dia) {
-    console.log('[selecionarDia] Chamado com dia:', dia);
-    console.log('[selecionarDia] Tipo do dia:', typeof dia);
-    estado.dia = parseInt(dia);
-    console.log('[selecionarDia] Estado.dia:', estado.dia);
-    console.log('[selecionarDia] Estado completo:', JSON.stringify(estado));
-    
-    try {
-        carregarMarcacoes();
-        console.log('[selecionarDia] carregarMarcacoes() concluído');
-        mostrarTela('marcacao');
-        console.log('[selecionarDia] mostrarTela(marcacao) concluído');
-    } catch (erro) {
-        console.error('[selecionarDia] ERRO:', erro);
-        alert('Erro ao selecionar dia: ' + erro.message);
-    }
-}
-
 function voltarParaCalendario() {
     estado.dia = null;
     estado.marcacoesModificadas = {};
@@ -1028,54 +984,28 @@ function voltarParaCalendario() {
 }
 
 // ========================================
-// TELA 4: MARCAÇÃO DE PRESENÇA
+// TELA 4: MARCAÇÃO COM CACHE
 // ========================================
 function carregarMarcacoes() {
-    console.log('[carregarMarcacoes] Iniciando...');
-    console.log('[carregarMarcacoes] Estado:', JSON.stringify(estado));
+    console.log('[carregarMarcacoes] Iniciando para dia:', estado.dia);
     
     const list = document.getElementById('colaboradores-list');
     const infoDia = document.getElementById('info-dia');
     
-    console.log('[carregarMarcacoes] Elementos encontrados:', {
-        list: !!list,
-        infoDia: !!infoDia
-    });
-    
-    if (!list) {
-        console.error('[carregarMarcacoes] ERRO CRÍTICO: colaboradores-list não encontrado!');
-        return;
-    }
-    
-    if (!infoDia) {
-        console.warn('[carregarMarcacoes] AVISO: info-dia não encontrado, continuando...');
-    }
+    if (!list) return;
     
     list.innerHTML = '';
-    console.log('[carregarMarcacoes] Lista limpa');
     
     if (infoDia) {
         infoDia.textContent = `Dia ${estado.dia} - ${estado.mes} ${estado.ano}`;
-        console.log('[carregarMarcacoes] Info dia atualizado');
     }
     
     estado.colaboradores = estado.todosColaboradores.filter(
         c => c.liderNormalizado === estado.supervisor
     );
-    console.log('[carregarMarcacoes] Colaboradores filtrados:', estado.colaboradores.length);
-    
-    // LOG PASSO 3: Contagem na marcação
-    if (estado.supervisor === 'VERONICA THOMAZ') {
-        console.log('[DEBUG PASSO 3 - Marcações] VERONICA THOMAZ após filtro:', estado.colaboradores.length);
-        console.log('[DEBUG PASSO 3 - Marcações] Lista:', estado.colaboradores.map(c => c.nome));
-    }
     
     renderizarColaboradores();
-    console.log('[carregarMarcacoes] renderizarColaboradores() concluído');
-    
     atualizarEstatisticas();
-    console.log('[carregarMarcacoes] atualizarEstatisticas() concluído');
-    console.log('[carregarMarcacoes] FINALIZADO COM SUCESSO');
 }
 
 function renderizarColaboradores() {
@@ -1091,21 +1021,23 @@ function renderizarColaboradores() {
     let totalFiltrado = 0;
     
     estado.colaboradores.forEach((colab) => {
-        // Filtro de busca por nome/WFM
         if (busca && !colab.nome.toLowerCase().includes(busca) && !colab.wfmUser.toLowerCase().includes(busca)) {
             return;
         }
         
-        // Verificar se o colaborador tem desligamento em qualquer dia do mês
         if (temDesligamentoNoMes(colab)) {
-            return; // Não mostrar desligados
+            return;
         }
         
-        // Pega a marcação atual do colaborador para este dia
+        // CORREÇÃO 1: Sistema de cache triplo
+        const chaveCache = `${colab.wfmUser}_${estado.dia}`;
         let marcacaoAtual = '';
         let isPeriodo = false;
         
-        if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
+        // Prioridade: Cache visual > Modificações > Dados originais
+        if (estado.marcacoesCache[chaveCache]) {
+            marcacaoAtual = estado.marcacoesCache[chaveCache];
+        } else if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
             const modificacao = estado.marcacoesModificadas[colab.wfmUser];
             if (typeof modificacao === 'object' && modificacao.tipo === 'periodo') {
                 if (estado.dia >= modificacao.inicio && estado.dia <= modificacao.fim) {
@@ -1119,11 +1051,9 @@ function renderizarColaboradores() {
             marcacaoAtual = colab.marcacoes[estado.dia].sigla;
         }
         
-        // Aplicar filtro de status
         const isPendente = !marcacaoAtual;
         const isMarcado = !!marcacaoAtual;
         
-        // Lógica de filtro por status
         if (estado.filtroStatus === 'pendentes' && !isPendente) return;
         if (estado.filtroStatus === 'marcados' && !isMarcado) return;
         
@@ -1139,7 +1069,6 @@ function renderizarColaboradores() {
             selectOptions += `<option value="${sigla}" ${selected}>${info.nome}</option>`;
         }
         
-        // Badge dinâmico
         let badgeHTML = '';
         if (isPendente) {
             badgeHTML = '<span class="badge badge-pendente">PENDENTE</span>';
@@ -1167,7 +1096,6 @@ function renderizarColaboradores() {
         list.appendChild(item);
     });
     
-    // Atualizar estatísticas com base nos colaboradores filtrados
     const statMarcacaoTotal = document.getElementById('stat-marcacao-total');
     const statMarcacaoMarcados = document.getElementById('stat-marcacao-marcados');
     const statMarcacaoPendentes = document.getElementById('stat-marcacao-pendentes');
@@ -1183,16 +1111,271 @@ function marcarPresenca(select) {
     
     console.log('[marcarPresenca] WFM:', wfmUser, 'Sigla:', sigla, 'Dia:', estado.dia);
     
-    // Verificar se precisa de seleção de período (AM, AF, AL)
     if (SIGLAS_COM_PERIODO.includes(sigla)) {
         periodoAtual = { wfmUser, sigla, select };
-        abrirModalEscolhaPeriodo(sigla); // Novo modal intermediário
+        abrirModalEscolhaPeriodo(sigla);
         return;
     }
     
-    // Marcação simples para o dia atual
+    // CORREÇÃO 1: Salvar em ambos os caches
+    const chaveCache = `${wfmUser}_${estado.dia}`;
+    estado.marcacoesCache[chaveCache] = sigla;
     estado.marcacoesModificadas[wfmUser] = sigla;
+    
     renderizarColaboradores();
+}
+
+function marcarTodosPresentes() {
+    let contador = 0;
+    
+    estado.colaboradores.forEach(colab => {
+        const chaveCache = `${colab.wfmUser}_${estado.dia}`;
+        let jaMarcado = false;
+        
+        if (estado.marcacoesCache[chaveCache]) {
+            jaMarcado = true;
+        } else if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
+            jaMarcado = true;
+        } else if (colab.marcacoes && colab.marcacoes[estado.dia]) {
+            jaMarcado = true;
+        }
+        
+        if (!jaMarcado && !temDesligamentoNoMes(colab)) {
+            estado.marcacoesCache[chaveCache] = 'P';
+            estado.marcacoesModificadas[colab.wfmUser] = 'P';
+            contador++;
+        }
+    });
+    
+    if (contador > 0) {
+        alert(`✅ ${contador} colaborador(es) marcado(s) como presente!`);
+        renderizarColaboradores();
+    } else {
+        alert('ℹ️ Todos os colaboradores já possuem marcação para este dia.');
+    }
+}
+
+// ========================================
+// FUNÇÕES DE APOIO
+// ========================================
+function filtrarColaboradores() {
+    renderizarColaboradores();
+}
+
+function aplicarFiltroStatus() {
+    const select = document.getElementById('filtro-status');
+    if (select) {
+        estado.filtroStatus = select.value;
+        renderizarColaboradores();
+    }
+}
+
+function atualizarEstatisticas() {
+    renderizarColaboradores();
+}
+
+function temDesligamentoNoMes(colab) {
+    if (!colab.marcacoes) return false;
+    
+    for (let dia = 1; dia <= 31; dia++) {
+        if (colab.marcacoes[dia] && SIGLAS_DESLIGAMENTO.includes(colab.marcacoes[dia].sigla)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ========================================
+// SISTEMA DE SALVAMENTO (CORRIGIDO)
+// ========================================
+async function salvarMarcacoes() {
+    console.log('[SAVE] Iniciando salvamento...');
+    
+    if (Object.keys(estado.marcacoesModificadas).length === 0) {
+        alert('Nenhuma marcação foi alterada.');
+        return;
+    }
+    
+    mostrarLoading('Salvando marcações...');
+    
+    try {
+        const todasMarcacoes = [];
+        
+        for (const [wfmUser, valor] of Object.entries(estado.marcacoesModificadas)) {
+            const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
+            if (!colab) continue;
+            
+            if (typeof valor === 'string') {
+                todasMarcacoes.push({
+                    wfmUser,
+                    nome: colab.nome,
+                    dia: estado.dia,
+                    sigla: valor
+                });
+            } else if (valor.tipo === 'periodo') {
+                for (let d = valor.inicio; d <= valor.fim; d++) {
+                    todasMarcacoes.push({
+                        wfmUser,
+                        nome: colab.nome,
+                        dia: d,
+                        sigla: valor.sigla
+                    });
+                }
+            }
+        }
+        
+        if (todasMarcacoes.length === 0) {
+            esconderLoading();
+            alert('Nenhuma marcação válida para salvar.');
+            return;
+        }
+        
+        const marcacoesPorDia = {};
+        todasMarcacoes.forEach(m => {
+            if (!marcacoesPorDia[m.dia]) {
+                marcacoesPorDia[m.dia] = [];
+            }
+            marcacoesPorDia[m.dia].push(m);
+        });
+        
+        let totalSalvos = 0;
+        
+        for (const [dia, marcacoes] of Object.entries(marcacoesPorDia)) {
+            const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-email': getUserEmail()
+                },
+                body: JSON.stringify({
+                    warehouse: estado.warehouse,
+                    mes: estado.mes,
+                    ano: estado.ano,
+                    dia: parseInt(dia),
+                    marcacoes: marcacoes
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                esconderLoading();
+                alert(`❌ Erro ao salvar dia ${dia}: ${data.error}`);
+                return;
+            }
+            
+            totalSalvos += data.salvos || marcacoes.length;
+        }
+        
+        console.log('[SAVE] API salvamento concluído com sucesso');
+        
+        // ✅ CORREÇÃO PRINCIPAL: Persistir marcações nos dados originais
+        for (const [wfmUser, valor] of Object.entries(estado.marcacoesModificadas)) {
+            const colabGlobal = estado.todosColaboradores.find(c => c.wfmUser === wfmUser);
+            
+            if (colabGlobal) {
+                if (!colabGlobal.marcacoes) {
+                    colabGlobal.marcacoes = {};
+                }
+                
+                if (typeof valor === 'string') {
+                    colabGlobal.marcacoes[estado.dia] = { 
+                        sigla: valor, 
+                        tipo: 'manual' 
+                    };
+                    
+                    const chaveCache = `${wfmUser}_${estado.dia}`;
+                    estado.marcacoesCache[chaveCache] = valor;
+                    
+                    console.log(`[SAVE] Persistido ${wfmUser} - Dia ${estado.dia}: ${valor}`);
+                    
+                } else if (valor.tipo === 'periodo') {
+                    for (let d = valor.inicio; d <= valor.fim; d++) {
+                        colabGlobal.marcacoes[d] = { 
+                            sigla: valor.sigla, 
+                            tipo: 'manual' 
+                        };
+                        
+                        const chaveCache = `${wfmUser}_${d}`;
+                        estado.marcacoesCache[chaveCache] = valor.sigla;
+                    }
+                    
+                    console.log(`[SAVE] Persistido período ${wfmUser} - Dias ${valor.inicio}-${valor.fim}: ${valor.sigla}`);
+                }
+            }
+        }
+        
+        esconderLoading();
+        
+        const periodos = Object.values(estado.marcacoesModificadas).filter(v => v.tipo === 'periodo').length;
+        
+        let mensagem = `✅ Sucesso!\n\n${totalSalvos} marcação(ões) salva(s).`;
+        if (periodos > 0) {
+            mensagem += `\n${periodos} período(s) aplicado(s).`;
+        }
+        
+        alert(mensagem);
+        
+        // ✅ Limpar apenas modificações pendentes (manter cache visual)
+        estado.marcacoesModificadas = {};
+        console.log('[SAVE] marcacoesModificadas limpo, cache visual mantido');
+        
+        // ✅ Atualizar interface para refletir status "MARCADO"
+        renderizarColaboradores();
+        
+        // ✅ Atualizar calendário para mostrar dias completos/pendentes corretos
+        carregarCalendario();
+        
+    } catch (error) {
+        esconderLoading();
+        alert(`Erro ao salvar: ${error.message}`);
+        console.error('[SAVE] Erro:', error);
+    }
+}
+
+// ========================================
+// MODAIS DE PERÍODO
+// ========================================
+function abrirModalEscolhaPeriodo(sigla) {
+    const modal = document.getElementById('modal-escolha-periodo');
+    const tipoMarcacao = document.getElementById('escolha-tipo-marcacao');
+    const diaAtualTexto = document.getElementById('dia-atual-texto');
+    
+    tipoMarcacao.textContent = OPCOES_PRESENCA[sigla].nome;
+    if (diaAtualTexto) {
+        diaAtualTexto.textContent = estado.dia;
+    }
+    
+    modal.style.display = 'block';
+}
+
+function escolherApenasHoje() {
+    if (!periodoAtual) return;
+    
+    const chaveCache = `${periodoAtual.wfmUser}_${estado.dia}`;
+    estado.marcacoesCache[chaveCache] = periodoAtual.sigla;
+    estado.marcacoesModificadas[periodoAtual.wfmUser] = periodoAtual.sigla;
+    
+    fecharModalEscolhaPeriodo();
+    renderizarColaboradores();
+}
+
+function escolherVariosDias() {
+    fecharModalEscolhaPeriodo();
+    if (periodoAtual) {
+        abrirModalPeriodo(periodoAtual.sigla);
+    }
+}
+
+function cancelarEscolhaPeriodo() {
+    if (periodoAtual && periodoAtual.select) {
+        periodoAtual.select.value = '';
+    }
+    fecharModalEscolhaPeriodo();
+}
+
+function fecharModalEscolhaPeriodo() {
+    document.getElementById('modal-escolha-periodo').style.display = 'none';
 }
 
 function abrirModalPeriodo(sigla) {
@@ -1201,10 +1384,8 @@ function abrirModalPeriodo(sigla) {
     const dataInicio = document.getElementById('data-inicio');
     const dataFim = document.getElementById('data-fim');
     
-    // Configurar o modal
     tipoPeriodo.textContent = OPCOES_PRESENCA[sigla].nome;
     
-    // Configurar datas padrão
     const mesIndex = MESES.indexOf(estado.mes);
     const anoAtual = estado.ano;
     const dataAtual = new Date(anoAtual, mesIndex, estado.dia);
@@ -1212,7 +1393,6 @@ function abrirModalPeriodo(sigla) {
     dataInicio.value = formatarDataInput(dataAtual);
     dataFim.value = formatarDataInput(dataAtual);
     
-    // Definir limites do mês
     const primeiroDia = new Date(anoAtual, mesIndex, 1);
     const ultimoDia = new Date(anoAtual, mesIndex + 1, 0);
     
@@ -1242,11 +1422,15 @@ function confirmarPeriodo() {
         return;
     }
     
-    // Converter datas para dias do mês
     const inicio = new Date(dataInicio).getDate();
     const fim = new Date(dataFim).getDate();
     
-    // Salvar o período
+    // Salvar no cache todos os dias do período
+    for (let d = inicio; d <= fim; d++) {
+        const chaveCache = `${periodoAtual.wfmUser}_${d}`;
+        estado.marcacoesCache[chaveCache] = periodoAtual.sigla;
+    }
+    
     estado.marcacoesModificadas[periodoAtual.wfmUser] = {
         sigla: periodoAtual.sigla,
         inicio: inicio,
@@ -1271,285 +1455,14 @@ function fecharModalPeriodo() {
 }
 
 // ========================================
-// MODAL INTERMEDIÁRIO - ESCOLHA DE PERÍODO
-// ========================================
-
-function abrirModalEscolhaPeriodo(sigla) {
-    const modal = document.getElementById('modal-escolha-periodo');
-    const tipoMarcacao = document.getElementById('escolha-tipo-marcacao');
-    
-    // Configurar o título com o nome da sigla
-    tipoMarcacao.textContent = OPCOES_PRESENCA[sigla].nome;
-    
-    console.log('[Modal Escolha] Abrindo para sigla:', sigla);
-    modal.style.display = 'block';
-}
-
-function escolherApenasHoje() {
-    console.log('[Modal Escolha] Usuário escolheu: Apenas Hoje');
-    
-    if (!periodoAtual) {
-        console.error('[Modal Escolha] periodoAtual não definido');
-        return;
-    }
-    
-    // Marcação direta no dia atual
-    estado.marcacoesModificadas[periodoAtual.wfmUser] = periodoAtual.sigla;
-    
-    fecharModalEscolhaPeriodo();
-    renderizarColaboradores();
-    
-    console.log('[Modal Escolha] Marcação aplicada para o dia', estado.dia);
-}
-
-function escolherVariosDias() {
-    console.log('[Modal Escolha] Usuário escolheu: Vários Dias');
-    
-    fecharModalEscolhaPeriodo();
-    
-    // Abre o modal de calendário existente
-    if (periodoAtual) {
-        abrirModalPeriodo(periodoAtual.sigla);
-    }
-}
-
-function cancelarEscolhaPeriodo() {
-    console.log('[Modal Escolha] Usuário cancelou');
-    
-    // Resetar o dropdown para "-- Selecione --"
-    if (periodoAtual && periodoAtual.select) {
-        periodoAtual.select.value = '';
-    }
-    
-    fecharModalEscolhaPeriodo();
-}
-
-function fecharModalEscolhaPeriodo() {
-    document.getElementById('modal-escolha-periodo').style.display = 'none';
-    // NÃO limpar periodoAtual aqui, pois pode ser usado no modal de período
-}
-
-function filtrarColaboradores() {
-    renderizarColaboradores();
-}
-
-function aplicarFiltroStatus() {
-    const select = document.getElementById('filtro-status');
-    if (select) {
-        estado.filtroStatus = select.value;
-        console.log('[aplicarFiltroStatus] Filtro alterado para:', estado.filtroStatus);
-        renderizarColaboradores();
-    }
-}
-
-function atualizarEstatisticas() {
-    renderizarColaboradores();
-}
-
-function temDesligamentoNoMes(colab) {
-    if (!colab.marcacoes) return false;
-    
-    for (let dia = 1; dia <= 31; dia++) {
-        if (colab.marcacoes[dia] && SIGLAS_DESLIGAMENTO.includes(colab.marcacoes[dia].sigla)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function marcarTodosPresentes() {
-    let contador = 0;
-    
-    estado.colaboradores.forEach(colab => {
-        // Verificar se já tem marcação
-        let jaMarcado = false;
-        
-        if (estado.marcacoesModificadas[colab.wfmUser] !== undefined) {
-            jaMarcado = true;
-        } else if (colab.marcacoes && colab.marcacoes[estado.dia]) {
-            jaMarcado = true;
-        }
-        
-        // Marcar como presente apenas se não tiver marcação
-        if (!jaMarcado && !temDesligamentoNoMes(colab)) {
-            estado.marcacoesModificadas[colab.wfmUser] = 'P';
-            contador++;
-        }
-    });
-    
-    if (contador > 0) {
-        alert(`✅ ${contador} colaborador(es) marcado(s) como presente!`);
-        renderizarColaboradores();
-    } else {
-        alert('ℹ️ Todos os colaboradores já possuem marcação para este dia.');
-    }
-}
-
-async function recarregarMarcacoes() {
-    mostrarLoading('Recarregando dados...');
-    
-    try {
-        const response = await fetch(`${API_BASE}/api/abs/colaboradores/${estado.warehouse}/${estado.mes}/${estado.ano}`, {
-            headers: { 'x-user-email': getUserEmail() }
-        });
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Erro ao recarregar dados');
-        }
-        
-        // Atualizar dados globais
-        estado.todosColaboradores = data.colaboradores || [];
-        
-        // Normalizar campo lider em TODOS os colaboradores
-        estado.todosColaboradores.forEach(c => {
-            c.liderNormalizado = normalizeLider(c.lider);
-        });
-        
-        // Limpar modificações locais
-        estado.marcacoesModificadas = {};
-        
-        // Re-filtrar colaboradores do supervisor atual
-        estado.colaboradores = estado.todosColaboradores.filter(
-            c => c.liderNormalizado === estado.supervisor
-        );
-        
-        // Re-renderizar lista
-        renderizarColaboradores();
-        atualizarEstatisticas();
-        
-        esconderLoading();
-        
-    } catch (error) {
-        esconderLoading();
-        alert(`Erro ao recarregar: ${error.message}`);
-        console.error(error);
-    }
-}
-
-async function salvarMarcacoes() {
-    console.log('[SAVE] Iniciando salvamento otimizado...');
-    
-    if (Object.keys(estado.marcacoesModificadas).length === 0) {
-        alert('Nenhuma marcação foi alterada.');
-        return;
-    }
-    
-    mostrarLoading('Salvando marcações...');
-    
-    try {
-        const todasMarcacoes = [];
-        
-        // Processar todas as marcações modificadas
-        for (const [wfmUser, valor] of Object.entries(estado.marcacoesModificadas)) {
-            if (wfmUser.includes('_dia_')) continue; // Ignorar propagações antigas
-            
-            const colab = estado.colaboradores.find(c => c.wfmUser === wfmUser);
-            if (!colab) continue;
-            
-            if (typeof valor === 'string') {
-                // Marcação simples
-                todasMarcacoes.push({
-                    wfmUser,
-                    nome: colab.nome,
-                    dia: estado.dia,
-                    sigla: valor
-                });
-            } else if (valor.tipo === 'periodo') {
-                // Marcação de período - expandir para todos os dias
-                for (let d = valor.inicio; d <= valor.fim; d++) {
-                    todasMarcacoes.push({
-                        wfmUser,
-                        nome: colab.nome,
-                        dia: d,
-                        sigla: valor.sigla
-                    });
-                }
-            }
-        }
-        
-        if (todasMarcacoes.length === 0) {
-            esconderLoading();
-            alert('Nenhuma marcação válida para salvar.');
-            return;
-        }
-        
-        console.log('[SAVE] Total de marcações a salvar:', todasMarcacoes.length);
-        
-        // Agrupar por dia para enviar em batches
-        const marcacoesPorDia = {};
-        todasMarcacoes.forEach(m => {
-            if (!marcacoesPorDia[m.dia]) {
-                marcacoesPorDia[m.dia] = [];
-            }
-            marcacoesPorDia[m.dia].push(m);
-        });
-        
-        let totalSalvos = 0;
-        
-        // Enviar batch por dia
-        for (const [dia, marcacoes] of Object.entries(marcacoesPorDia)) {
-            const response = await fetch(`${API_BASE}/api/abs/marcar-presenca`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-user-email': getUserEmail()
-                },
-                body: JSON.stringify({
-                    warehouse: estado.warehouse,
-                    mes: estado.mes,
-                    ano: estado.ano,
-                    dia: parseInt(dia),
-                    marcacoes: marcacoes
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                esconderLoading();
-                alert(`❌ Erro ao salvar dia ${dia}: ${data.error}`);
-                return;
-            }
-            
-            totalSalvos += data.salvos || marcacoes.length;
-        }
-        
-        console.log('[SAVE] SAVE_EXECUTADO=true');
-        
-        esconderLoading();
-        
-        const periodos = Object.values(estado.marcacoesModificadas).filter(v => v.tipo === 'periodo').length;
-        
-        let mensagem = `✅ Sucesso!\n\n${totalSalvos} marcação(ões) salva(s).`;
-        if (periodos > 0) {
-            mensagem += `\n${periodos} período(s) aplicado(s).`;
-        }
-        
-        alert(mensagem);
-        
-        // Limpar modificações e recarregar
-        // estado.marcacoesModificadas = {};
-        // await recarregarMarcacoes();
-        
-    } catch (error) {
-        esconderLoading();
-        alert(`Erro ao salvar: ${error.message}`);
-        console.error('[SAVE] Erro:', error);
-    }
-}
-
-// ========================================
-// HORA EXTRA
+// MODAIS HORA EXTRA E SINERGIA
 // ========================================
 function abrirModalHoraExtra() {
     const modal = document.getElementById('modal-hora-extra');
     const select = document.getElementById('hr-colaborador');
     
-    // Limpar select
     select.innerHTML = '<option value="">-- Selecione um colaborador --</option>';
     
-    // Preencher com colaboradores do supervisor atual
     estado.colaboradores.forEach(colab => {
         const option = document.createElement('option');
         option.value = colab.wfmUser;
@@ -1557,19 +1470,16 @@ function abrirModalHoraExtra() {
         select.appendChild(option);
     });
     
-    // Limpar campos
     document.getElementById('hr-dia-inteiro').checked = false;
     document.getElementById('hr-inicio').value = '';
     document.getElementById('hr-fim').value = '';
     document.getElementById('hr-horarios').style.display = 'grid';
     
-    // Mostrar modal
     modal.style.display = 'flex';
 }
 
 function fecharModalHoraExtra() {
-    const modal = document.getElementById('modal-hora-extra');
-    modal.style.display = 'none';
+    document.getElementById('modal-hora-extra').style.display = 'none';
 }
 
 function toggleHorarioHR() {
@@ -1591,7 +1501,6 @@ async function salvarHoraExtra() {
     const hrInicio = document.getElementById('hr-inicio').value;
     const hrFim = document.getElementById('hr-fim').value;
     
-    // Validações
     if (!wfmUser) {
         alert('Selecione um colaborador');
         return;
@@ -1653,17 +1562,12 @@ async function salvarHoraExtra() {
     }
 }
 
-// ========================================
-// SINERGIA
-// ========================================
 function abrirModalSinergia() {
     const modal = document.getElementById('modal-sinergia');
     const select = document.getElementById('sinergia-colaborador');
     
-    // Limpar select
     select.innerHTML = '<option value="">-- Selecione um colaborador --</option>';
     
-    // Preencher com colaboradores do supervisor atual
     estado.colaboradores.forEach(colab => {
         const option = document.createElement('option');
         option.value = colab.wfmUser;
@@ -1672,18 +1576,15 @@ function abrirModalSinergia() {
         select.appendChild(option);
     });
     
-    // Limpar campos
     document.getElementById('sinergia-tipo').value = '';
     document.getElementById('sinergia-setor-destino').value = '';
     document.getElementById('sinergia-obs').value = '';
     
-    // Mostrar modal
     modal.style.display = 'flex';
 }
 
 function fecharModalSinergia() {
-    const modal = document.getElementById('modal-sinergia');
-    modal.style.display = 'none';
+    document.getElementById('modal-sinergia').style.display = 'none';
 }
 
 async function salvarSinergia() {
@@ -1692,7 +1593,6 @@ async function salvarSinergia() {
     const setorDestino = document.getElementById('sinergia-setor-destino').value.trim();
     const observacoes = document.getElementById('sinergia-obs').value.trim();
     
-    // Validações
     if (!wfmUser) {
         alert('Selecione um colaborador');
         return;
@@ -1761,72 +1661,8 @@ async function salvarSinergia() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Sistema ABS carregado');
     console.log('Warehouse:', WAREHOUSE);
-    console.log('Estado inicial:', estado);
     carregarMeses();
 });
     </script>
-
-<!-- Modal de Escolha: Um Dia ou Vários Dias -->
-<div id="modal-escolha-periodo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2b2b2b; padding: 35px; border-radius: 12px; min-width: 450px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
-        <h3 style="color: #fff; margin-bottom: 10px; text-align: center; font-size: 20px;">
-            <i class="fas fa-calendar-check" style="color: #FF9800; margin-right: 8px;"></i>
-            Período do Atestado
-        </h3>
-        
-        <div style="margin-bottom: 25px; text-align: center;">
-            <div id="escolha-tipo-marcacao" style="color: #B0B0B0; font-size: 15px; font-weight: 500;"></div>
-        </div>
-        
-        <p style="color: #E0E0E0; text-align: center; margin-bottom: 30px; font-size: 15px; line-height: 1.5;">
-            Este atestado é apenas para <strong style="color: #4CAF50;">hoje</strong> ou para <strong style="color: #2196F3;">vários dias</strong>?
-        </p>
-        
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button onclick="escolherApenasHoje()" style="padding: 14px 24px; background: #4CAF50; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
-                <i class="fas fa-check-circle"></i>
-                Apenas Hoje (Dia ${estado.dia})
-            </button>
-            
-            <button onclick="escolherVariosDias()" style="padding: 14px 24px; background: #2196F3; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s;">
-                <i class="fas fa-calendar-alt"></i>
-                Vários Dias (Período)
-            </button>
-            
-            <button onclick="cancelarEscolhaPeriodo()" style="padding: 12px 24px; background: #666; border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 14px; margin-top: 8px; transition: all 0.3s;">
-                <i class="fas fa-times" style="margin-right: 6px;"></i>
-                Cancelar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Seleção de Período (Date Picker) -->
-<div id="modal-periodo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 30px; border-radius: 12px; min-width: 400px;">
-        <h3 style="color: #fff; margin-bottom: 20px; text-align: center;">📅 Selecionar Período</h3>
-        
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Tipo de Marcação:</label>
-            <div id="tipo-periodo" style="color: #fff; font-weight: bold; font-size: 16px;"></div>
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Data de Início:</label>
-            <input type="date" id="data-inicio" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 8px; color: #B0B0B0; font-size: 14px;">Data de Fim:</label>
-            <input type="date" id="data-fim" style="width: 100%; padding: 12px; background: #404040; border: 1px solid #555; border-radius: 8px; color: #fff; font-size: 14px;">
-        </div>
-        
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="cancelarPeriodo()" style="padding: 12px 24px; background: #666; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Cancelar</button>
-            <button onclick="confirmarPeriodo()" style="padding: 12px 24px; background: #4CAF50; border: none; border-radius: 8px; color: #fff; cursor: pointer;">✓ Confirmar</button>
-        </div>
-    </div>
-</div>
-
 </body>
 </html>
