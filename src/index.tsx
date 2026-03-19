@@ -1580,17 +1580,23 @@ app.get('/api/abs/colaboradores/:warehouse/:mes/:ano', async (c) => {
     // Mapear índices das colunas
     const getColIndex = (nome: string) => header.indexOf(nome)
     
+    function getColIndexInsensitive(nome: string) {
+  return header.findIndex(h => 
+    h?.toString().trim().toLowerCase() === nome.toLowerCase()
+  )
+}
+
     const indices = {
-      colaborador: getColIndex('Colaborador'),
-      wfmUser: getColIndex('WFM USER'),
-      setor: getColIndex('Setor'),
-      lider: getColIndex('LIDER'),
-      cargo: getColIndex('Cargo'),
-      escala: getColIndex('Escala'),
-      dataAdmissao: getColIndex('Data de Admissão'),
-      dataDesligamento: getColIndex('Data de Desligamento'),
-      dias: Array.from({ length: 31 }, (_, i) => getColIndex(`${i + 1}`))
-    }
+  colaborador: getColIndexInsensitive('Colaborador'),
+  wfmUser: getColIndexInsensitive('WFM USER'),
+  setor: getColIndexInsensitive('Setor'),
+  lider: getColIndexInsensitive('Lider'), // 🔥 corrigido
+  cargo: getColIndexInsensitive('Cargo'),
+  escala: getColIndexInsensitive('Escala'),
+  dataAdmissao: getColIndexInsensitive('Data de Admissão'),
+  dataDesligamento: getColIndexInsensitive('Data de Desligamento'),
+  dias: Array.from({ length: 31 }, (_, i) => getColIndexInsensitive(`${i + 1}`))
+}
     
     console.log(`[ABS API] Mapeamento colunas:`, {
       colaborador: indices.colaborador,
