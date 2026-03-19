@@ -674,8 +674,15 @@ const SIGLAS_COM_PERIODO = ['AM', 'AF', 'AL'];
 let periodoAtual = null;
 
 function normalizeLider(valor) {
-    if (!valor) return 'NÃO ATRIBUÍDO';
-    return valor.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!valor || typeof valor !== 'string' || valor.trim() === '') {
+        return null; // 🔥 NÃO usa mais "NÃO ATRIBUÍDO"
+    }
+
+    return valor
+        .trim()
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 }
 
 function getUserEmail() {
