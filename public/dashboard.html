@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Integrado - HC & Produtividade</title>
+    <title>HC & Produtividade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -340,24 +340,16 @@
             </a>
         </div>
 
-        <!-- Success Banner -->
-        <div class="success-banner">
-            <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
-            <div style="flex: 1;">
-                <strong>Dashboard Integrado</strong>
-            </div>
-        </div>
-
         <!-- Header -->
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 4px;">
                         <i class="fas fa-chart-line" style="color: #2196F3;"></i>
-                        Dashboard Integrado - HC & Produtividade
+                        HC & Produtividade
                     </h1>
                     <p style="color: #B0B0B0; font-size: 0.9rem;">
-                        Dados consolidados: <strong>raw_hc</strong> + <strong>raw_dados</strong>
+                        Dados consolidados: <strong>raw_hc</strong> + <strong>raw_dados</strong> + <strong>raw_labour</strong>
                     </p>
                 </div>
                 <div style="text-align: right;">
@@ -382,11 +374,6 @@
                     <select id="filter-sector">
                         <option value="all">Todos os Setores</option>
                     </select>
-                </div>
-                <div style="margin-top: auto;">
-                    <button class="btn-primary" onclick="carregarDados()">
-                        <i class="fas fa-sync-alt"></i> Atualizar Dados
-                    </button>
                 </div>
             </div>
         </div>
@@ -520,7 +507,7 @@
                     <div class="kpi-label">Drop Total (Outbound)</div>
                     <div class="kpi-value" style="color: #F44336;" id="kpi-drop-out">--</div>
                     <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span style="color: #B0B0B0;">vs forecast:</span>
                         <span class="comparison-badge badge-neutral" id="comp-drop-out">
                             <i class="fas fa-minus"></i> --
                         </span>
@@ -533,7 +520,7 @@
                     <div class="kpi-label">Processado Total (Outbound)</div>
                     <div class="kpi-value" style="color: #4CAF50;" id="kpi-proc-out">--</div>
                     <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span style="color: #B0B0B0;">vs forecast:</span>
                         <span class="comparison-badge badge-neutral" id="comp-proc-out">
                             <i class="fas fa-minus"></i> --
                         </span>
@@ -546,7 +533,7 @@
                     <div class="kpi-label">Recebido Total (Inbound)</div>
                     <div class="kpi-value" style="color: #9C27B0;" id="kpi-rec-in">--</div>
                     <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span style="color: #B0B0B0;">vs forecast:</span>
                         <span class="comparison-badge badge-neutral" id="comp-rec-in">
                             <i class="fas fa-minus"></i> --
                         </span>
@@ -559,7 +546,7 @@
                     <div class="kpi-label">Processado Total (Inbound)</div>
                     <div class="kpi-value" style="color: #2196F3;" id="kpi-proc-in">--</div>
                     <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span style="color: #B0B0B0;">vs forecast:</span>
                         <span class="comparison-badge badge-neutral" id="comp-proc-in">
                             <i class="fas fa-minus"></i> --
                         </span>
@@ -670,6 +657,7 @@ let chartConsolidado = null;
 let dadosHC = [];
 let dadosProducao = [];
 let dadosProducaoProcessados = []; // Dados com correção BRFSP1/BRFSP2
+let dadosLabour = []; // Dados de forecast (raw_labour)
 
 // ================================
 // UTILITÁRIOS
@@ -719,6 +707,130 @@ function atualizarBadge(elementId, comparacao) {
     if (!badge) return;
     badge.className = `comparison-badge badge-${comparacao.tipo}`;
     badge.innerHTML = `<i class="fas ${comparacao.icone}"></i> ${formatPercent(comparacao.valor)}`;
+}
+
+function calcularComparacaoForecast(real, forecast) {
+    if (!forecast || forecast === 0) {
+        return { tipo: 'neutral', valor: 0, icone: 'fa-minus' };
+    }
+    const diff = ((real - forecast) / forecast) * 100;
+    if (Math.abs(diff) < 0.1) {
+        return { tipo: 'neutral', valor: 0, icone: 'fa-minus' };
+    }
+    return {
+        tipo: diff > 0 ? 'up' : 'down',
+        valor: Math.abs(diff),
+        icone: diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down'
+    };
+}
+
+function normalizarCabecalho(valor) {
+    return normalizarTexto(valor).replace(/\s+/g, '_');
+}
+
+function converterLinhaLabourParaObjeto(row, headerMap) {
+    return {
+        week: row[headerMap.week] || '',
+        date: row[headerMap.date] || '',
+        metric: row[headerMap.metric] || '',
+        valor: row[headerMap.valor] || row[headerMap.value] || row[headerMap.forecast] || row[headerMap.qty] || '',
+        whs: row[headerMap.whs] || row[headerMap.whs_id] || row[headerMap.warehouse] || row[headerMap.site] || ''
+    };
+}
+
+function normalizarDadosLabour(dadosRaw) {
+    if (!Array.isArray(dadosRaw) || dadosRaw.length <= 1) return [];
+    const header = dadosRaw[0].map(normalizarCabecalho);
+    const headerMap = {};
+    header.forEach((coluna, index) => {
+        headerMap[coluna] = index;
+    });
+
+    const chavesObrigatorias = ['week', 'date', 'metric'];
+    const temObrigatorias = chavesObrigatorias.every(chave => headerMap[chave] !== undefined);
+    if (!temObrigatorias) {
+        console.warn('[Dashboard] raw_labour sem cabeçalho esperado:', header);
+        return [];
+    }
+
+    return dadosRaw.slice(1).map(row => converterLinhaLabourParaObjeto(row, headerMap)).filter(r => r.week && r.date && r.metric);
+}
+
+function getSemanaMaisRecenteLabour() {
+    const semanas = [...new Set(dadosLabour.map(r => r.week).filter(Boolean))].sort();
+    return semanas.length ? semanas[semanas.length - 1] : null;
+}
+
+function getMetricasForecastPorWH(whs) {
+    const wh = normalizarTexto(whs);
+    if (wh === 'BRFSP1') {
+        return {
+            inbound: ['INBOUNDED_VOLUME_SP9'],
+            outbound: ['OUTBOUNDED_VOLUME_SP9']
+        };
+    }
+    if (wh === 'BRFSP2') {
+        return {
+            inbound: [],
+            outbound: ['OUTBOUNDED_VOLUME_SP9']
+        };
+    }
+    if (wh === 'FRANCAO') {
+        return {
+            inbound: ['INBOUNDED_VOLUME_SP9'],
+            outbound: ['OUTBOUNDED_VOLUME_SP9']
+        };
+    }
+    if (wh === 'BRFGO1') {
+        return {
+            inbound: ['INBOUNDED_VOLUME_GO'],
+            outbound: ['OUTBOUNDED_VOLUME_GO']
+        };
+    }
+    if (wh === 'BRFPE1') {
+        return {
+            inbound: ['INBOUNDED_VOLUME_PE'],
+            outbound: ['OUTBOUNDED_VOLUME_PE']
+        };
+    }
+    return { inbound: [], outbound: [] };
+}
+
+function getWHSComparacaoForecast(whSelecionado) {
+    if (whSelecionado === 'all') return ['BRFSP1', 'BRFSP2', 'BRFGO1', 'BRFPE1'];
+    if (whSelecionado === 'FRANCAO') return ['BRFSP1', 'BRFSP2'];
+    return [whSelecionado];
+}
+
+function buscarForecastPorDataEWH(data, whSelecionado, tipo) {
+    const semanaMaisRecente = getSemanaMaisRecenteLabour();
+    if (!semanaMaisRecente) return 0;
+
+    const whsComparacao = getWHSComparacaoForecast(whSelecionado);
+    let total = 0;
+
+    whsComparacao.forEach(wh => {
+        const metricas = getMetricasForecastPorWH(wh);
+        const metricasAlvo = tipo === 'inbound' ? metricas.inbound : metricas.outbound;
+        if (!metricasAlvo || metricasAlvo.length === 0) return;
+
+        dadosLabour.forEach(r => {
+            if (r.week !== semanaMaisRecente) return;
+            if (r.date !== data) return;
+
+            const metricNormalizada = normalizarTexto(r.metric);
+            const whsLinha = normalizarTexto(r.whs);
+
+            const metricMatch = metricasAlvo.includes(metricNormalizada);
+            const whMatch = !whsLinha || whsLinha === normalizarTexto(wh);
+
+            if (metricMatch && whMatch) {
+                total += parseNumero(r.valor);
+            }
+        });
+    });
+
+    return total;
 }
 
 // ================================
@@ -823,25 +935,28 @@ async function carregarDados() {
     loading.classList.add('active');
     
     try {
-        const [resHC, resProducao] = await Promise.all([
+        const [resHC, resProducao, resLabour] = await Promise.all([
             fetch(`${API_BASE}/api/dashboard/raw-hc`, { headers: { 'x-user-email': userEmail } }),
-            fetch(`${API_BASE}/api/dashboard/raw-dados`, { headers: { 'x-user-email': userEmail } })
+            fetch(`${API_BASE}/api/dashboard/raw-dados`, { headers: { 'x-user-email': userEmail } }),
+            fetch(`${API_BASE}/api/dashboard/raw-lb`, { headers: { 'x-user-email': userEmail } })
         ]);
         
         const dataHC = await resHC.json();
         const dataProducao = await resProducao.json();
+        const dataLabour = await resLabour.json();
         
-        if (!dataHC.success || !dataProducao.success) {
-            throw new Error(dataHC.error || dataProducao.error || 'Erro ao buscar dados');
+        if (!dataHC.success || !dataProducao.success || !dataLabour.success) {
+            throw new Error(dataHC.error || dataProducao.error || dataLabour.error || 'Erro ao buscar dados');
         }
         
         dadosHC = dataHC.data || [];
         dadosProducao = dataProducao.data || [];
+        dadosLabour = normalizarDadosLabour(dataLabour.data || []);
         
         // PROCESSAR CORREÇÃO BRFSP1/BRFSP2 AQUI
         dadosProducaoProcessados = processarDadosProducao(dadosProducao);
         
-        console.log(`[Dashboard] HC: ${dadosHC.length}, Prod: ${dadosProducao.length} → ${dadosProducaoProcessados.length} processados`);
+        console.log(`[Dashboard] HC: ${dadosHC.length}, Prod: ${dadosProducao.length} → ${dadosProducaoProcessados.length} processados | Labour: ${dadosLabour.length}`);
         
         popularFiltros();
         renderizarDashboard();
@@ -989,28 +1104,29 @@ function renderizarDashboard() {
     document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
     document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
     
-    // Comparação com dia anterior
+    // Comparação HC com dia anterior
     const dataAnterior = getDataAnteriorStr(filtroData);
     if (dataAnterior) {
         const hcAnterior = filtrarHCPor(dataAnterior, filtroWH, filtroSetor);
-        const prodAnterior = filtrarProdPor(dataAnterior, filtroWH);
-        
         const kpiHCAnterior = calcularKPIsHC(hcAnterior);
-        const kpiProdAnterior = calcularKPIsProd(prodAnterior);
         
         atualizarBadge('comp-headcount', calcularComparacao(hc, kpiHCAnterior.hc));
         atualizarBadge('comp-presenca', calcularComparacao(presenca, kpiHCAnterior.presenca));
         atualizarBadge('comp-absenteismo', calcularComparacao(abs, kpiHCAnterior.abs));
         atualizarBadge('comp-turnover', calcularComparacao(turn, kpiHCAnterior.turn));
-        
-        atualizarBadge('comp-proc-out', calcularComparacao(procOut, kpiProdAnterior.procOut));
-        atualizarBadge('comp-drop-out', calcularComparacao(dropOut, kpiProdAnterior.dropOut));
-        atualizarBadge('comp-proc-in', calcularComparacao(procIn, kpiProdAnterior.procIn));
-        atualizarBadge('comp-rec-in', calcularComparacao(recIn, kpiProdAnterior.recIn));
     } else {
-        ['comp-headcount','comp-presenca','comp-absenteismo','comp-turnover','comp-proc-out','comp-drop-out','comp-proc-in','comp-rec-in']
+        ['comp-headcount','comp-presenca','comp-absenteismo','comp-turnover']
             .forEach(id => atualizarBadge(id, { tipo: 'neutral', valor: 0, icone: 'fa-minus' }));
     }
+    
+    // Comparação Processados vs Forecast
+    const forecastOutbound = buscarForecastPorDataEWH(filtroData, filtroWH, 'outbound');
+    const forecastInbound = buscarForecastPorDataEWH(filtroData, filtroWH, 'inbound');
+    
+    atualizarBadge('comp-proc-out', calcularComparacaoForecast(procOut, forecastOutbound));
+    atualizarBadge('comp-drop-out', calcularComparacaoForecast(dropOut, forecastOutbound));
+    atualizarBadge('comp-proc-in', calcularComparacaoForecast(procIn, forecastInbound));
+    atualizarBadge('comp-rec-in', calcularComparacaoForecast(recIn, forecastInbound));
     
     renderizarHistorico(filtroData, filtroWH);
     renderizarTabelas(hcFiltrado, producaoFiltrado);
@@ -1351,6 +1467,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-date')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-warehouse')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-sector')?.addEventListener('change', renderizarDashboard);
+    carregarDados();
 });
     </script>
 </body>

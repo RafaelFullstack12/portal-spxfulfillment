@@ -2302,6 +2302,86 @@ app.get('/api/dashboard/raw-hc', async (c) => {
 })
 
 /**
+ * API: Buscar dados raw_lb
+ */
+app.get('/api/dashboard/raw-lb', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) {
+    return c.json({ success: false, error: 'Não autenticado' }, 401)
+  }
+
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    if (!user || user.status !== 'APROVADO') {
+      return c.json({ success: false, error: 'Acesso negado' }, 403)
+    }
+
+    console.log('[Dashboard API] Buscando dados raw_labour...')
+
+    const response = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId: DASHBOARD_SPREADSHEET_ID,
+      range: 'raw_labour!A:E'
+    })
+
+    const rows = response.data.values || []
+    console.log(`[Dashboard API] raw-lb: ${rows.length} linhas encontradas`)
+
+    return c.json({
+      success: true,
+      data: rows,
+      total: rows.length
+    })
+
+  } catch (error: any) {
+    console.error('[Dashboard API] Erro ao buscar raw-lb:', error)
+    return c.json({
+      success: false,
+      error: 'Erro ao buscar dados de FORCAST',
+      message: error.message
+    }, 500)
+  }
+})
+/**
+ * API: Buscar dados raw_processos
+ */
+app.get('/api/dashboard/raw-process', async (c) => {
+  const email = c.req.header('x-user-email')
+  if (!email) {
+    return c.json({ success: false, error: 'Não autenticado' }, 401)
+  }
+
+  try {
+    const user = await sheetsManager.findUserByEmail(email)
+    if (!user || user.status !== 'APROVADO') {
+      return c.json({ success: false, error: 'Acesso negado' }, 403)
+    }
+
+    console.log('[Dashboard API] Buscando dados raw_processos...')
+
+    const response = await sheetsManager.sheets.spreadsheets.values.get({
+      spreadsheetId: DASHBOARD_SPREADSHEET_ID,
+      range: 'raw_processos!A:E'
+    })
+
+    const rows = response.data.values || []
+    console.log(`[Dashboard API] raw-process: ${rows.length} linhas encontradas`)
+
+    return c.json({
+      success: true,
+      data: rows,
+      total: rows.length
+    })
+
+  } catch (error: any) {
+    console.error('[Dashboard API] Erro ao buscar raw-process:', error)
+    return c.json({
+      success: false,
+      error: 'Erro ao buscar dados de THP PROCESSOS',
+      message: error.message
+    }, 500)
+  }
+})
+/**
  * API: Buscar dados raw_dados
  */
 app.get('/api/dashboard/raw-dados', async (c) => {
