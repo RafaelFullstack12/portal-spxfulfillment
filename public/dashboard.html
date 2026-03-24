@@ -179,7 +179,23 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
+        }
+
+        /* NOVO: Estilo para exibir valor do forecast */
+        .kpi-forecast-value {
+            font-size: 0.85rem;
+            color: #B0B0B0;
+            margin-top: 4px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            border-top: 1px solid #404040;
+        }
+
+        .kpi-forecast-value strong {
+            color: #2196F3;
+            font-weight: 600;
         }
 
         .mini-history {
@@ -309,7 +325,7 @@
             </a>
         </div>
 
-        <!-- Header (SEM "Dashboard Integrado") -->
+        <!-- Header -->
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -344,7 +360,6 @@
                         <option value="all">Todos os Setores</option>
                     </select>
                 </div>
-                <!-- BOTÃO REMOVIDO -->
             </div>
         </div>
 
@@ -469,9 +484,10 @@
             </div>
         </div>
 
-        <!-- TAB 2: PROCESSADOS (COM VS FORECAST) -->
+        <!-- TAB 2: PROCESSADOS (COM FORECAST) -->
         <div id="tab-processados" class="tab-content">
             <div class="kpi-grid">
+                <!-- Drop Total (Outbound) - COM FORECAST -->
                 <div class="kpi-card">
                     <i class="fas fa-exclamation-triangle kpi-icon" style="color: #F44336;"></i>
                     <div class="kpi-label">Drop Total (Outbound)</div>
@@ -482,9 +498,14 @@
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
+                    <!-- NOVO: Mostrar valor do forecast -->
+                    <div class="kpi-forecast-value" id="forecast-drop-out">
+                        Forecast: <strong>--</strong>
+                    </div>
                     <div class="mini-history" id="hist-drop-out"></div>
                 </div>
 
+                <!-- Processado Total (Outbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-box kpi-icon" style="color: #4CAF50;"></i>
                     <div class="kpi-label">Processado Total (Outbound)</div>
@@ -498,6 +519,7 @@
                     <div class="mini-history" id="hist-proc-out"></div>
                 </div>
 
+                <!-- Recebido Total (Inbound) - COM FORECAST -->
                 <div class="kpi-card">
                     <i class="fas fa-dolly kpi-icon" style="color: #9C27B0;"></i>
                     <div class="kpi-label">Recebido Total (Inbound)</div>
@@ -508,9 +530,14 @@
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
+                    <!-- NOVO: Mostrar valor do forecast -->
+                    <div class="kpi-forecast-value" id="forecast-rec-in">
+                        Forecast: <strong>--</strong>
+                    </div>
                     <div class="mini-history" id="hist-rec-in"></div>
                 </div>
 
+                <!-- Processado Total (Inbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-truck-loading kpi-icon" style="color: #2196F3;"></i>
                     <div class="kpi-label">Processado Total (Inbound)</div>
@@ -525,6 +552,32 @@
                 </div>
             </div>
 
+            <!-- NOVOS GRÁFICOS: Forecast vs Real -->
+            <div class="chart-grid">
+                <!-- Outbound: Forecast vs Drop -->
+                <div class="chart-container">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-line" style="color: #F44336;"></i>
+                        Outbound - Últimos 7 Dias (Forecast vs Drop)
+                    </h3>
+                    <div style="height: 300px;">
+                        <canvas id="chartOutboundForecast"></canvas>
+                    </div>
+                </div>
+
+                <!-- Inbound: Forecast vs Recebido -->
+                <div class="chart-container">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-line" style="color: #9C27B0;"></i>
+                        Inbound - Últimos 7 Dias (Forecast vs Recebido)
+                    </h3>
+                    <div style="height: 300px;">
+                        <canvas id="chartInboundForecast"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICOS ORIGINAIS: Processado vs Drop/Recebido -->
             <div class="chart-grid">
                 <div class="chart-container">
                     <h3 class="section-title">
@@ -547,6 +600,7 @@
                 </div>
             </div>
 
+            <!-- TABELA: Produtividade por Warehouse (COM COLUNAS FORECAST) -->
             <div class="chart-container">
                 <h3 class="section-title">
                     <i class="fas fa-warehouse" style="color: #FF9800;"></i>
@@ -559,12 +613,14 @@
                             <th>PROC. OUT</th>
                             <th>DROP OUT</th>
                             <th>% DROP</th>
+                            <th style="color: #2196F3;">FORECAST OUT</th>
                             <th>PROC. IN</th>
                             <th>RECEB. IN</th>
+                            <th style="color: #2196F3;">FORECAST IN</th>
                         </tr>
                     </thead>
                     <tbody id="table-producao">
-                        <tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregando...</td></tr>
+                        <tr><td colspan="8" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -623,11 +679,13 @@ const API_BASE = window.location.origin;
 let chartHC = null;
 let chartOutbound = null;
 let chartInbound = null;
+let chartOutboundForecast = null; // NOVO
+let chartInboundForecast = null; // NOVO
 let chartConsolidado = null;
 let dadosHC = [];
 let dadosProducao = [];
 let dadosProducaoProcessados = [];
-let dadosForecast = []; // NOVO: dados do raw_labour
+let dadosForecast = [];
 
 // ================================
 // MAPEAMENTO DE MÉTRICAS POR WAREHOUSE
@@ -758,17 +816,15 @@ function buscarForecastDoDia(warehouse, data) {
         return { inbound: 0, outbound: 0 };
     }
     
-    // Buscar semana mais recente que contenha dados para a data especificada
     const semanas = [...new Set(dadosForecast.map(row => row[0]).filter(Boolean))].sort();
     const semanaMaisRecente = semanas[semanas.length - 1];
     
     console.log(`[Dashboard] Semana mais recente encontrada: ${semanaMaisRecente}`);
     
-    // Filtrar dados da semana mais recente para o warehouse e data específicos
     const dadosFiltrados = dadosForecast.filter(row => {
-        return row[0] === semanaMaisRecente && // grass_date (Coluna A)
-               row[1] === data &&               // date (Coluna B)
-               row[2] === warehouse;            // WHS_ID (Coluna C)
+        return row[0] === semanaMaisRecente &&
+               row[1] === data &&
+               row[2] === warehouse;
     });
     
     if (dadosFiltrados.length === 0) {
@@ -780,8 +836,8 @@ function buscarForecastDoDia(warehouse, data) {
     let outbound = 0;
     
     dadosFiltrados.forEach(row => {
-        const metric = row[3]; // metric (Coluna D)
-        const value = parseNumero(row[4]); // value (Coluna E)
+        const metric = row[3];
+        const value = parseNumero(row[4]);
         
         if (metric === FORECAST_METRICS[warehouse].inbound) {
             inbound += value;
@@ -851,7 +907,7 @@ async function carregarDados() {
         
         dadosHC = dataHC.data || [];
         dadosProducao = dataProducao.data || [];
-        dadosForecast = dataForecast.data?.slice(1) || []; // Remove header
+        dadosForecast = dataForecast.data?.slice(1) || [];
         
         dadosProducaoProcessados = processarDadosProducao(dadosProducao);
         
@@ -999,7 +1055,7 @@ function renderizarDashboard() {
     document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
     document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
     
-    // Comparação HC com dia anterior (mantido)
+    // Comparação HC com dia anterior
     const dataAnterior = getDataAnteriorStr(filtroData);
     if (dataAnterior) {
         const hcAnterior = filtrarHCPor(dataAnterior, filtroWH, filtroSetor);
@@ -1013,29 +1069,25 @@ function renderizarDashboard() {
         atualizarBadge('comp-absenteismo', calcularComparacao(abs, kpiHCAnterior.abs));
         atualizarBadge('comp-turnover', calcularComparacao(turn, kpiHCAnterior.turn));
         
-        // Processado mantém comparação com dia anterior
         atualizarBadge('comp-proc-out', calcularComparacao(procOut, kpiProdAnterior.procOut));
         atualizarBadge('comp-proc-in', calcularComparacao(procIn, kpiProdAnterior.procIn));
     }
     
-    // COMPARAÇÃO COM FORECAST (Drop Out e Recebido In)
+    // COMPARAÇÃO COM FORECAST
     let forecastInbound = 0;
     let forecastOutbound = 0;
     
     if (filtroWH === 'all') {
-        // Somar forecast de todos os warehouses
         ['BRFSP1', 'BRFGO1', 'BRFPE1'].forEach(wh => {
             const fc = buscarForecastDoDia(wh, filtroData);
             forecastInbound += fc.inbound;
             forecastOutbound += fc.outbound;
         });
     } else if (filtroWH === 'FRANCAO') {
-        // Apenas BRFSP1 (BRFSP2 não tem forecast)
         const fc = buscarForecastDoDia('BRFSP1', filtroData);
         forecastInbound = fc.inbound;
         forecastOutbound = fc.outbound;
     } else {
-        // Warehouse específico
         const fc = buscarForecastDoDia(filtroWH, filtroData);
         forecastInbound = fc.inbound;
         forecastOutbound = fc.outbound;
@@ -1043,12 +1095,16 @@ function renderizarDashboard() {
     
     console.log(`[Dashboard] Forecast consolidado: Inbound=${forecastInbound}, Outbound=${forecastOutbound}`);
     
-    // Atualizar badges com comparação vs forecast
+    // Atualizar badges e MOSTRAR VALORES DO FORECAST
     atualizarBadge('comp-drop-out', calcularComparacao(dropOut, forecastOutbound));
     atualizarBadge('comp-rec-in', calcularComparacao(recIn, forecastInbound));
     
+    // NOVO: Exibir valores do forecast abaixo das badges
+    document.getElementById('forecast-drop-out').innerHTML = `Forecast: <strong>${formatNumber(forecastOutbound)}</strong>`;
+    document.getElementById('forecast-rec-in').innerHTML = `Forecast: <strong>${formatNumber(forecastInbound)}</strong>`;
+    
     renderizarHistorico(filtroData, filtroWH);
-    renderizarTabelas(hcFiltrado, producaoFiltrado);
+    renderizarTabelas(hcFiltrado, producaoFiltrado, filtroData, filtroWH);
     renderizarGraficos(filtroWH, filtroSetor, filtroData);
 }
 
@@ -1089,7 +1145,7 @@ function renderizarHistorico(dataBase, filtroWH) {
     });
 }
 
-function renderizarTabelas(hcData, prodData) {
+function renderizarTabelas(hcData, prodData, filtroData, filtroWH) {
     // Tabela Setores
     const setores = {};
     hcData.forEach(r => {
@@ -1127,22 +1183,40 @@ function renderizarTabelas(hcData, prodData) {
         return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td><td style="color:#FF9800">${formatPercent(t)}</td></tr>`;
     }).join('');
     
-    // Tabela Produção
+    // TABELA PRODUÇÃO (COM COLUNAS DE FORECAST)
     const whsProd = {};
     prodData.forEach(r => {
         const w = r[1] || 'N/A';
         if (w === 'BRS' || w === 'OTHERS') return;
-        if (!whsProd[w]) whsProd[w] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
+        if (!whsProd[w]) whsProd[w] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0, forecastOut: 0, forecastIn: 0 };
         whsProd[w].procOut += parseNumero(r[2]);
         whsProd[w].dropOut += parseNumero(r[3]);
         whsProd[w].procIn += parseNumero(r[4]);
         whsProd[w].recIn += parseNumero(r[5]);
     });
     
+    // Adicionar forecast para cada warehouse
+    Object.keys(whsProd).forEach(wh => {
+        const fc = buscarForecastDoDia(wh, filtroData);
+        whsProd[wh].forecastOut = fc.outbound;
+        whsProd[wh].forecastIn = fc.inbound;
+    });
+    
     document.getElementById('table-producao').innerHTML = Object.keys(whsProd).sort().map(w => {
         const d = whsProd[w];
         const dp = d.procOut > 0 ? (d.dropOut / d.procOut) * 100 : 0;
-        return `<tr><td><strong>${w}</strong></td><td style="color:#4CAF50">${formatNumber(d.procOut)}</td><td style="color:#F44336">${formatNumber(d.dropOut)}</td><td>${formatPercent(dp)}</td><td style="color:#2196F3">${formatNumber(d.procIn)}</td><td style="color:#9C27B0">${formatNumber(d.recIn)}</td></tr>`;
+        return `
+            <tr>
+                <td><strong>${w}</strong></td>
+                <td style="color:#4CAF50">${formatNumber(d.procOut)}</td>
+                <td style="color:#F44336">${formatNumber(d.dropOut)}</td>
+                <td>${formatPercent(dp)}</td>
+                <td style="color:#2196F3; font-weight:bold;">${formatNumber(d.forecastOut)}</td>
+                <td style="color:#2196F3">${formatNumber(d.procIn)}</td>
+                <td style="color:#9C27B0">${formatNumber(d.recIn)}</td>
+                <td style="color:#2196F3; font-weight:bold;">${formatNumber(d.forecastIn)}</td>
+            </tr>
+        `;
     }).join('');
     
     // Tabela Consolidada
@@ -1222,8 +1296,122 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
         options: opt
     });
     
-    // Gráfico Outbound - Últimos 7 dias
+    // NOVOS GRÁFICOS: Forecast vs Real (Últimos 7 dias)
     const ultimos7Dias = getUltimos7Dias(filtroData);
+    
+    // Dados para Forecast vs Drop (Outbound)
+    const dadosForecastOut = [];
+    const dadosDropReal = [];
+    
+    ultimos7Dias.forEach(dia => {
+        const rows = filtrarProdPor(dia, filtroWH);
+        const dropReal = rows.reduce((s, r) => s + parseNumero(r[3]), 0);
+        
+        let forecastOut = 0;
+        if (filtroWH === 'all') {
+            ['BRFSP1', 'BRFGO1', 'BRFPE1'].forEach(wh => {
+                const fc = buscarForecastDoDia(wh, dia);
+                forecastOut += fc.outbound;
+            });
+        } else if (filtroWH === 'FRANCAO') {
+            const fc = buscarForecastDoDia('BRFSP1', dia);
+            forecastOut = fc.outbound;
+        } else {
+            const fc = buscarForecastDoDia(filtroWH, dia);
+            forecastOut = fc.outbound;
+        }
+        
+        dadosForecastOut.push(forecastOut);
+        dadosDropReal.push(dropReal);
+    });
+    
+    if (chartOutboundForecast) chartOutboundForecast.destroy();
+    chartOutboundForecast = new Chart(document.getElementById('chartOutboundForecast'), {
+        type: 'line',
+        data: {
+            labels: ultimos7Dias.map(d => formatarDataCorreta(d)),
+            datasets: [
+                {
+                    label: 'Forecast',
+                    data: dadosForecastOut,
+                    borderColor: '#2196F3',
+                    backgroundColor: 'rgba(33,150,243,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'Drop Real',
+                    data: dadosDropReal,
+                    borderColor: '#F44336',
+                    backgroundColor: 'rgba(244,67,54,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: opt
+    });
+    
+    // Dados para Forecast vs Recebido (Inbound)
+    const dadosForecastIn = [];
+    const dadosRecReal = [];
+    
+    ultimos7Dias.forEach(dia => {
+        const rows = filtrarProdPor(dia, filtroWH);
+        const recReal = rows.reduce((s, r) => s + parseNumero(r[5]), 0);
+        
+        let forecastIn = 0;
+        if (filtroWH === 'all') {
+            ['BRFSP1', 'BRFGO1', 'BRFPE1'].forEach(wh => {
+                const fc = buscarForecastDoDia(wh, dia);
+                forecastIn += fc.inbound;
+            });
+        } else if (filtroWH === 'FRANCAO') {
+            const fc = buscarForecastDoDia('BRFSP1', dia);
+            forecastIn = fc.inbound;
+        } else {
+            const fc = buscarForecastDoDia(filtroWH, dia);
+            forecastIn = fc.inbound;
+        }
+        
+        dadosForecastIn.push(forecastIn);
+        dadosRecReal.push(recReal);
+    });
+    
+    if (chartInboundForecast) chartInboundForecast.destroy();
+    chartInboundForecast = new Chart(document.getElementById('chartInboundForecast'), {
+        type: 'line',
+        data: {
+            labels: ultimos7Dias.map(d => formatarDataCorreta(d)),
+            datasets: [
+                {
+                    label: 'Forecast',
+                    data: dadosForecastIn,
+                    borderColor: '#2196F3',
+                    backgroundColor: 'rgba(33,150,243,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'Recebido Real',
+                    data: dadosRecReal,
+                    borderColor: '#9C27B0',
+                    backgroundColor: 'rgba(156,39,176,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: opt
+    });
+    
+    // GRÁFICOS ORIGINAIS: Processado vs Drop/Recebido
     const dadosOutbound = { proc: [], drop: [] };
     
     ultimos7Dias.forEach(dia => {
@@ -1263,7 +1451,6 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
         options: opt
     });
     
-    // Gráfico Inbound - Últimos 7 dias
     const dadosInbound = { proc: [], rec: [] };
     
     ultimos7Dias.forEach(dia => {
@@ -1384,10 +1571,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log(`[Dashboard] User: ${userEmail}`);
     
-    // CARREGAMENTO AUTOMÁTICO AO ENTRAR
     carregarDados();
     
-    // Atualizar ao mudar filtros
     document.getElementById('filter-date')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-warehouse')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-sector')?.addEventListener('change', renderizarDashboard);
