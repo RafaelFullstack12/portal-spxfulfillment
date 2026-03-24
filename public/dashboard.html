@@ -12,33 +12,35 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1a1a1a;
             color: #ffffff;
+            font-size: 12px; /* REDUZIDO 20% */
         }
 
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 24px;
+            padding: 19px; /* REDUZIDO 20% (era 24px) */
         }
 
         .header {
             background: linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%);
             border: 2px solid #404040;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 13px; /* REDUZIDO 20% (era 16px) */
+            padding: 19px; /* REDUZIDO 20% (era 24px) */
+            margin-bottom: 19px; /* REDUZIDO 20% (era 24px) */
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .back-button {
             background: #404040;
             color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 8px 16px; /* REDUZIDO 20% (era 10px 20px) */
+            border-radius: 6px; /* REDUZIDO 20% (era 8px) */
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* REDUZIDO 20% (era 8px) */
             font-weight: 600;
+            font-size: 11px; /* REDUZIDO 20% */
             transition: all 0.3s;
             border: none;
             cursor: pointer;
@@ -51,18 +53,19 @@
 
         .tab-container {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
+            gap: 6px; /* REDUZIDO 20% (era 8px) */
+            margin-bottom: 19px; /* REDUZIDO 20% (era 24px) */
             border-bottom: 2px solid #404040;
             padding-bottom: 0;
         }
 
         .tab {
-            padding: 12px 24px;
+            padding: 10px 19px; /* REDUZIDO 20% (era 12px 24px) */
             background: transparent;
             border: none;
             color: #B0B0B0;
             font-weight: 600;
+            font-size: 11px; /* REDUZIDO 20% */
             cursor: pointer;
             border-bottom: 3px solid transparent;
             transition: all 0.3s;
@@ -89,20 +92,20 @@
 
         .filters {
             display: flex;
-            gap: 16px;
+            gap: 13px; /* REDUZIDO 20% (era 16px) */
             align-items: center;
             flex-wrap: wrap;
-            margin-top: 16px;
+            margin-top: 13px; /* REDUZIDO 20% (era 16px) */
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px; /* REDUZIDO 20% (era 8px) */
         }
 
         .filter-label {
-            font-size: 12px;
+            font-size: 10px; /* REDUZIDO 20% (era 12px) */
             color: #B0B0B0;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -113,10 +116,10 @@
             background: #404040;
             border: 1px solid #505050;
             color: white;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            min-width: 180px;
+            padding: 8px 13px; /* REDUZIDO 20% (era 10px 16px) */
+            border-radius: 6px; /* REDUZIDO 20% (era 8px) */
+            font-size: 11px; /* REDUZIDO 20% (era 14px) */
+            min-width: 144px; /* REDUZIDO 20% (era 180px) */
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -127,16 +130,16 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(224px, 1fr)); /* REDUZIDO 20% (era 280px) */
+            gap: 16px; /* REDUZIDO 20% (era 20px) */
+            margin-bottom: 19px; /* REDUZIDO 20% (era 24px) */
         }
 
         .kpi-card {
             background: #333333;
             border: 2px solid #404040;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 10px; /* REDUZIDO 20% (era 12px) */
+            padding: 19px; /* REDUZIDO 20% (era 24px) */
             position: relative;
             overflow: hidden;
             transition: all 0.3s;
@@ -152,44 +155,43 @@
 
         .kpi-icon {
             position: absolute;
-            right: 20px;
-            top: 20px;
-            font-size: 2.5rem;
+            right: 16px; /* REDUZIDO 20% (era 20px) */
+            top: 16px; /* REDUZIDO 20% (era 20px) */
+            font-size: 2rem; /* REDUZIDO 20% (era 2.5rem) */
             opacity: 0.15;
         }
 
         .kpi-label {
             color: #B0B0B0;
-            font-size: 0.85rem;
+            font-size: 0.68rem; /* REDUZIDO 20% (era 0.85rem) */
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* REDUZIDO 20% (era 8px) */
         }
 
         .kpi-value {
-            font-size: 2.5rem;
+            font-size: 2rem; /* REDUZIDO 20% (era 2.5rem) */
             font-weight: bold;
-            margin-bottom: 12px;
+            margin-bottom: 10px; /* REDUZIDO 20% (era 12px) */
             font-variant-numeric: tabular-nums;
         }
 
         .kpi-comparison {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            gap: 6px; /* REDUZIDO 20% (era 8px) */
+            font-size: 0.72rem; /* REDUZIDO 20% (era 0.9rem) */
+            margin-bottom: 6px; /* REDUZIDO 20% (era 8px) */
         }
 
-        /* NOVO: Estilo para exibir valor do forecast */
         .kpi-forecast-value {
-            font-size: 0.85rem;
+            font-size: 0.68rem; /* REDUZIDO 20% (era 0.85rem) */
             color: #B0B0B0;
-            margin-top: 4px;
-            padding: 4px 8px;
+            margin-top: 3px; /* REDUZIDO 20% (era 4px) */
+            padding: 3px 6px; /* REDUZIDO 20% (era 4px 8px) */
             background: rgba(255,255,255,0.05);
-            border-radius: 4px;
+            border-radius: 3px; /* REDUZIDO 20% (era 4px) */
             border-top: 1px solid #404040;
         }
 
@@ -201,22 +203,22 @@
         .mini-history {
             margin-top: auto;
             border-top: 1px solid #404040;
-            padding-top: 12px;
+            padding-top: 10px; /* REDUZIDO 20% (era 12px) */
         }
 
         .mini-history-title {
-            font-size: 0.75rem;
+            font-size: 0.6rem; /* REDUZIDO 20% (era 0.75rem) */
             color: #888;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* REDUZIDO 20% (era 8px) */
             font-weight: 600;
         }
 
         .mini-history-row {
             display: flex;
             justify-content: space-between;
-            padding: 3px 0;
-            font-size: 0.8rem;
+            padding: 2px 0; /* REDUZIDO 20% (era 3px) */
+            font-size: 0.64rem; /* REDUZIDO 20% (era 0.8rem) */
         }
 
         .mini-history-date {
@@ -229,12 +231,13 @@
         }
 
         .comparison-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px; /* REDUZIDO 20% (era 4px 10px) */
+            border-radius: 5px; /* REDUZIDO 20% (era 6px) */
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px; /* REDUZIDO 20% (era 4px) */
+            font-size: 0.68rem; /* REDUZIDO 20% */
         }
 
         .badge-up { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
@@ -244,39 +247,40 @@
         .chart-container {
             background: #333333;
             border: 2px solid #404040;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 10px; /* REDUZIDO 20% (era 12px) */
+            padding: 19px; /* REDUZIDO 20% (era 24px) */
+            margin-bottom: 19px; /* REDUZIDO 20% (era 24px) */
         }
 
         .chart-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* REDUZIDO 20% (era 500px) */
+            gap: 19px; /* REDUZIDO 20% (era 24px) */
+            margin-bottom: 19px; /* REDUZIDO 20% (era 24px) */
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: 13px; /* REDUZIDO 20% (era 16px) */
         }
 
         .data-table th {
             text-align: left;
-            padding: 14px;
+            padding: 11px; /* REDUZIDO 20% (era 14px) */
             color: #B0B0B0;
             border-bottom: 2px solid #404040;
-            font-size: 0.8rem;
+            font-size: 0.64rem; /* REDUZIDO 20% (era 0.8rem) */
             font-weight: 600;
             text-transform: uppercase;
             background: #2a2a2a;
         }
 
         .data-table td {
-            padding: 14px;
+            padding: 11px; /* REDUZIDO 20% (era 14px) */
             border-bottom: 1px solid #2a2a2a;
-            font-size: 0.9rem;
+            font-size: 0.72rem; /* REDUZIDO 20% (era 0.9rem) */
+            font-weight: bold; /* NEGRITO EM TODA TABELA */
         }
 
         .data-table tr:hover {
@@ -296,50 +300,48 @@
         .loading.active { display: flex; }
         
         .spinner {
-            border: 4px solid #404040;
-            border-top: 4px solid #2196F3;
+            border: 3px solid #404040;
+            border-top: 3px solid #2196F3;
             border-radius: 50%;
-            width: 50px; height: 50px;
+            width: 40px; height: 40px; /* REDUZIDO 20% (era 50px) */
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 16px; /* REDUZIDO 20% (era 20px) */
         }
         
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .section-title {
-            font-size: 1.2rem;
+            font-size: 0.96rem; /* REDUZIDO 20% (era 1.2rem) */
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 16px; /* REDUZIDO 20% (era 20px) */
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px; /* REDUZIDO 20% (era 10px) */
         }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Botão Voltar -->
-        <div style="margin-bottom: 20px;">
+        <div style="margin-bottom: 16px;">
             <a href="/portal" class="back-button">
                 <i class="fas fa-arrow-left"></i> Voltar ao Portal
             </a>
         </div>
 
-        <!-- Header -->
+        <!-- Header (TEXTO REMOVIDO) -->
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 4px;">
+                    <h1 style="font-size: 1.6rem; font-weight: bold; margin-bottom: 3px;">
                         <i class="fas fa-chart-line" style="color: #2196F3;"></i>
                         HC & Produtividade
                     </h1>
-                    <p style="color: #B0B0B0; font-size: 0.9rem;">
-                        Dados consolidados: <strong>raw_hc</strong> + <strong>raw_dados</strong> + <strong>raw_labour</strong>
-                    </p>
+                    <!-- REMOVIDO: "Dados consolidados: raw_hc + raw_dados + raw_labour" -->
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 0.8rem; color: #B0B0B0;">Última atualização</div>
-                    <div id="last-update" style="font-weight: bold; color: #2196F3;">--:--</div>
+                    <div style="font-size: 0.64rem; color: #B0B0B0;">Última atualização</div>
+                    <div id="last-update" style="font-weight: bold; color: #2196F3; font-size: 0.9rem;">--:--</div>
                 </div>
             </div>
 
@@ -433,7 +435,7 @@
                     <i class="fas fa-chart-area" style="color: #2196F3;"></i>
                     Tendência HC - Últimos 30 Dias
                 </h3>
-                <div style="height: 350px;">
+                <div style="height: 280px;"> <!-- REDUZIDO 20% (era 350px) -->
                     <canvas id="chartHC"></canvas>
                 </div>
             </div>
@@ -455,7 +457,7 @@
                             </tr>
                         </thead>
                         <tbody id="table-setores">
-                            <tr><td colspan="5" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregando...</td></tr>
+                            <tr><td colspan="5" style="text-align: center; color: #B0B0B0; padding: 32px;">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -477,17 +479,16 @@
                             </tr>
                         </thead>
                         <tbody id="table-warehouses">
-                            <tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregando...</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 32px;">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: PROCESSADOS (COM FORECAST) -->
+        <!-- TAB 2: PROCESSADOS -->
         <div id="tab-processados" class="tab-content">
             <div class="kpi-grid">
-                <!-- Drop Total (Outbound) - COM FORECAST -->
                 <div class="kpi-card">
                     <i class="fas fa-exclamation-triangle kpi-icon" style="color: #F44336;"></i>
                     <div class="kpi-label">Drop Total (Outbound)</div>
@@ -498,14 +499,12 @@
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
-                    <!-- NOVO: Mostrar valor do forecast -->
                     <div class="kpi-forecast-value" id="forecast-drop-out">
                         Forecast: <strong>--</strong>
                     </div>
                     <div class="mini-history" id="hist-drop-out"></div>
                 </div>
 
-                <!-- Processado Total (Outbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-box kpi-icon" style="color: #4CAF50;"></i>
                     <div class="kpi-label">Processado Total (Outbound)</div>
@@ -519,7 +518,6 @@
                     <div class="mini-history" id="hist-proc-out"></div>
                 </div>
 
-                <!-- Recebido Total (Inbound) - COM FORECAST -->
                 <div class="kpi-card">
                     <i class="fas fa-dolly kpi-icon" style="color: #9C27B0;"></i>
                     <div class="kpi-label">Recebido Total (Inbound)</div>
@@ -530,14 +528,12 @@
                             <i class="fas fa-minus"></i> --
                         </span>
                     </div>
-                    <!-- NOVO: Mostrar valor do forecast -->
                     <div class="kpi-forecast-value" id="forecast-rec-in">
                         Forecast: <strong>--</strong>
                     </div>
                     <div class="mini-history" id="hist-rec-in"></div>
                 </div>
 
-                <!-- Processado Total (Inbound) -->
                 <div class="kpi-card">
                     <i class="fas fa-truck-loading kpi-icon" style="color: #2196F3;"></i>
                     <div class="kpi-label">Processado Total (Inbound)</div>
@@ -554,37 +550,35 @@
 
             <!-- NOVOS GRÁFICOS: Forecast vs Real -->
             <div class="chart-grid">
-                <!-- Outbound: Forecast vs Drop -->
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-chart-line" style="color: #F44336;"></i>
                         Outbound - Últimos 7 Dias (Forecast vs Drop)
                     </h3>
-                    <div style="height: 300px;">
+                    <div style="height: 240px;"> <!-- REDUZIDO 20% (era 300px) -->
                         <canvas id="chartOutboundForecast"></canvas>
                     </div>
                 </div>
 
-                <!-- Inbound: Forecast vs Recebido -->
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-chart-line" style="color: #9C27B0;"></i>
                         Inbound - Últimos 7 Dias (Forecast vs Recebido)
                     </h3>
-                    <div style="height: 300px;">
+                    <div style="height: 240px;"> <!-- REDUZIDO 20% (era 300px) -->
                         <canvas id="chartInboundForecast"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- GRÁFICOS ORIGINAIS: Processado vs Drop/Recebido -->
+            <!-- GRÁFICOS ORIGINAIS -->
             <div class="chart-grid">
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-chart-line" style="color: #4CAF50;"></i>
                         Outbound - Últimos 7 Dias (Processado vs Drop)
                     </h3>
-                    <div style="height: 300px;">
+                    <div style="height: 240px;"> <!-- REDUZIDO 20% (era 300px) -->
                         <canvas id="chartOutbound"></canvas>
                     </div>
                 </div>
@@ -594,13 +588,13 @@
                         <i class="fas fa-chart-line" style="color: #2196F3;"></i>
                         Inbound - Últimos 7 Dias (Processado vs Recebido)
                     </h3>
-                    <div style="height: 300px;">
+                    <div style="height: 240px;"> <!-- REDUZIDO 20% (era 300px) -->
                         <canvas id="chartInbound"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- TABELA: Produtividade por Warehouse (COM COLUNAS FORECAST) -->
+            <!-- TABELA: Produtividade por Warehouse (COM PAR FRANÇÃO) -->
             <div class="chart-container">
                 <h3 class="section-title">
                     <i class="fas fa-warehouse" style="color: #FF9800;"></i>
@@ -620,7 +614,7 @@
                         </tr>
                     </thead>
                     <tbody id="table-producao">
-                        <tr><td colspan="8" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregando...</td></tr>
+                        <tr><td colspan="8" style="text-align: center; color: #B0B0B0; padding: 32px;">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -645,7 +639,7 @@
                         </tr>
                     </thead>
                     <tbody id="table-consolidado">
-                        <tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 40px;">Carregando...</td></tr>
+                        <tr><td colspan="6" style="text-align: center; color: #B0B0B0; padding: 32px;">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -655,7 +649,7 @@
                     <i class="fas fa-chart-bar" style="color: #9C27B0;"></i>
                     Visão Geral por Warehouse
                 </h3>
-                <div style="height: 400px;">
+                <div style="height: 320px;"> <!-- REDUZIDO 20% (era 400px) -->
                     <canvas id="chartConsolidado"></canvas>
                 </div>
             </div>
@@ -664,9 +658,9 @@
 
     <!-- Loading -->
     <div class="loading" id="loading">
-        <div style="text-center; background: #333; padding: 30px 50px; border-radius: 10px;">
+        <div style="text-center; background: #333; padding: 24px 40px; border-radius: 8px;">
             <div class="spinner"></div>
-            <div style="font-size: 1.1rem; font-weight: 600;">Carregando dados do Google Sheets...</div>
+            <div style="font-size: 0.88rem; font-weight: 600;">Carregando dados do Google Sheets...</div>
         </div>
     </div>
 
@@ -679,8 +673,8 @@ const API_BASE = window.location.origin;
 let chartHC = null;
 let chartOutbound = null;
 let chartInbound = null;
-let chartOutboundForecast = null; // NOVO
-let chartInboundForecast = null; // NOVO
+let chartOutboundForecast = null;
+let chartInboundForecast = null;
 let chartConsolidado = null;
 let dadosHC = [];
 let dadosProducao = [];
@@ -688,7 +682,7 @@ let dadosProducaoProcessados = [];
 let dadosForecast = [];
 
 // ================================
-// MAPEAMENTO DE MÉTRICAS POR WAREHOUSE
+// MAPEAMENTO DE MÉTRICAS (ATUALIZADO)
 // ================================
 
 const FORECAST_METRICS = {
@@ -805,49 +799,67 @@ function processarDadosProducao(dadosRaw) {
 }
 
 // ================================
-// BUSCAR FORECAST DA SEMANA MAIS RECENTE
+// BUSCAR FORECAST COM FALLBACK INTELIGENTE
 // ================================
 
 function buscarForecastDoDia(warehouse, data) {
     console.log(`[Dashboard] Buscando forecast para ${warehouse} na data ${data}`);
     
-    if (!FORECAST_METRICS[warehouse]) {
+    // REGRA: BRFSP1/BRFSP2 isolados NÃO têm forecast
+    if (warehouse === 'BRFSP1' || warehouse === 'BRFSP2') {
+        console.log(`[Dashboard] ${warehouse} isolado não possui forecast`);
+        return { inbound: 0, outbound: 0 };
+    }
+    
+    // Mapear warehouse para busca
+    const whBusca = warehouse === 'FRANCAO' ? 'BRFSP1' : warehouse;
+    
+    if (!FORECAST_METRICS[whBusca]) {
         console.warn(`[Dashboard] Warehouse ${warehouse} não tem mapeamento de forecast`);
         return { inbound: 0, outbound: 0 };
     }
     
-    const semanas = [...new Set(dadosForecast.map(row => row[0]).filter(Boolean))].sort();
-    const semanaMaisRecente = semanas[semanas.length - 1];
+    // Obter semanas disponíveis (ordenadas da mais recente para mais antiga)
+    const semanas = [...new Set(dadosForecast.map(row => row[0]).filter(Boolean))].sort().reverse();
     
-    console.log(`[Dashboard] Semana mais recente encontrada: ${semanaMaisRecente}`);
+    console.log(`[Dashboard] Semanas disponíveis (${semanas.length}):`, semanas.slice(0, 3));
     
-    const dadosFiltrados = dadosForecast.filter(row => {
-        return row[0] === semanaMaisRecente &&
-               row[1] === data &&
-               row[2] === warehouse;
-    });
-    
-    if (dadosFiltrados.length === 0) {
-        console.warn(`[Dashboard] Nenhum forecast encontrado para ${warehouse} em ${data}`);
-        return { inbound: 0, outbound: 0 };
+    // BUSCA COM FALLBACK: Tenta semana mais recente, depois anteriores
+    for (const semana of semanas) {
+        console.log(`[Dashboard] Tentando semana: ${semana} para ${whBusca}`);
+        
+        const dadosFiltrados = dadosForecast.filter(row => {
+            return row[0] === semana &&        // grass_date (Coluna A)
+                   row[1] === data &&          // date (Coluna B) 
+                   row[2] === whBusca;         // WHS_ID (Coluna C)
+        });
+        
+        if (dadosFiltrados.length > 0) {
+            console.log(`[Dashboard] ✅ Dados encontrados na semana ${semana} para ${whBusca}`);
+            
+            let inbound = 0;
+            let outbound = 0;
+            
+            dadosFiltrados.forEach(row => {
+                const metric = row[3]; // metric (Coluna D)
+                const value = parseNumero(row[4]); // value (Coluna E)
+                
+                if (metric === FORECAST_METRICS[whBusca].inbound) {
+                    inbound += value;
+                } else if (metric === FORECAST_METRICS[whBusca].outbound) {
+                    outbound += value;
+                }
+            });
+            
+            console.log(`[Dashboard] Forecast para ${warehouse}: Inbound=${inbound}, Outbound=${outbound}`);
+            return { inbound, outbound };
+        } else {
+            console.log(`[Dashboard] ❌ Sem dados na semana ${semana}, tentando anterior...`);
+        }
     }
     
-    let inbound = 0;
-    let outbound = 0;
-    
-    dadosFiltrados.forEach(row => {
-        const metric = row[3];
-        const value = parseNumero(row[4]);
-        
-        if (metric === FORECAST_METRICS[warehouse].inbound) {
-            inbound += value;
-        } else if (metric === FORECAST_METRICS[warehouse].outbound) {
-            outbound += value;
-        }
-    });
-    
-    console.log(`[Dashboard] Forecast consolidado para ${warehouse}: Inbound=${inbound}, Outbound=${outbound}`);
-    return { inbound, outbound };
+    console.warn(`[Dashboard] ⚠️ Nenhum forecast encontrado para ${warehouse} em ${data}`);
+    return { inbound: 0, outbound: 0 };
 }
 
 // ================================
@@ -911,13 +923,13 @@ async function carregarDados() {
         
         dadosProducaoProcessados = processarDadosProducao(dadosProducao);
         
-        console.log(`[Dashboard] HC: ${dadosHC.length}, Prod: ${dadosProducao.length}, Forecast: ${dadosForecast.length}`);
+        console.log(`[Dashboard] Dados carregados - HC: ${dadosHC.length}, Prod: ${dadosProducao.length}, Forecast: ${dadosForecast.length}`);
         
         popularFiltros();
         renderizarDashboard();
         
         document.getElementById('last-update').textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        console.log('[Dashboard] ✅ OK');
+        console.log('[Dashboard] ✅ Carregamento concluído');
     } catch (error) {
         console.error('[Dashboard] Erro:', error);
         alert(`❌ ${error.message}`);
@@ -1034,7 +1046,7 @@ function renderizarDashboard() {
     const filtroWH = document.getElementById('filter-warehouse').value;
     const filtroSetor = document.getElementById('filter-sector').value;
     
-    console.log('[Dashboard] Filtros:', { data: filtroData, warehouse: filtroWH, setor: filtroSetor });
+    console.log('[Dashboard] Renderizando com filtros:', { data: filtroData, warehouse: filtroWH, setor: filtroSetor });
     
     const hcFiltrado = filtrarHCPor(filtroData, filtroWH, filtroSetor);
     const producaoFiltrado = filtrarProdPor(filtroData, filtroWH);
@@ -1055,7 +1067,7 @@ function renderizarDashboard() {
     document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
     document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
     
-    // Comparação HC com dia anterior
+    // Comparação com dia anterior (HC e Processados)
     const dataAnterior = getDataAnteriorStr(filtroData);
     if (dataAnterior) {
         const hcAnterior = filtrarHCPor(dataAnterior, filtroWH, filtroSetor);
@@ -1073,38 +1085,38 @@ function renderizarDashboard() {
         atualizarBadge('comp-proc-in', calcularComparacao(procIn, kpiProdAnterior.procIn));
     }
     
-    // COMPARAÇÃO COM FORECAST
+    // COMPARAÇÃO COM FORECAST (Drop Out e Recebido In)
     let forecastInbound = 0;
     let forecastOutbound = 0;
     
     if (filtroWH === 'all') {
-        ['BRFSP1', 'BRFGO1', 'BRFPE1'].forEach(wh => {
+        // Somar forecast de FRANÇÃO + BRFGO1 + BRFPE1 (não BRFSP1 isolado)
+        ['FRANCAO', 'BRFGO1', 'BRFPE1'].forEach(wh => {
             const fc = buscarForecastDoDia(wh, filtroData);
             forecastInbound += fc.inbound;
             forecastOutbound += fc.outbound;
         });
     } else if (filtroWH === 'FRANCAO') {
-        const fc = buscarForecastDoDia('BRFSP1', filtroData);
+        const fc = buscarForecastDoDia('FRANCAO', filtroData);
         forecastInbound = fc.inbound;
         forecastOutbound = fc.outbound;
-    } else {
+    } else if (filtroWH !== 'BRFSP1' && filtroWH !== 'BRFSP2') {
+        // Apenas warehouses com forecast (não BRFSP1/BRFSP2 isolados)
         const fc = buscarForecastDoDia(filtroWH, filtroData);
         forecastInbound = fc.inbound;
         forecastOutbound = fc.outbound;
     }
     
-    console.log(`[Dashboard] Forecast consolidado: Inbound=${forecastInbound}, Outbound=${forecastOutbound}`);
+    console.log(`[Dashboard] Forecast consolidado final: Inbound=${forecastInbound}, Outbound=${forecastOutbound}`);
     
-    // Atualizar badges e MOSTRAR VALORES DO FORECAST
     atualizarBadge('comp-drop-out', calcularComparacao(dropOut, forecastOutbound));
     atualizarBadge('comp-rec-in', calcularComparacao(recIn, forecastInbound));
     
-    // NOVO: Exibir valores do forecast abaixo das badges
     document.getElementById('forecast-drop-out').innerHTML = `Forecast: <strong>${formatNumber(forecastOutbound)}</strong>`;
     document.getElementById('forecast-rec-in').innerHTML = `Forecast: <strong>${formatNumber(forecastInbound)}</strong>`;
     
     renderizarHistorico(filtroData, filtroWH);
-    renderizarTabelas(hcFiltrado, producaoFiltrado, filtroData, filtroWH);
+    renderizarTabelas(hcFiltrado, producaoFiltrado, filtroData);
     renderizarGraficos(filtroWH, filtroSetor, filtroData);
 }
 
@@ -1145,7 +1157,7 @@ function renderizarHistorico(dataBase, filtroWH) {
     });
 }
 
-function renderizarTabelas(hcData, prodData, filtroData, filtroWH) {
+function renderizarTabelas(hcData, prodData, filtroData) {
     // Tabela Setores
     const setores = {};
     hcData.forEach(r => {
@@ -1183,38 +1195,73 @@ function renderizarTabelas(hcData, prodData, filtroData, filtroWH) {
         return `<tr><td><strong>${w}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td><td style="color:#FF9800">${formatPercent(t)}</td></tr>`;
     }).join('');
     
-    // TABELA PRODUÇÃO (COM COLUNAS DE FORECAST)
+    // TABELA PRODUÇÃO COM PAR FRANÇÃO
     const whsProd = {};
     prodData.forEach(r => {
         const w = r[1] || 'N/A';
         if (w === 'BRS' || w === 'OTHERS') return;
-        if (!whsProd[w]) whsProd[w] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0, forecastOut: 0, forecastIn: 0 };
+        if (!whsProd[w]) whsProd[w] = { procOut: 0, dropOut: 0, procIn: 0, recIn: 0 };
         whsProd[w].procOut += parseNumero(r[2]);
         whsProd[w].dropOut += parseNumero(r[3]);
         whsProd[w].procIn += parseNumero(r[4]);
         whsProd[w].recIn += parseNumero(r[5]);
     });
     
-    // Adicionar forecast para cada warehouse
-    Object.keys(whsProd).forEach(wh => {
-        const fc = buscarForecastDoDia(wh, filtroData);
-        whsProd[wh].forecastOut = fc.outbound;
-        whsProd[wh].forecastIn = fc.inbound;
+    // CRIAR PAR FRANÇÃO se BRFSP1 e BRFSP2 existirem
+    if (whsProd['BRFSP1'] && whsProd['BRFSP2']) {
+        whsProd['FRANÇÃO'] = {
+            procOut: whsProd['BRFSP1'].procOut + whsProd['BRFSP2'].procOut,
+            dropOut: whsProd['BRFSP1'].dropOut + whsProd['BRFSP2'].dropOut,
+            procIn: whsProd['BRFSP1'].procIn + whsProd['BRFSP2'].procIn,
+            recIn: whsProd['BRFSP1'].recIn + whsProd['BRFSP2'].recIn
+        };
+    }
+    
+    // Ordenar: FRANÇÃO primeiro, depois BRFSP1, BRFSP2, depois resto alfabético
+    const whsOrdenados = Object.keys(whsProd).sort((a, b) => {
+        if (a === 'FRANÇÃO') return -1;
+        if (b === 'FRANÇÃO') return 1;
+        if (a === 'BRFSP1') return -1;
+        if (b === 'BRFSP1') return 1;
+        if (a === 'BRFSP2') return -1;
+        if (b === 'BRFSP2') return 1;
+        return a.localeCompare(b);
     });
     
-    document.getElementById('table-producao').innerHTML = Object.keys(whsProd).sort().map(w => {
+    document.getElementById('table-producao').innerHTML = whsOrdenados.map(w => {
         const d = whsProd[w];
         const dp = d.procOut > 0 ? (d.dropOut / d.procOut) * 100 : 0;
+        
+        // Lógica de forecast por warehouse
+        let forecastOut = 0;
+        let forecastIn = 0;
+        
+        if (w === 'BRFSP1' || w === 'BRFSP2') {
+            // SP1 e SP2 isolados: forecast = 0
+            forecastOut = 0;
+            forecastIn = 0;
+        } else if (w === 'FRANÇÃO') {
+            // FRANÇÃO usa forecast de BRFSP1 (SP9)
+            const fc = buscarForecastDoDia('FRANCAO', filtroData);
+            forecastOut = fc.outbound;
+            forecastIn = fc.inbound;
+        } else {
+            // Outros warehouses (GO, PE)
+            const fc = buscarForecastDoDia(w, filtroData);
+            forecastOut = fc.outbound;
+            forecastIn = fc.inbound;
+        }
+        
         return `
             <tr>
                 <td><strong>${w}</strong></td>
                 <td style="color:#4CAF50">${formatNumber(d.procOut)}</td>
                 <td style="color:#F44336">${formatNumber(d.dropOut)}</td>
                 <td>${formatPercent(dp)}</td>
-                <td style="color:#2196F3; font-weight:bold;">${formatNumber(d.forecastOut)}</td>
+                <td style="color:#2196F3;">${formatNumber(forecastOut)}</td>
                 <td style="color:#2196F3">${formatNumber(d.procIn)}</td>
                 <td style="color:#9C27B0">${formatNumber(d.recIn)}</td>
-                <td style="color:#2196F3; font-weight:bold;">${formatNumber(d.forecastIn)}</td>
+                <td style="color:#2196F3;">${formatNumber(forecastIn)}</td>
             </tr>
         `;
     }).join('');
@@ -1249,10 +1296,10 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
     const opt = {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#B0B0B0' } } },
+        plugins: { legend: { labels: { color: '#B0B0B0', font: { size: 10 } } } },
         scales: {
-            y: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } },
-            x: { ticks: { color: '#B0B0B0' }, grid: { color: '#404040' } }
+            y: { ticks: { color: '#B0B0B0', font: { size: 9 } }, grid: { color: '#404040' } },
+            x: { ticks: { color: '#B0B0B0', font: { size: 9 } }, grid: { color: '#404040' } }
         }
     };
     
@@ -1287,16 +1334,16 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(33,150,243,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
                 }
             ]
         },
         options: opt
     });
     
-    // NOVOS GRÁFICOS: Forecast vs Real (Últimos 7 dias)
+    // NOVOS GRÁFICOS: Forecast vs Real
     const ultimos7Dias = getUltimos7Dias(filtroData);
     
     // Dados para Forecast vs Drop (Outbound)
@@ -1309,14 +1356,14 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
         
         let forecastOut = 0;
         if (filtroWH === 'all') {
-            ['BRFSP1', 'BRFGO1', 'BRFPE1'].forEach(wh => {
+            ['FRANCAO', 'BRFGO1', 'BRFPE1'].forEach(wh => {
                 const fc = buscarForecastDoDia(wh, dia);
                 forecastOut += fc.outbound;
             });
         } else if (filtroWH === 'FRANCAO') {
-            const fc = buscarForecastDoDia('BRFSP1', dia);
+            const fc = buscarForecastDoDia('FRANCAO', dia);
             forecastOut = fc.outbound;
-        } else {
+        } else if (filtroWH !== 'BRFSP1' && filtroWH !== 'BRFSP2') {
             const fc = buscarForecastDoDia(filtroWH, dia);
             forecastOut = fc.outbound;
         }
@@ -1338,7 +1385,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(33,150,243,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3,
+                    borderWidth: 2,
                     borderDash: [5, 5]
                 },
                 {
@@ -1348,7 +1395,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(244,67,54,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3
+                    borderWidth: 2
                 }
             ]
         },
@@ -1365,14 +1412,14 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
         
         let forecastIn = 0;
         if (filtroWH === 'all') {
-            ['BRFSP1', 'BRFGO1', 'BRFPE1'].forEach(wh => {
+            ['FRANCAO', 'BRFGO1', 'BRFPE1'].forEach(wh => {
                 const fc = buscarForecastDoDia(wh, dia);
                 forecastIn += fc.inbound;
             });
         } else if (filtroWH === 'FRANCAO') {
-            const fc = buscarForecastDoDia('BRFSP1', dia);
+            const fc = buscarForecastDoDia('FRANCAO', dia);
             forecastIn = fc.inbound;
-        } else {
+        } else if (filtroWH !== 'BRFSP1' && filtroWH !== 'BRFSP2') {
             const fc = buscarForecastDoDia(filtroWH, dia);
             forecastIn = fc.inbound;
         }
@@ -1394,7 +1441,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(33,150,243,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3,
+                    borderWidth: 2,
                     borderDash: [5, 5]
                 },
                 {
@@ -1404,7 +1451,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(156,39,176,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3
+                    borderWidth: 2
                 }
             ]
         },
@@ -1435,7 +1482,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(76,175,80,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3
+                    borderWidth: 2
                 },
                 {
                     label: 'Drop',
@@ -1444,7 +1491,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(244,67,54,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3
+                    borderWidth: 2
                 }
             ]
         },
@@ -1474,7 +1521,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(33,150,243,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3
+                    borderWidth: 2
                 },
                 {
                     label: 'Recebido',
@@ -1483,7 +1530,7 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
                     backgroundColor: 'rgba(156,39,176,0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 3
+                    borderWidth: 2
                 }
             ]
         },
@@ -1536,20 +1583,20 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#B0B0B0' } } },
+            plugins: { legend: { labels: { color: '#B0B0B0', font: { size: 10 } } } },
             scales: {
                 y: {
                     position: 'left',
-                    ticks: { color: '#B0B0B0' },
+                    ticks: { color: '#B0B0B0', font: { size: 9 } },
                     grid: { color: '#404040' }
                 },
                 y1: {
                     position: 'right',
-                    ticks: { color: '#F44336', callback: v => `${v}%` },
+                    ticks: { color: '#F44336', callback: v => `${v}%`, font: { size: 9 } },
                     grid: { drawOnChartArea: false }
                 },
                 x: {
-                    ticks: { color: '#B0B0B0' },
+                    ticks: { color: '#B0B0B0', font: { size: 9 } },
                     grid: { color: '#404040' }
                 }
             }
@@ -1562,17 +1609,19 @@ function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
 // ================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Dashboard] Pronto');
+    console.log('[Dashboard] Inicializando...');
     const userEmail = getUserEmail();
     if (!userEmail) {
         alert('❌ Não autenticado');
         window.location.href = '/';
         return;
     }
-    console.log(`[Dashboard] User: ${userEmail}`);
+    console.log(`[Dashboard] Usuário autenticado: ${userEmail}`);
     
+    // CARREGAMENTO AUTOMÁTICO
     carregarDados();
     
+    // Event listeners para filtros
     document.getElementById('filter-date')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-warehouse')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-sector')?.addEventListener('change', renderizarDashboard);
