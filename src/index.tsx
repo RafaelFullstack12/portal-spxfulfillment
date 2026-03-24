@@ -2360,7 +2360,7 @@ app.get('/api/dashboard/raw-process', async (c) => {
 
     const response = await sheetsManager.sheets.spreadsheets.values.get({
       spreadsheetId: DASHBOARD_SPREADSHEET_ID,
-      range: 'raw_processos!A:E'
+      range: 'raw_processos!A:D'
     })
 
     const rows = response.data.values || []
