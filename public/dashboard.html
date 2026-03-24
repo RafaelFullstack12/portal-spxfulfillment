@@ -329,7 +329,7 @@
             </a>
         </div>
 
-        <!-- Header -->
+        <!-- Header COM FILTRO DE SETOR RESTAURADO -->
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -353,6 +353,13 @@
                     <label class="filter-label">Warehouse</label>
                     <select id="filter-warehouse">
                         <option value="all">Todos os Warehouses</option>
+                    </select>
+                </div>
+                <!-- FILTRO SETOR RESTAURADO -->
+                <div class="filter-group">
+                    <label class="filter-label">Setor (HC)</label>
+                    <select id="filter-sector">
+                        <option value="all">Todos os Setores</option>
                     </select>
                 </div>
             </div>
@@ -610,10 +617,11 @@
             </div>
         </div>
 
-        <!-- TAB 3: Produtividade (GRÁFICOS INDIVIDUAIS) -->
+        <!-- TAB 3: Produtividade (ORDEM CORRIGIDA: PICKING → CHECKING → PUTAWAY → BOXING) -->
         <div id="tab-produtividade" class="tab-content">
-            <!-- KPIs de Processos -->
+            <!-- KPIs REORDENADOS -->
             <div class="kpi-grid">
+                <!-- 1. PICKING -->
                 <div class="kpi-card">
                     <i class="fas fa-hand-pointer kpi-icon" style="color: #FFC107;"></i>
                     <div class="kpi-label">Picking Total</div>
@@ -627,32 +635,7 @@
                     <div class="mini-history" id="hist-picking"></div>
                 </div>
 
-                <div class="kpi-card">
-                    <i class="fas fa-box-open kpi-icon" style="color: #FF9800;"></i>
-                    <div class="kpi-label">Boxing Total</div>
-                    <div class="kpi-value" style="color: #FF9800;" id="kpi-boxing">--</div>
-                    <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
-                        <span class="comparison-badge badge-neutral" id="comp-boxing">
-                            <i class="fas fa-minus"></i> --
-                        </span>
-                    </div>
-                    <div class="mini-history" id="hist-boxing"></div>
-                </div>
-
-                <div class="kpi-card">
-                    <i class="fas fa-dolly-flatbed kpi-icon" style="color: #2196F3;"></i>
-                    <div class="kpi-label">Putaway Total</div>
-                    <div class="kpi-value" style="color: #2196F3;" id="kpi-putaway">--</div>
-                    <div class="kpi-comparison">
-                        <span style="color: #B0B0B0;">vs dia anterior:</span>
-                        <span class="comparison-badge badge-neutral" id="comp-putaway">
-                            <i class="fas fa-minus"></i> --
-                        </span>
-                    </div>
-                    <div class="mini-history" id="hist-putaway"></div>
-                </div>
-
+                <!-- 2. CHECKING -->
                 <div class="kpi-card">
                     <i class="fas fa-clipboard-check kpi-icon" style="color: #9C27B0;"></i>
                     <div class="kpi-label">Checking Total</div>
@@ -665,11 +648,39 @@
                     </div>
                     <div class="mini-history" id="hist-checking"></div>
                 </div>
+
+                <!-- 3. PUTAWAY (PUTTING na base) -->
+                <div class="kpi-card">
+                    <i class="fas fa-dolly-flatbed kpi-icon" style="color: #2196F3;"></i>
+                    <div class="kpi-label">Putaway Total</div>
+                    <div class="kpi-value" style="color: #2196F3;" id="kpi-putting">--</div>
+                    <div class="kpi-comparison">
+                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span class="comparison-badge badge-neutral" id="comp-putting">
+                            <i class="fas fa-minus"></i> --
+                        </span>
+                    </div>
+                    <div class="mini-history" id="hist-putting"></div>
+                </div>
+
+                <!-- 4. BOXING -->
+                <div class="kpi-card">
+                    <i class="fas fa-box-open kpi-icon" style="color: #FF9800;"></i>
+                    <div class="kpi-label">Boxing Total</div>
+                    <div class="kpi-value" style="color: #FF9800;" id="kpi-boxing">--</div>
+                    <div class="kpi-comparison">
+                        <span style="color: #B0B0B0;">vs dia anterior:</span>
+                        <span class="comparison-badge badge-neutral" id="comp-boxing">
+                            <i class="fas fa-minus"></i> --
+                        </span>
+                    </div>
+                    <div class="mini-history" id="hist-boxing"></div>
+                </div>
             </div>
 
-            <!-- GRÁFICOS INDIVIDUAIS POR PROCESSO (2x2 Grid) -->
+            <!-- GRÁFICOS REORDENADOS (2x2 Grid) -->
             <div class="chart-grid">
-                <!-- Picking -->
+                <!-- 1. Picking -->
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-hand-pointer" style="color: #FFC107;"></i>
@@ -680,29 +691,7 @@
                     </div>
                 </div>
 
-                <!-- Boxing -->
-                <div class="chart-container">
-                    <h3 class="section-title">
-                        <i class="fas fa-box-open" style="color: #FF9800;"></i>
-                        Boxing - Últimos 7 Dias
-                    </h3>
-                    <div style="height: 240px;">
-                        <canvas id="chartBoxing"></canvas>
-                    </div>
-                </div>
-
-                <!-- Putaway -->
-                <div class="chart-container">
-                    <h3 class="section-title">
-                        <i class="fas fa-dolly-flatbed" style="color: #2196F3;"></i>
-                        Putaway - Últimos 7 Dias
-                    </h3>
-                    <div style="height: 240px;">
-                        <canvas id="chartPutaway"></canvas>
-                    </div>
-                </div>
-
-                <!-- Checking -->
+                <!-- 2. Checking -->
                 <div class="chart-container">
                     <h3 class="section-title">
                         <i class="fas fa-clipboard-check" style="color: #9C27B0;"></i>
@@ -712,8 +701,29 @@
                         <canvas id="chartChecking"></canvas>
                     </div>
                 </div>
+
+                <!-- 3. Putaway -->
+                <div class="chart-container">
+                    <h3 class="section-title">
+                        <i class="fas fa-dolly-flatbed" style="color: #2196F3;"></i>
+                        Putaway - Últimos 7 Dias
+                    </h3>
+                    <div style="height: 240px;">
+                        <canvas id="chartPutting"></canvas>
+                    </div>
+                </div>
+
+                <!-- 4. Boxing -->
+                <div class="chart-container">
+                    <h3 class="section-title">
+                        <i class="fas fa-box-open" style="color: #FF9800;"></i>
+                        Boxing - Últimos 7 Dias
+                    </h3>
+                    <div style="height: 240px;">
+                        <canvas id="chartBoxing"></canvas>
+                    </div>
+                </div>
             </div>
-            <!-- REMOVIDAS: Tabela Consolidada e Gráfico Visão Geral -->
         </div>
     </div>
 
@@ -736,11 +746,10 @@ let chartOutbound = null;
 let chartInbound = null;
 let chartOutboundForecast = null;
 let chartInboundForecast = null;
-// NOVOS: Gráficos individuais por processo
 let chartPicking = null;
-let chartBoxing = null;
-let chartPutaway = null;
 let chartChecking = null;
+let chartPutting = null; // CORRIGIDO: Consistent ID
+let chartBoxing = null;
 
 let dadosHC = [];
 let dadosProducao = [];
@@ -797,6 +806,14 @@ function formatPercent(value) {
 function normalizarTexto(texto) {
     if (!texto) return '';
     return texto.toString().trim().toUpperCase();
+}
+
+// FUNÇÃO PARA VALIDAR SETORES (REMOVER #REF, #N/A, OTHERS)
+function isSetorValido(setor) {
+    if (!setor) return false;
+    const setorNorm = normalizarTexto(setor);
+    const invalidos = ['#REF!', '#N/A', 'OTHERS', 'N/A', '#REF', '#NA', '', '0'];
+    return !invalidos.includes(setorNorm);
 }
 
 function calcularComparacao(atual, anterior) {
@@ -886,11 +903,7 @@ function buscarForecastDoDia(warehouse, data) {
     
     const semanas = [...new Set(dadosForecast.map(row => row[0]).filter(Boolean))].sort().reverse();
     
-    console.log(`[Dashboard] Semanas disponíveis (${semanas.length}):`, semanas.slice(0, 3));
-    
     for (const semana of semanas) {
-        console.log(`[Dashboard] Tentando semana: ${semana} para ${whBusca}`);
-        
         const dadosFiltrados = dadosForecast.filter(row => {
             return row[0] === semana &&
                    row[1] === data &&
@@ -898,8 +911,6 @@ function buscarForecastDoDia(warehouse, data) {
         });
         
         if (dadosFiltrados.length > 0) {
-            console.log(`[Dashboard] ✅ Dados encontrados na semana ${semana} para ${whBusca}`);
-            
             let inbound = 0;
             let outbound = 0;
             
@@ -914,14 +925,10 @@ function buscarForecastDoDia(warehouse, data) {
                 }
             });
             
-            console.log(`[Dashboard] Forecast para ${warehouse}: Inbound=${inbound}, Outbound=${outbound}`);
             return { inbound, outbound };
-        } else {
-            console.log(`[Dashboard] ❌ Sem dados na semana ${semana}, tentando anterior...`);
         }
     }
     
-    console.warn(`[Dashboard] ⚠️ Nenhum forecast encontrado para ${warehouse} em ${data}`);
     return { inbound: 0, outbound: 0 };
 }
 
@@ -1007,6 +1014,7 @@ async function carregarDados() {
 function popularFiltros() {
     const hcSemHeader = dadosHC.slice(1);
     
+    // Filtro Warehouse
     const whSelect = document.getElementById('filter-warehouse');
     const whsUnicos = new Set();
     
@@ -1029,6 +1037,17 @@ function popularFiltros() {
     optionsHTML += warehouses.map(wh => `<option value="${wh}">${wh}</option>`).join('');
     whSelect.innerHTML = optionsHTML;
     
+    // FILTRO SETOR RESTAURADO (FILTRANDO VALORES INVÁLIDOS)
+    const setorSelect = document.getElementById('filter-sector');
+    const setores = [...new Set(hcSemHeader
+        .map(r => r[5])
+        .filter(s => isSetorValido(s))
+    )].sort();
+    
+    setorSelect.innerHTML = '<option value="all">Todos os Setores</option>' + 
+        setores.map(s => `<option value="${normalizarTexto(s)}">${s}</option>`).join('');
+    
+    // Data
     const datas = [...new Set(hcSemHeader.map(r => r[0]).filter(Boolean))].sort();
     document.getElementById('filter-date').value = datas.length > 0 ? datas[datas.length - 1] : new Date().toISOString().split('T')[0];
 }
@@ -1058,13 +1077,17 @@ function getUltimos7Dias(dataBase) {
     return dias;
 }
 
-function filtrarHCPor(data, whSelecionado) {
+// FILTROS COM SETOR RESTAURADO
+function filtrarHCPor(data, whSelecionado, setorSelecionado) {
     return dadosHC.slice(1).filter(row => {
         if (!row || row.length === 0) return false;
         if (data && row[0] !== data) return false;
         const wh = row[1];
+        const setorNorm = normalizarTexto(row[5]);
         if (!aplicarFiltroWarehouse(whSelecionado, wh)) return false;
+        if (setorSelecionado !== 'all' && setorNorm !== setorSelecionado) return false;
         if (wh === 'BRS' || wh === 'OTHERS') return false;
+        if (!isSetorValido(row[5])) return false; // FILTRA SETORES INVÁLIDOS
         return true;
     });
 }
@@ -1112,11 +1135,12 @@ function calcularKPIsProd(prodRows) {
     return { procOut, dropOut, procIn, recIn };
 }
 
+// CORRIGIDO: PUTTING ao invés de PUTAWAY
 function calcularKPIsProcessos(processosRows) {
     const kpis = {
         PICKING: 0,
         BOXING: 0,
-        PUTAWAY: 0,
+        PUTTING: 0,  // CORRIGIDO: Lê "PUTTING" da base
         CHECKING: 0
     };
     
@@ -1135,10 +1159,11 @@ function calcularKPIsProcessos(processosRows) {
 function renderizarDashboard() {
     const filtroData = document.getElementById('filter-date').value;
     const filtroWH = document.getElementById('filter-warehouse').value;
+    const filtroSetor = document.getElementById('filter-sector').value; // RESTAURADO
     
-    console.log('[Dashboard] Renderizando com filtros:', { data: filtroData, warehouse: filtroWH });
+    console.log('[Dashboard] Renderizando com filtros:', { data: filtroData, warehouse: filtroWH, setor: filtroSetor });
     
-    const hcFiltrado = filtrarHCPor(filtroData, filtroWH);
+    const hcFiltrado = filtrarHCPor(filtroData, filtroWH, filtroSetor); // COM SETOR
     const producaoFiltrado = filtrarProdPor(filtroData, filtroWH);
     const processosFiltrado = filtrarProcessosPor(filtroData, filtroWH);
     
@@ -1158,18 +1183,18 @@ function renderizarDashboard() {
     document.getElementById('kpi-proc-in').textContent = formatNumber(procIn);
     document.getElementById('kpi-rec-in').textContent = formatNumber(recIn);
     
-    // KPIs Processos
+    // KPIs Processos (USANDO PUTTING)
     const kpisProcessos = calcularKPIsProcessos(processosFiltrado);
     
     document.getElementById('kpi-picking').textContent = formatNumber(kpisProcessos.PICKING);
-    document.getElementById('kpi-boxing').textContent = formatNumber(kpisProcessos.BOXING);
-    document.getElementById('kpi-putaway').textContent = formatNumber(kpisProcessos.PUTAWAY);
     document.getElementById('kpi-checking').textContent = formatNumber(kpisProcessos.CHECKING);
+    document.getElementById('kpi-putting').textContent = formatNumber(kpisProcessos.PUTTING); // CORRIGIDO
+    document.getElementById('kpi-boxing').textContent = formatNumber(kpisProcessos.BOXING);
     
     // Comparação com dia anterior
     const dataAnterior = getDataAnteriorStr(filtroData);
     if (dataAnterior) {
-        const hcAnterior = filtrarHCPor(dataAnterior, filtroWH);
+        const hcAnterior = filtrarHCPor(dataAnterior, filtroWH, filtroSetor); // COM SETOR
         const prodAnterior = filtrarProdPor(dataAnterior, filtroWH);
         const processosAnterior = filtrarProcessosPor(dataAnterior, filtroWH);
         
@@ -1186,9 +1211,9 @@ function renderizarDashboard() {
         atualizarBadge('comp-proc-in', calcularComparacao(procIn, kpiProdAnterior.procIn));
         
         atualizarBadge('comp-picking', calcularComparacao(kpisProcessos.PICKING, kpiProcessosAnterior.PICKING));
-        atualizarBadge('comp-boxing', calcularComparacao(kpisProcessos.BOXING, kpiProcessosAnterior.BOXING));
-        atualizarBadge('comp-putaway', calcularComparacao(kpisProcessos.PUTAWAY, kpiProcessosAnterior.PUTAWAY));
         atualizarBadge('comp-checking', calcularComparacao(kpisProcessos.CHECKING, kpiProcessosAnterior.CHECKING));
+        atualizarBadge('comp-putting', calcularComparacao(kpisProcessos.PUTTING, kpiProcessosAnterior.PUTTING)); // CORRIGIDO
+        atualizarBadge('comp-boxing', calcularComparacao(kpisProcessos.BOXING, kpiProcessosAnterior.BOXING));
     }
     
     // COMPARAÇÃO COM FORECAST
@@ -1211,8 +1236,6 @@ function renderizarDashboard() {
         forecastOutbound = fc.outbound;
     }
     
-    console.log(`[Dashboard] Forecast consolidado final: Inbound=${forecastInbound}, Outbound=${forecastOutbound}`);
-    
     atualizarBadge('comp-drop-out', calcularComparacao(dropOut, forecastOutbound));
     atualizarBadge('comp-rec-in', calcularComparacao(recIn, forecastInbound));
     
@@ -1221,14 +1244,14 @@ function renderizarDashboard() {
     
     renderizarHistorico(filtroData, filtroWH);
     renderizarTabelas(hcFiltrado, producaoFiltrado, filtroData);
-    renderizarGraficos(filtroWH, filtroData);
+    renderizarGraficos(filtroWH, filtroSetor, filtroData); // COM SETOR
     renderizarProdutividade(filtroData, filtroWH);
 }
 
+// ORDEM CORRIGIDA: PICKING → CHECKING → PUTTING → BOXING
 function renderizarProdutividade(filtroData, filtroWH) {
     console.log('[Dashboard] Renderizando aba Produtividade...');
     
-    // 1. Histórico de 4 dias
     const dias4 = [];
     let date = new Date(filtroData + 'T12:00:00');
     for (let i = 0; i < 4; i++) {
@@ -1236,7 +1259,8 @@ function renderizarProdutividade(filtroData, filtroWH) {
         dias4.push(date.toISOString().split('T')[0]);
     }
     
-    ['PICKING', 'BOXING', 'PUTAWAY', 'CHECKING'].forEach(atividade => {
+    // ORDEM CORRIGIDA
+    ['PICKING', 'CHECKING', 'PUTTING', 'BOXING'].forEach(atividade => {
         let html = '<div class="mini-history-title">Últimos 4 dias</div>';
         
         dias4.forEach(dia => {
@@ -1253,51 +1277,42 @@ function renderizarProdutividade(filtroData, filtroWH) {
             `;
         });
         
-        const elemento = document.getElementById(`hist-${atividade.toLowerCase()}`);
+        // Mapear PUTTING → putting para o ID do elemento
+        const idProcesso = atividade === 'PUTTING' ? 'putting' : atividade.toLowerCase();
+        const elemento = document.getElementById(`hist-${idProcesso}`);
         if (elemento) elemento.innerHTML = html;
     });
     
-    // 2. Gráficos individuais (últimos 7 dias)
     const ultimos7Dias = getUltimos7Dias(filtroData);
     const labels = ultimos7Dias.map(d => formatarDataCorreta(d));
     
     const commonOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { 
-            legend: { 
-                display: false 
-            } 
-        },
+        plugins: { legend: { display: false } },
         scales: {
-            y: { 
-                ticks: { color: '#B0B0B0', font: { size: 9 } }, 
-                grid: { color: '#404040' } 
-            },
-            x: { 
-                ticks: { color: '#B0B0B0', font: { size: 9 } }, 
-                grid: { color: '#404040' } 
-            }
+            y: { ticks: { color: '#B0B0B0', font: { size: 9 } }, grid: { color: '#404040' } },
+            x: { ticks: { color: '#B0B0B0', font: { size: 9 } }, grid: { color: '#404040' } }
         }
     };
     
-    // Preparar dados para cada processo
+    // Preparar dados
     const dadosPicking = [];
-    const dadosBoxing = [];
-    const dadosPutaway = [];
     const dadosChecking = [];
+    const dadosPutting = [];
+    const dadosBoxing = [];
     
     ultimos7Dias.forEach(dia => {
         const rows = filtrarProcessosPor(dia, filtroWH);
         const kpisDia = calcularKPIsProcessos(rows);
         
         dadosPicking.push(kpisDia.PICKING);
-        dadosBoxing.push(kpisDia.BOXING);
-        dadosPutaway.push(kpisDia.PUTAWAY);
         dadosChecking.push(kpisDia.CHECKING);
+        dadosPutting.push(kpisDia.PUTTING); // CORRIGIDO
+        dadosBoxing.push(kpisDia.BOXING);
     });
     
-    // Gráfico Picking
+    // 1. Picking
     if (chartPicking) chartPicking.destroy();
     chartPicking = new Chart(document.getElementById('chartPicking'), {
         type: 'line',
@@ -1318,17 +1333,17 @@ function renderizarProdutividade(filtroData, filtroWH) {
         options: commonOptions
     });
     
-    // Gráfico Boxing
-    if (chartBoxing) chartBoxing.destroy();
-    chartBoxing = new Chart(document.getElementById('chartBoxing'), {
+    // 2. Checking
+    if (chartChecking) chartChecking.destroy();
+    chartChecking = new Chart(document.getElementById('chartChecking'), {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Boxing',
-                data: dadosBoxing,
-                borderColor: '#FF9800',
-                backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                label: 'Checking',
+                data: dadosChecking,
+                borderColor: '#9C27B0',
+                backgroundColor: 'rgba(156, 39, 176, 0.1)',
                 tension: 0.4,
                 fill: true,
                 borderWidth: 2,
@@ -1339,15 +1354,15 @@ function renderizarProdutividade(filtroData, filtroWH) {
         options: commonOptions
     });
     
-    // Gráfico Putaway
-    if (chartPutaway) chartPutaway.destroy();
-    chartPutaway = new Chart(document.getElementById('chartPutaway'), {
+    // 3. Putaway (Putting)
+    if (chartPutting) chartPutting.destroy();
+    chartPutting = new Chart(document.getElementById('chartPutting'), {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Putaway',
-                data: dadosPutaway,
+                data: dadosPutting,
                 borderColor: '#2196F3',
                 backgroundColor: 'rgba(33, 150, 243, 0.1)',
                 tension: 0.4,
@@ -1360,17 +1375,17 @@ function renderizarProdutividade(filtroData, filtroWH) {
         options: commonOptions
     });
     
-    // Gráfico Checking
-    if (chartChecking) chartChecking.destroy();
-    chartChecking = new Chart(document.getElementById('chartChecking'), {
+    // 4. Boxing
+    if (chartBoxing) chartBoxing.destroy();
+    chartBoxing = new Chart(document.getElementById('chartBoxing'), {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Checking',
-                data: dadosChecking,
-                borderColor: '#9C27B0',
-                backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                label: 'Boxing',
+                data: dadosBoxing,
+                borderColor: '#FF9800',
+                backgroundColor: 'rgba(255, 152, 0, 0.1)',
                 tension: 0.4,
                 fill: true,
                 borderWidth: 2,
@@ -1420,21 +1435,23 @@ function renderizarHistorico(dataBase, filtroWH) {
 }
 
 function renderizarTabelas(hcData, prodData, filtroData) {
-    // Tabela Setores
+    // Tabela Setores (FILTRANDO INVÁLIDOS)
     const setores = {};
     hcData.forEach(r => {
-        const s = normalizarTexto(r[5]) || 'N/A';
-        if (!setores[s]) setores[s] = { hc: 0, presenca: 0, faltas: 0 };
-        setores[s].hc += parseNumero(r[6]);
-        setores[s].presenca += parseNumero(r[7]);
-        setores[s].faltas += parseNumero(r[8]);
+        const s = r[5];
+        if (!isSetorValido(s)) return; // FILTRA INVÁLIDOS
+        const setorNorm = normalizarTexto(s);
+        if (!setores[setorNorm]) setores[setorNorm] = { hc: 0, presenca: 0, faltas: 0, nome: s };
+        setores[setorNorm].hc += parseNumero(r[6]);
+        setores[setorNorm].presenca += parseNumero(r[7]);
+        setores[setorNorm].faltas += parseNumero(r[8]);
     });
     
     document.getElementById('table-setores').innerHTML = Object.keys(setores).sort().map(s => {
         const d = setores[s];
         const denominadorAbs = d.presenca + d.faltas;
         const a = denominadorAbs > 0 ? (d.faltas / denominadorAbs) * 100 : 0;
-        return `<tr><td><strong>${s}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td></tr>`;
+        return `<tr><td><strong>${d.nome}</strong></td><td>${formatNumber(d.hc)}</td><td style="color:#4CAF50">${formatNumber(d.presenca)}</td><td style="color:#F44336">${formatNumber(d.faltas)}</td><td>${formatPercent(a)}</td></tr>`;
     }).join('');
     
     // Tabela Warehouses
@@ -1523,7 +1540,7 @@ function renderizarTabelas(hcData, prodData, filtroData) {
     }).join('');
 }
 
-function renderizarGraficos(filtroWH, filtroData) {
+function renderizarGraficos(filtroWH, filtroSetor, filtroData) {
     const opt = {
         responsive: true,
         maintainAspectRatio: false,
@@ -1534,14 +1551,17 @@ function renderizarGraficos(filtroWH, filtroData) {
         }
     };
     
-    // Gráfico HC - últimos 30 dias
+    // Gráfico HC - últimos 30 dias (COM SETOR)
     const dadosPorData = {};
     dadosHC.slice(1).forEach(r => {
         if (!r || r.length === 0) return;
         const data = r[0];
         const wh = r[1];
+        const setorNorm = normalizarTexto(r[5]);
         if (wh === 'BRS' || wh === 'OTHERS') return;
         if (!aplicarFiltroWarehouse(filtroWH, wh)) return;
+        if (filtroSetor !== 'all' && setorNorm !== filtroSetor) return; // FILTRO SETOR
+        if (!isSetorValido(r[5])) return; // FILTRA INVÁLIDOS
         if (!data) return;
         if (!dadosPorData[data]) dadosPorData[data] = { hc: 0 };
         dadosPorData[data].hc += parseNumero(r[6]);
@@ -1782,6 +1802,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('filter-date')?.addEventListener('change', renderizarDashboard);
     document.getElementById('filter-warehouse')?.addEventListener('change', renderizarDashboard);
+    document.getElementById('filter-sector')?.addEventListener('change', renderizarDashboard); // RESTAURADO
 });
     </script>
 </body>
