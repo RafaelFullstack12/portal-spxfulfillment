@@ -1014,7 +1014,7 @@ async function carregarDados() {
 function popularFiltros() {
     const hcSemHeader = dadosHC.slice(1);
     
-    // Filtro Warehouse
+    // Filtro Warehouse (mantém como estava)
     const whSelect = document.getElementById('filter-warehouse');
     const whsUnicos = new Set();
     
@@ -1037,17 +1037,39 @@ function popularFiltros() {
     optionsHTML += warehouses.map(wh => `<option value="${wh}">${wh}</option>`).join('');
     whSelect.innerHTML = optionsHTML;
     
-    // FILTRO SETOR RESTAURADO (FILTRANDO VALORES INVÁLIDOS)
+    // ✅ FILTRO SETOR CORRIGIDO - SEM DUPLICATAS COM TRIM
     const setorSelect = document.getElementById('filter-sector');
-    const setores = [...new Set(hcSemHeader
-        .map(r => r[5])
-        .filter(s => isSetorValido(s))
-    )].sort();
+    const setoresMap = new Map(); // Map evita duplicatas automaticamente
+    
+    hcSemHeader.forEach(r => {
+        const setorOriginal = r[5];
+        if (!isSetorValido(setorOriginal)) return;
+        
+        // Aplicar trim() para remover espaços extras
+        const setorLimpo = setorOriginal.toString().trim();
+        
+        // Normalizar para chave única (uppercase, sem acentos)
+        const chaveNormalizada = normalizarTexto(setorLimpo);
+        
+        // Usar chave normalizada para evitar duplicatas
+        // Manter valor original (com capitalização) para exibição bonita
+        if (!setoresMap.has(chaveNormalizada)) {
+            setoresMap.set(chaveNormalizada, setorLimpo);
+        }
+    });
+    
+    // Converter Map para array ordenado
+    const setoresUnicos = Array.from(setoresMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0])) // Ordenar pela chave normalizada
+        .map(([chaveNorm, valorOriginal]) => ({
+            value: chaveNorm,      // Para comparação nos filtros
+            label: valorOriginal   // Para exibição no select
+        }));
     
     setorSelect.innerHTML = '<option value="all">Todos os Setores</option>' + 
-        setores.map(s => `<option value="${normalizarTexto(s)}">${s}</option>`).join('');
+        setoresUnicos.map(s => `<option value="${s.value}">${s.label}</option>`).join('');
     
-    // Data
+    // Data (mantém como estava)
     const datas = [...new Set(hcSemHeader.map(r => r[0]).filter(Boolean))].sort();
     document.getElementById('filter-date').value = datas.length > 0 ? datas[datas.length - 1] : new Date().toISOString().split('T')[0];
 }
@@ -1076,18 +1098,26 @@ function getUltimos7Dias(dataBase) {
     }
     return dias;
 }
-
 // FILTROS COM SETOR RESTAURADO
 function filtrarHCPor(data, whSelecionado, setorSelecionado) {
     return dadosHC.slice(1).filter(row => {
         if (!row || row.length === 0) return false;
         if (data && row[0] !== data) return false;
+        
         const wh = row[1];
-        const setorNorm = normalizarTexto(row[5]);
+        const setorOriginal = row[5];
+        
+        // 🔥 CORREÇÃO: Aplicar trim() antes de normalizar (igual ao popularFiltros)
+        const setorNorm = setorOriginal ? normalizarTexto(setorOriginal.toString().trim()) : '';
+        
         if (!aplicarFiltroWarehouse(whSelecionado, wh)) return false;
+        
+        // ✅ Comparar chaves normalizadas consistentemente
         if (setorSelecionado !== 'all' && setorNorm !== setorSelecionado) return false;
+        
         if (wh === 'BRS' || wh === 'OTHERS') return false;
-        if (!isSetorValido(row[5])) return false; // FILTRA SETORES INVÁLIDOS
+        if (!isSetorValido(setorOriginal)) return false;
+        
         return true;
     });
 }
